@@ -3,18 +3,28 @@ session_start();
 require_once 'conexion.php';
 
 if (!isset($_SESSION['id_usuario'])) {
-    header("Location: login.php");
+    header("Location: login.html");
     exit();
 }
 
-if (isset($_GET['id_ingreso'])) {
+$idUsuario = $_SESSION['id_usuario'];
+$idIngreso = $_GET['id'];  // Obtenemos el ID del ingreso a eliminar
+
+try {
     $conexion = Conexion::conectar();
-    $sql = "DELETE FROM ingresos WHERE id_ingreso = :id_ingreso";
+
+    // Eliminar ingreso de la base de datos
+    $sql = "DELETE FROM ingresos WHERE id = :id AND id_usuario = :idUsuario";
     $stmt = $conexion->prepare($sql);
-    $stmt->bindParam(':id_ingreso', $_GET['id_ingreso'], PDO::PARAM_INT);
+    $stmt->bindParam(':id', $idIngreso);
+    $stmt->bindParam(':idUsuario', $idUsuario);
     $stmt->execute();
-    
+
+    // Redirigir al listado de ingresos
     header("Location: ver_ingresos.php");
     exit();
+
+} catch (PDOException $e) {
+    echo "Error al eliminar ingreso: " . $e->getMessage();
 }
 ?>

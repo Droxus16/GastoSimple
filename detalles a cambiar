@@ -1,4 +1,45 @@
-1 darle mejor front
-2 que sea más logico y sea responsible
-3 adaptar la funcionalidad a python
-4 agregar mejoras para que nos sea mas simple
+1. Autenticación y Roles
+Login/Logout con sesiones.
+
+Roles: usuario_estandar, administrador.
+
+2. Dashboard financiero
+Panel de resumen con gráficas (ingresos vs. gastos, por tipo, por mes, etc.).
+
+El administrador verá datos globales de todos los usuarios en gráficas.
+
+El usuario estándar verá solo sus propios datos.
+
+3. Gestión de Ingresos y Gastos (CRUD)
+Registrar, consultar, actualizar y eliminar ingresos/gastos.
+
+Las monedas y descripciones reflejarán la configuración personalizada del usuario.
+
+4. Configuración de Usuario
+Moneda: listado de las 50 monedas más usadas (ej. USD, EUR, JPY, GBP, etc.).
+
+Idioma: solo Español, Inglés, Francés y Chino.
+
+Preferencias como notificaciones o temas podrían agregarse más adelante.
+
+5. Metas de ahorro
+El usuario define metas por valor y tiempo.
+
+El sistema indica el progreso hacia esas metas.
+
+6. Alertas y Recordatorios
+Ejemplo: “superaste tu presupuesto mensual”, “recuerda registrar tu gasto diario”, etc.
+
+7. Historial de transacciones
+Filtros por fecha, tipo, monto, moneda, etc.
+
+8. Reportes exportables
+Exportar a PDF y Excel.
+
+Aplicable a ingresos, gastos y metas.
+
+9. Importar datos
+Subida de archivo CSV para importar ingresos/gastos.
+
+10. Multilenguaje
+Toda la aplicación debe ajustarse al idioma seleccionado por el usuario.

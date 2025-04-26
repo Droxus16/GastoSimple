@@ -8,7 +8,7 @@ if (!isset($_SESSION['id_usuario'])) {
 }
 
 $idUsuario = $_SESSION['id_usuario'];
-$idGasto = $_GET['id'];  // ID del gasto a editar
+$idIngreso = $_GET['id'];  // ID del ingreso a editar
 
 try {
     $conexion = Conexion::conectar();
@@ -22,35 +22,35 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $monto = $_POST['monto'];
         $descripcion = $_POST['descripcion'];
-        $idCategoria = $_POST['categoria']; // Esto es el ID, no el nombre
+        $idCategoria = $_POST['categoria']; // esto es el id, no el nombre
 
-        // Actualizar el gasto
-        $sql = "UPDATE gastos 
+        // Actualizar el ingreso
+        $sql = "UPDATE ingresos 
                 SET monto = :monto, descripcion = :descripcion, id_categoria = :id_categoria 
                 WHERE id = :id AND id_usuario = :idUsuario";
         $stmt = $conexion->prepare($sql);
         $stmt->bindParam(':monto', $monto);
         $stmt->bindParam(':descripcion', $descripcion);
         $stmt->bindParam(':id_categoria', $idCategoria);
-        $stmt->bindParam(':id', $idGasto);
+        $stmt->bindParam(':id', $idIngreso);
         $stmt->bindParam(':idUsuario', $idUsuario);
         $stmt->execute();
 
-        header("Location: ver_gastos.php");
+        header("Location: ver_ingresos.php");
         exit();
     } else {
-        // Obtener los datos actuales del gasto con JOIN
-        $sql = "SELECT g.monto, g.descripcion, g.id_categoria 
-                FROM gastos g 
-                WHERE g.id = :id AND g.id_usuario = :idUsuario";
+        // Obtener los datos actuales del ingreso con JOIN
+        $sql = "SELECT i.monto, i.descripcion, i.id_categoria 
+                FROM ingresos i 
+                WHERE i.id = :id AND i.id_usuario = :idUsuario";
         $stmt = $conexion->prepare($sql);
-        $stmt->bindParam(':id', $idGasto);
+        $stmt->bindParam(':id', $idIngreso);
         $stmt->bindParam(':idUsuario', $idUsuario);
         $stmt->execute();
-        $gasto = $stmt->fetch(PDO::FETCH_ASSOC);
+        $ingreso = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$gasto) {
-            echo "Gasto no encontrado.";
+        if (!$ingreso) {
+            echo "Ingreso no encontrado.";
             exit();
         }
     }
@@ -64,22 +64,22 @@ try {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Editar Gasto - GastoSimple</title>
+    <title>Editar Ingreso - GastoSimple</title>
     <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
-    <h2>Editar Gasto</h2>
+    <h2>Editar Ingreso</h2>
     <form method="POST">
         <label for="monto">Monto:</label>
-        <input type="number" name="monto" value="<?= htmlspecialchars($gasto['monto']) ?>" required><br>
+        <input type="number" name="monto" value="<?= htmlspecialchars($ingreso['monto']) ?>" required><br>
 
         <label for="descripcion">Descripción:</label>
-        <input type="text" name="descripcion" value="<?= htmlspecialchars($gasto['descripcion']) ?>" required><br>
+        <input type="text" name="descripcion" value="<?= htmlspecialchars($ingreso['descripcion']) ?>" required><br>
 
         <label for="categoria">Categoría:</label>
         <select name="categoria" required>
             <?php foreach ($categorias as $cat): ?>
-                <option value="<?= $cat['id'] ?>" <?= ($cat['id'] == $gasto['id_categoria']) ? 'selected' : '' ?>>
+                <option value="<?= $cat['id'] ?>" <?= ($cat['id'] == $ingreso['id_categoria']) ? 'selected' : '' ?>>
                     <?= htmlspecialchars($cat['nombre']) ?>
                 </option>
             <?php endforeach; ?>
@@ -87,6 +87,6 @@ try {
 
         <button type="submit">Actualizar</button>
     </form>
-    <a href="ver_gastos.php">Volver a los gastos</a>
+    <a href="ver_ingresos.php">Volver a los ingresos</a>
 </body>
 </html>

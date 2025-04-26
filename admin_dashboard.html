@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel del Administrador</title>
+    <link rel="stylesheet" href="estilos.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h2>Estadísticas Globales de Gasto</h2>
+    <canvas id="graficoGastos" width="400" height="200"></canvas>
+
+    <script>
+        fetch('reportes_admin.php')
+            .then(res => res.json())
+            .then(data => {
+                const categorias = data.map(d => d.categoria);
+                const montos = data.map(d => d.total);
+
+                new Chart(document.getElementById('graficoGastos'), {
+                    type: 'bar',
+                    data: {
+                        labels: categorias,
+                        datasets: [{
+                            label: 'Total Gastado por Categoría',
+                            data: montos,
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                        }]
+                    }
+                });
+            })
+            .catch(err => console.error(err));
+    </script>
+</body>
+</html>
