@@ -1,16 +1,14 @@
 <?php
 session_start();
-require_once 'conexion.php';
+require_once __DIR__ . '/conexion.php';
 
-// Verificar si el usuario está autenticado
 if (!isset($_SESSION['id_usuario'])) {
-    header("Location: login.php");
+    header("Location:login.html");
     exit();
 }
 
 $idUsuario = $_SESSION['id_usuario'];
 
-// Obtener categorías disponibles para el formulario
 try {
     $pdo = Conexion::conectar();
     $sql = "SELECT * FROM categorias";
@@ -27,11 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $descripcion = $_POST['descripcion'];
     $fecha = $_POST['fecha'];
 
-    // Validar que los campos no estén vacíos
     if (empty($categoria) || empty($monto) || empty($descripcion) || empty($fecha)) {
         $error = "Por favor, completa todos los campos.";
     } else {
-        // Insertar el ingreso en la base de datos
+
         try {
             $sql = "INSERT INTO ingresos (id_usuario, id_categoria, monto, descripcion, fecha)
                     VALUES (:id_usuario, :id_categoria, :monto, :descripcion, :fecha)";
@@ -42,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindParam(':descripcion', $descripcion);
             $stmt->bindParam(':fecha', $fecha);
             $stmt->execute();
-            header("Location: ver_ingresos.php");
+            header("Location:ver_ingresos.php");
             exit();
         } catch (PDOException $e) {
             $error = "Error al registrar el ingreso: " . $e->getMessage();
@@ -66,9 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <h1>Registrar Ingreso</h1>
     <nav>
       <ul>
-        <li><a href="menu.php">Menú</a></li>
-        <li><a href="perfil.php">Mi Perfil</a></li>
-        <li><a href="logout.php">Cerrar Sesión</a></li>
+          <li><a href="menu.php">Menú</a></li>
+          <li><a href="perfil.php">Mi Perfil</a></li>
+          <li><a href="logout.php">Cerrar Sesión</a></li>
       </ul>
     </nav>
   </header>

@@ -1,6 +1,6 @@
-<?php include('idioma.php'); ?>
+<?php include('idiomas.php'); ?>
 
-<!-- Aquí va el código del encabezado -->
+
 <div>
     <a href="?idioma=es">Español</a> |
     <a href="?idioma=en">English</a> |

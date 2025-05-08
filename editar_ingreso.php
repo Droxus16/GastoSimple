@@ -1,19 +1,19 @@
 <?php
 session_start();
-require_once 'conexion.php';
+require_once __DIR__ . '/conexion.php';
+
 
 if (!isset($_SESSION['id_usuario'])) {
-    header("Location: login.html");
+    header("Location:login.html");
     exit();
 }
 
 $idUsuario = $_SESSION['id_usuario'];
-$idIngreso = $_GET['id'];  // ID del ingreso a editar
+$idIngreso = $_GET['id'];
 
 try {
     $conexion = Conexion::conectar();
 
-    // Obtener categorías para el select
     $sqlCategorias = "SELECT id, nombre FROM categorias";
     $stmtCategorias = $conexion->prepare($sqlCategorias);
     $stmtCategorias->execute();
@@ -22,9 +22,8 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $monto = $_POST['monto'];
         $descripcion = $_POST['descripcion'];
-        $idCategoria = $_POST['categoria']; // esto es el id, no el nombre
+        $idCategoria = $_POST['categoria'];
 
-        // Actualizar el ingreso
         $sql = "UPDATE ingresos 
                 SET monto = :monto, descripcion = :descripcion, id_categoria = :id_categoria 
                 WHERE id = :id AND id_usuario = :idUsuario";
@@ -39,7 +38,6 @@ try {
         header("Location: ver_ingresos.php");
         exit();
     } else {
-        // Obtener los datos actuales del ingreso con JOIN
         $sql = "SELECT i.monto, i.descripcion, i.id_categoria 
                 FROM ingresos i 
                 WHERE i.id = :id AND i.id_usuario = :idUsuario";

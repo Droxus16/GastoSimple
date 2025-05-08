@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once 'conexion.php';
+require_once __DIR__ . '/conexion.php';
 
-// Verificar si el usuario está autenticado
+
 if (!isset($_SESSION['id_usuario'])) {
-    header("Location: login.php");
+    header("Location: login.html");
     exit();
 }
 
@@ -13,7 +13,6 @@ $idUsuario = $_SESSION['id_usuario'];
 try {
     $conexion = Conexion::conectar();
 
-    // Obtener los gastos registrados por el usuario con el nombre de la categoría
     $sql = "SELECT g.id, g.descripcion, g.monto, g.fecha, c.nombre AS categoria
             FROM gastos g
             LEFT JOIN categorias c ON g.id_categoria = c.id
@@ -27,7 +26,6 @@ try {
     echo "Error al obtener gastos: " . $e->getMessage();
 }
 
-// Eliminar gasto individual
 if (isset($_GET['eliminar_id'])) {
     $idGasto = $_GET['eliminar_id'];
 
@@ -38,7 +36,7 @@ if (isset($_GET['eliminar_id'])) {
         $stmtEliminar->bindParam(':id_usuario', $idUsuario);
         $stmtEliminar->execute();
 
-        header("Location: ver_gastos.php"); // Redirigir después de eliminar
+        header("Location: ver_gastos.php");
         exit();
     } catch (PDOException $e) {
         echo "Error al eliminar el gasto: " . $e->getMessage();

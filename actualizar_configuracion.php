@@ -1,6 +1,6 @@
 <?php
 session_start();
-require 'conexion.php'; // Incluye tu archivo de conexión a la BD
+require_once __DIR__ . '/conexion.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: login.php");
@@ -9,14 +9,12 @@ if (!isset($_SESSION['usuario_id'])) {
 
 $usuario_id = $_SESSION['usuario_id'];
 
-// Recoge los valores del formulario
 $nombre = trim($_POST['nombre'] ?? '');
 $correo = trim($_POST['correo'] ?? '');
 $contrasena = $_POST['contrasena'] ?? '';
 $moneda = $_POST['moneda'] ?? '';
 $idioma = $_POST['idioma'] ?? '';
 
-// Crea arreglo dinámico para la consulta SQL
 $campos = [];
 $valores = [];
 
@@ -54,6 +52,5 @@ if (!empty($campos)) {
     $stmt->execute($valores);
 }
 
-// Redirige al perfil
 header("Location: perfil.php");
 exit();

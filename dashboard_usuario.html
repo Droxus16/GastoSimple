@@ -22,15 +22,14 @@
 </body>
 
 <script>
-    // Estos valores serán inyectados por PHP en el HTML o usando AJAX
     const moneda = localStorage.getItem('moneda') || 'USD';
     const idioma = localStorage.getItem('idioma') || 'es';
 
     document.getElementById('monedaUsuario').textContent = moneda;
     document.getElementById('idiomaUsuario').textContent = idioma;
 
-    const ingresos = parseFloat("0");  // Será reemplazado por PHP
-    const gastos = parseFloat("0");    // Será reemplazado por PHP
+    const ingresos = parseFloat("0"); 
+    const gastos = parseFloat("0");  
 
     document.getElementById('totalIngresos').textContent = `${moneda} ${ingresos.toLocaleString()}`;
     document.getElementById('totalGastos').textContent = `${moneda} ${gastos.toLocaleString()}`;

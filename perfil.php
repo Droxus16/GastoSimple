@@ -1,13 +1,14 @@
 <?php
 session_start();
-require 'conexion.php';
+require_once __DIR__ . '/conexion.php';
+
 
 if (!isset($_SESSION['id_usuario'])) {
-    header("Location: login.php");
+    header("Location: login.html");
     exit();
 }
 
-$conexion = Conexion::conectar(); // Asegurar conexión
+$conexion = Conexion::conectar();
 
 $usuario_id = $_SESSION['id_usuario'];
 
@@ -37,7 +38,7 @@ $moneda = htmlspecialchars($usuario['moneda']);
     <p><strong>Moneda:</strong> <?= $moneda ?></p>
 
     <div class="botones">
-      <a href="menu.php">Volver al Menú</a> <!-- mejor que .html -->
+      <a href="menu.php">Volver al Menú</a>
       <a href="configuracion_usuario.php">Configuración</a>
     </div>
   </div>

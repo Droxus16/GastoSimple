@@ -1,6 +1,7 @@
 <?php
 session_start();
-require 'conexion.php';
+require_once __DIR__ . '/conexion.php';
+
 
 if (!isset($_SESSION['id_usuario'])) {
     header("Location: login.php");

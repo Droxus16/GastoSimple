@@ -1,10 +1,9 @@
 <?php
 session_start();
-require_once 'conexion.php';
+require_once __DIR__ . '/conexion.php';
 
-// Verificar si el usuario está autenticado
 if (!isset($_SESSION['id_usuario'])) {
-    header("Location: login.php");
+    header("Location: login.html");
     exit();
 }
 
@@ -13,7 +12,6 @@ $idUsuario = $_SESSION['id_usuario'];
 try {
     $conexion = Conexion::conectar();
 
-    // Obtener los ingresos registrados por el usuario con el nombre de la categoría
     $sql = "SELECT ingresos.id, ingresos.descripcion, ingresos.monto, ingresos.fecha, categorias.nombre AS categoria
             FROM ingresos
             LEFT JOIN categorias ON ingresos.id_categoria = categorias.id
@@ -27,7 +25,6 @@ try {
     echo "Error al obtener ingresos: " . $e->getMessage();
 }
 
-// Eliminar ingreso
 if (isset($_GET['eliminar_id'])) {
     $idIngreso = $_GET['eliminar_id'];
 
@@ -38,7 +35,7 @@ if (isset($_GET['eliminar_id'])) {
         $stmtEliminar->bindParam(':id_usuario', $idUsuario);
         $stmtEliminar->execute();
 
-        header("Location: ver_ingresos.php"); // Redirigir después de eliminar
+        header("Location: ver_ingresos.php");
         exit();
     } catch (PDOException $e) {
         echo "Error al eliminar el ingreso: " . $e->getMessage();
@@ -61,9 +58,9 @@ if (isset($_GET['eliminar_id'])) {
     <h1>Mis Ingresos</h1>
     <nav>
       <ul>
-        <li><a href="menu.php">Menú</a></li>
-        <li><a href="perfil.php">Mi Perfil</a></li>
-        <li><a href="logout.php">Cerrar Sesión</a></li>
+          <li><a href="menu.php">Menú</a></li>
+          <li><a href="perfil.php">Mi Perfil</a></li>
+          <li><a href="logout.php">Cerrar Sesión</a></li>
       </ul>
     </nav>
   </header>

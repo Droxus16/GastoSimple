@@ -1,8 +1,8 @@
 <?php
 session_start();
-require_once 'conexion.php';
+require_once __DIR__ . '/conexion.php';
 
-// Validar si es admin
+
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] != 2) {
     header("Location: menu.php");
     exit();
@@ -11,7 +11,6 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] != 2) {
 try {
     $conexion = Conexion::conectar();
 
-    // Consultar ingresos por usuario
     $sqlIngresos = "
         SELECT u.correo, SUM(i.monto) AS total_ingresos
         FROM ingresos i
@@ -21,7 +20,6 @@ try {
     $stmtIngresos = $conexion->query($sqlIngresos);
     $ingresos = $stmtIngresos->fetchAll(PDO::FETCH_ASSOC);
 
-    // Consultar gastos por usuario
     $sqlGastos = "
         SELECT u.correo, SUM(g.monto) AS total_gastos
         FROM gastos g
@@ -31,7 +29,6 @@ try {
     $stmtGastos = $conexion->query($sqlGastos);
     $gastos = $stmtGastos->fetchAll(PDO::FETCH_ASSOC);
 
-    // Organizar datos
     $usuarios = [];
     $ingresosData = [];
     $gastosData = [];
@@ -67,7 +64,7 @@ try {
     <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
-    <h2>📊 Reporte Global de Ingresos vs Gastos</h2>
+    <h2>Reporte Global de Ingresos vs Gastos</h2>
     <canvas id="graficaGlobal" width="400" height="200"></canvas>
 
     <script>
@@ -100,6 +97,6 @@ try {
         });
     </script>
 
-    <a href="admin_dashboard.php">🔙 Volver al panel</a>
+    <a href="admin_dashboard.php">Volver al panel</a>
 </body>
 </html>

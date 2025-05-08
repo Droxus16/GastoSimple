@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'conexion.php';
+require_once __DIR__ . '/conexion.php';
 
 if (!isset($_SESSION['id_usuario'])) {
     header("Location: login.html");
@@ -8,12 +8,11 @@ if (!isset($_SESSION['id_usuario'])) {
 }
 
 $idUsuario = $_SESSION['id_usuario'];
-$idGasto = $_GET['id'];  // ID del gasto a editar
+$idGasto = $_GET['id'];
 
 try {
     $conexion = Conexion::conectar();
 
-    // Obtener categorías para el select
     $sqlCategorias = "SELECT id, nombre FROM categorias";
     $stmtCategorias = $conexion->prepare($sqlCategorias);
     $stmtCategorias->execute();
@@ -22,9 +21,8 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $monto = $_POST['monto'];
         $descripcion = $_POST['descripcion'];
-        $idCategoria = $_POST['categoria']; // Esto es el ID, no el nombre
+        $idCategoria = $_POST['categoria'];
 
-        // Actualizar el gasto
         $sql = "UPDATE gastos 
                 SET monto = :monto, descripcion = :descripcion, id_categoria = :id_categoria 
                 WHERE id = :id AND id_usuario = :idUsuario";
@@ -39,7 +37,6 @@ try {
         header("Location: ver_gastos.php");
         exit();
     } else {
-        // Obtener los datos actuales del gasto con JOIN
         $sql = "SELECT g.monto, g.descripcion, g.id_categoria 
                 FROM gastos g 
                 WHERE g.id = :id AND g.id_usuario = :idUsuario";

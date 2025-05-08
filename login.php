@@ -1,6 +1,7 @@
 <?php
 session_start();
-require_once 'conexion.php';
+require_once __DIR__ . '/conexion.php';
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $correo = $_POST['correo'];
@@ -8,18 +9,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $conexion = Conexion::conectar();
-        
-        // Verificar si el correo existe en la base de datos
         $sql = "SELECT id, password, id_rol FROM usuarios WHERE correo = :correo";
         $stmt = $conexion->prepare($sql);
         $stmt->bindParam(':correo', $correo);
         $stmt->execute();
 
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // Verificar si el usuario existe y si la contraseña es correcta
         if ($usuario && password_verify($password, $usuario['password'])) {
-            // Iniciar sesión y redirigir dependiendo del rol
             $_SESSION['id_usuario'] = $usuario['id'];
             $_SESSION['rol'] = $usuario['id_rol'];
 

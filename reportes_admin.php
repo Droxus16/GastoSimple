@@ -1,6 +1,7 @@
 <?php
 session_start();
-require_once 'conexion.php';
+require_once __DIR__ . '/conexion.php';
+
 
 if (!isset($_SESSION['id']) || $_SESSION['id_rol'] != 2) {
     http_response_code(403);

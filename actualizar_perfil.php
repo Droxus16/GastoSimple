@@ -1,6 +1,7 @@
 <?php
 session_start();
-require_once 'conexion.php';
+require_once __DIR__ . '/conexion.php';
+
 
 if (!isset($_SESSION['id'])) {
     header("Location: login.html");
@@ -10,7 +11,7 @@ if (!isset($_SESSION['id'])) {
 $idUsuario = $_SESSION['id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Verificar si los campos están presentes
+    
     if (isset($_POST['nombre'], $_POST['correo'], $_POST['idioma'], $_POST['moneda'])) {
         $nombre   = $_POST['nombre'];
         $correo   = $_POST['correo'];
@@ -21,7 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $conexion = Conexion::conectar();
 
-            // 1. Actualizar datos básicos del usuario
             if (!empty($password)) {
                 $passwordHash = password_hash($password, PASSWORD_DEFAULT);
                 $sql = "UPDATE usuarios 
@@ -44,7 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindParam(':id', $idUsuario, PDO::PARAM_INT);
             $stmt->execute();
 
-            // 2. Actualizar configuración de usuario (idioma y moneda)
             $sqlConfig = "UPDATE configuracion_usuario 
                           SET idioma = :idioma, 
                               moneda = :moneda 
@@ -55,8 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmtConfig->bindParam(':id', $idUsuario, PDO::PARAM_INT);
             $stmtConfig->execute();
 
-            // Redirigir al menú después de la actualización
-            header("Location: menu.html"); // Redirección al menú
+            header("Location:menu.html");
             exit();
 
         } catch (PDOException $e) {
