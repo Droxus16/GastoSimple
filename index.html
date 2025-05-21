@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GastoSimple</title>
+  <link href="https://unpkg.com/aos@next/dist/aos.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+  :root {
+    --primary-color: #68064c;
+    --bg-color: #0C1634;
+    --header-color: #0f0e42;
+    --text-light: #fff;
+    --text-muted: #ccc;
+    --button-bg: var(--primary-color);
+  }
+
+  [data-theme='light'] {
+    --primary-color: #ffffff;
+    --bg-color: #f5f5f5;
+    --header-color: #e0e0e0;
+    --text-light: #111;
+    --text-muted: #444;
+    --button-bg: #68064c;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-light);
+    font-size: 18px;
+  }
+
+  header {
+    background-color: var(--header-color);
+    padding: 30px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+    position: relative;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 2.2em;
+  }
+
+  nav {
+    display: flex;
+    gap: 30px;
+  }
+
+  nav a {
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 1.2em;
+  }
+
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+  }
+
+  .menu-toggle div {
+    width: 30px;
+    height: 4px;
+    background-color: var(--text-light);
+    margin: 5px 0;
+  }
+
+  .nav-links {
+    display: flex;
+  }
+
+  .banner {
+    background-image: 
+      linear-gradient(145deg, rgba(15, 14, 66, 0.85), rgba(104, 6, 76, 0.85)),
+      url('fondo-banner.jpg'); /* Reemplaza con la ruta real */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 120px 20px;
+    text-align: center;
+    color: white;
+}
+
+
+  .banner h2 {
+    font-size: 3.2em;
+    margin-bottom: 20px;
+  }
+
+  .banner p {
+    font-size: 1.6em;
+    margin: 0 auto 40px;
+    max-width: 800px;
+  }
+
+  .banner .buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 25px;
+  }
+
+  .banner button {
+    background-color: var(--button-bg);
+    color: white;
+    border: none;
+    padding: 18px 36px;
+    font-size: 1.3em;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+
+  .banner button:hover {
+    background-color: #d95788;
+  }
+
+  .features, .screenshots, .contact {
+    padding: 80px 20px;
+    text-align: center;
+  }
+
+  .features h3, .screenshots h3, .contact h3 {
+    font-size: 2.5em;
+    margin-bottom: 30px;
+  }
+
+  .features ul {
+    list-style: none;
+    padding: 0;
+    max-width: 900px;
+    margin: auto;
+  }
+
+  .features li {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+  }
+
+  .placeholder {
+    border: 2px dashed var(--text-light);
+    height: 400px;
+    margin: 30px auto;
+    max-width: 700px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.4em;
+    color: var(--text-muted);
+  }
+
+  .contact p {
+    font-size: 1.4em;
+    margin-bottom: 15px;
+  }
+
+  .contact button {
+    background-color: var(--button-bg);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    font-size: 1.2em;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  footer {
+    background-color: var(--header-color);
+    text-align: center;
+    padding: 30px;
+    font-size: 1.1em;
+    color: var(--text-muted);
+  }
+
+  footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 1.1em;
+  }
+
+  @media (max-width: 768px) {
+    .menu-toggle {
+      display: flex;
+    }
+
+    .nav-links {
+      position: absolute;
+      top: 90px;
+      right: 20px;
+      background-color: var(--header-color);
+      flex-direction: column;
+      width: 250px;
+      display: none;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    .nav-links.active {
+      display: flex;
+    }
+
+    nav {
+      flex-direction: column;
+    }
+
+    .banner .buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .banner h2 {
+      font-size: 2.2em;
+    }
+
+    .banner p {
+      font-size: 1.3em;
+    }
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --primary-color: #ffffff;
+      --bg-color: #f5f5f5;
+      --header-color: #e0e0e0;
+      --text-light: #111111;
+      --text-muted: #444444;
+      --button-bg: #68064c;
+    }
+
+    .placeholder {
+      border-color: var(--text-muted);
+      color: var(--text-muted);
+    }
+
+    #scrollTopBtn {
+      background-color: #111;
+      color: white;
+    }
+  }
+
+  #scrollTopBtn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #68064c;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    font-size: 1.5em;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    z-index: 1000;
+  }
+
+  nav a {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+nav a::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background-color: var(--primary-color);
+  transition: width 0.3s ease;
+}
+
+nav a:hover {
+  color: #d95788;
+}
+
+nav a:hover::after {
+  width: 100%;
+}
+
+.logo {
+  height: auto;
+  max-height: 80px;
+  width: auto;
+}
+
+@media (max-width: 768px) {
+  .logo {
+    max-height: 65px;
+  }
+}
+
+main {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+main::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('logo3.png'), url('logo3.png');
+  background-repeat: no-repeat, no-repeat;
+  background-position: left center, right center;
+  background-size: 250px auto;
+  opacity: 0.06; /* Ajusta según lo visible que quieras los logos */
+  z-index: 0;
+  pointer-events: none;
+}
+
+
+
+@media (max-width: 768px) {
+  main::before {
+    display: none;
+  }
+}
+
+@keyframes bounceLogo {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-8px);
+  }
+  60% {
+    transform: translateY(4px);
+  }
+}
+
+.logo:hover {
+  animation: bounceLogo 0.6s ease-in-out;
+}
+
+</style>
+
+</head>
+<body>
+
+  <header>
+    <a href="index.html"><img src="logo3.png" alt="GastoSimple logo" class="logo"></a>
+    <div class="menu-toggle" id="menu-toggle" aria-label="Abrir menú">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <nav class="nav-links" id="nav-links">
+      <a href="registro.html">Regístrate</a>
+      <a href="login.html">Inicia sesión</a>
+      <a href="#features">Características</a>
+      <a href="#screenshots">Demo</a>
+      <a href="#contact">Contacto</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="banner">
+      <h2 data-aos="fade-down">Gestiona tus finanzas sin complicaciones</h2>
+      <p data-aos="fade-up">GastoSimple es la herramienta que te permite controlar tus ingresos y gastos sin intermediarios, alcanzar tus metas de ahorro y recibir recomendaciones personalizadas.</p>
+      <div class="buttons" data-aos="zoom-in">
+        <button>Descargar GastoSimple</button>
+        <button>Conócenos</button>
+      </div>
+    </section>
+
+    <section class="features" id="features" data-aos="fade-up">
+      <h3>Características principales</h3>
+      <ul>
+        <li data-aos="fade-right">Gestión directa de ingresos y gastos sin terceros</li>
+        <li data-aos="fade-right" data-aos-delay="100">Creación de metas de ahorro personalizadas</li>
+        <li data-aos="fade-right" data-aos-delay="200">Visualización de resultados en gráficas intuitivas</li>
+        <li data-aos="fade-right" data-aos-delay="300">Asistente virtual para ayuda y recomendaciones</li>
+      </ul>
+    </section>
+
+    <section class="screenshots" id="screenshots">
+      <h3 data-aos="fade-up">Capturas de pantalla</h3>
+      <div class="placeholder" role="img" aria-label="Espacio reservado para capturas">[Espacio reservado para capturas]</div>
+
+      <h3 data-aos="fade-up">Video demo</h3>
+      <div class="placeholder" role="img" aria-label="Espacio reservado para video">[Espacio reservado para video]</div>
+    </section>
+
+    <section class="contact" id="contact">
+      <h3 data-aos="fade-up">Contáctanos</h3>
+      <p>¿Tienes dudas o sugerencias? Escríbenos:</p>
+      <p><strong>contacto@gastosimple.com</strong></p>
+      <button>Enviar PQR</button>
+    </section>
+  </main>
+
+  <footer>
+    &copy; 2025 GastoSimple. Todos los derechos reservados. | <a href="terminos.html">Términos y condiciones</a>
+  </footer>
+
+  <button id="scrollTopBtn" aria-label="Volver arriba">↑</button>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+  <script>
+    AOS.init({
+      duration: 1000,
+      once: true,
+    });
+
+    // Menú hamburguesa
+    const toggle = document.getElementById('menu-toggle');
+    const nav = document.getElementById('nav-links');
+
+    toggle.addEventListener('click', () => {
+      nav.classList.toggle('active');
+    });
+
+    // Botón scroll top
+    const scrollBtn = document.getElementById("scrollTopBtn");
+
+    window.addEventListener("scroll", () => {
+      if (document.documentElement.scrollTop > 300) {
+        scrollBtn.style.display = "block";
+      } else {
+        scrollBtn.style.display = "none";
+      }
+    });
+
+    scrollBtn.addEventListener("click", () => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    });
+  </script>
+</body>
+</html>
