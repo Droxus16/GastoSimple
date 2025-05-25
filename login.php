@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="assets/css/estilos.css">
 
 <style>
-  .login-wrapper {
+  .registro-wrapper {
     max-width: 400px;
     margin: 40px auto;
     padding: 30px;
@@ -15,19 +15,20 @@
     backdrop-filter: blur(10px);
   }
 
-  .login-wrapper h2 {
+  .registro-wrapper h2 {
     text-align: center;
     margin-bottom: 20px;
   }
 
-  .login-wrapper label {
+  .registro-wrapper label {
     display: block;
     margin: 15px 0 5px;
     font-weight: bold;
   }
 
-  .login-wrapper input[type="email"],
-  .login-wrapper input[type="password"] {
+  .registro-wrapper input[type="text"],
+  .registro-wrapper input[type="email"],
+  .registro-wrapper input[type="password"] {
     width: 100%;
     padding: 10px;
     border: none;
@@ -35,11 +36,17 @@
     margin-bottom: 10px;
   }
 
-  .login-wrapper input[type="checkbox"] {
+  .registro-wrapper input[type="checkbox"] {
     margin-right: 10px;
   }
 
-  .login-wrapper button {
+  .registro-wrapper .checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .registro-wrapper button {
     width: 100%;
     padding: 10px;
     background: #00D4FF;
@@ -51,11 +58,11 @@
     transition: background 0.3s;
   }
 
-  .login-wrapper button:hover {
+  .registro-wrapper button:hover {
     background: #00b8e6;
   }
 
-  .login-wrapper .mensaje {
+  .registro-wrapper .mensaje {
     background-color: #222;
     padding: 10px;
     border-radius: 8px;
@@ -64,17 +71,17 @@
     color: #ff9999;
   }
 
-  .login-wrapper a {
+  .registro-wrapper a {
     color: #00D4FF;
     text-decoration: none;
   }
 
-  .login-wrapper a:hover {
+  .registro-wrapper a:hover {
     text-decoration: underline;
   }
 </style>
 
-<div class="login-wrapper">
+<div class="registro-wrapper">
   <h2>Iniciar Sesión</h2>
 
   <?php
@@ -92,7 +99,7 @@
         if ($stmt->rowCount() == 1) {
           $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
           if (password_verify($claveIngresada, $usuario['clave'])) {
-            $_SESSION["id_usuario"] = $usuario["id"];
+            $_SESSION["usuario_id"] = $usuario["id"];
             $_SESSION["nombre"] = $usuario["nombre"];
             $_SESSION["rol"] = $usuario["rol"];
             header("Location: dashboard.php");
@@ -122,7 +129,11 @@
 
     <label for="contrasena">Contraseña:</label>
     <input type="password" name="contrasena" id="contrasena" required>
-    <label><input type="checkbox" id="togglePassword"> Mostrar contraseña</label>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="togglePassword">
+      <label for="togglePassword" style="margin: 0;">Mostrar contraseña</label>
+    </div>
 
     <button type="submit">Iniciar Sesión</button>
     <p style="text-align:center; margin-top:10px;">¿No tienes cuenta? <a href="register.php">Regístrate</a></p>

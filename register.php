@@ -1,9 +1,54 @@
+<?php
+session_start();
+require_once 'includes/db.php';
+
+$mensaje = "";
+
+// Lógica del formulario antes de enviar cualquier salida HTML
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  $nombre = trim($_POST["nombre"]);
+  $correo = trim($_POST["correo"]);
+  $contrasena = $_POST["contrasena"];
+  $rol = "estandar";
+
+  if (!empty($nombre) && !empty($correo) && !empty($contrasena)) {
+    if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+      $mensaje = "Por favor ingresa un correo válido.";
+    } else {
+      try {
+        $db = db::conectar();
+
+        $stmt = $db->prepare("SELECT id FROM usuarios WHERE correo = ?");
+        $stmt->execute([$correo]);
+
+        if ($stmt->rowCount() > 0) {
+          $mensaje = "El correo ya está registrado.";
+        } else {
+          $hash = password_hash($contrasena, PASSWORD_DEFAULT);
+          $stmt = $db->prepare("INSERT INTO usuarios (nombre, correo, clave, rol) VALUES (?, ?, ?, ?)");
+          $stmt->execute([$nombre, $correo, $hash, $rol]);
+
+          $idUsuario = $db->lastInsertId();
+          $_SESSION['usuario_id'] = $idUsuario;
+          $_SESSION['nombre'] = $nombre;
+          $_SESSION['rol'] = $rol;
+
+          // Redirige a dashboard antes de enviar cualquier salida HTML
+          header("Location: dashboard.php");
+          exit();
+        }
+      } catch (PDOException $e) {
+        $mensaje = "Error: " . $e->getMessage();
+      }
+    }
+  } else {
+    $mensaje = "Por favor completa todos los campos.";
+  }
+}
+?>
+
 <?php include 'includes/header.php'; ?>
-<?php require_once 'includes/db.php'; ?>
-<?php session_start(); ?>
-
 <link rel="stylesheet" href="assets/css/estilos.css">
-
 <style>
   .registro-wrapper {
     max-width: 400px;
@@ -78,45 +123,6 @@
 <div class="registro-wrapper">
   <h2>Registro de Usuario</h2>
 
-  <?php
-  $mensaje = "";
-  if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nombre = trim($_POST["nombre"]);
-    $correo = trim($_POST["correo"]);
-    $contrasena = $_POST["contrasena"];
-    $rol = "estandar";
-
-    if (!empty($nombre) && !empty($correo) && !empty($contrasena)) {
-      try {
-        $db = db::conectar();
-
-        $stmt = $db->prepare("SELECT id FROM usuarios WHERE correo = ?");
-        $stmt->execute([$correo]);
-
-        if ($stmt->rowCount() > 0) {
-          $mensaje = "El correo ya está registrado.";
-        } else {
-          $hash = password_hash($contrasena, PASSWORD_DEFAULT);
-          $stmt = $db->prepare("INSERT INTO usuarios (nombre, correo, contrasena, rol) VALUES (?, ?, ?, ?)");
-          $stmt->execute([$nombre, $correo, $hash, $rol]);
-
-          $idUsuario = $db->lastInsertId();
-          $_SESSION['usuario_id'] = $idUsuario;
-          $_SESSION['nombre'] = $nombre;
-          $_SESSION['rol'] = $rol;
-
-          header("Location: dashboard.php");
-          exit();
-        }
-      } catch (PDOException $e) {
-        $mensaje = "Error: " . $e->getMessage();
-      }
-    } else {
-      $mensaje = "Por favor completa todos los campos.";
-    }
-  }
-  ?>
-
   <?php if ($mensaje): ?>
     <p class="mensaje"><?= htmlspecialchars($mensaje) ?></p>
   <?php endif; ?>
@@ -136,19 +142,16 @@
 
     <button type="submit" id="btnRegistro" disabled>Registrarse</button>
 
-    <!-- ENLACE A LOGIN -->
     <p style="text-align:center; margin-top:10px;">¿Ya tienes un usuario? <a href="login.php">Inicia sesión</a></p>
   </form>
 </div>
 
 <script>
-  // Mostrar/ocultar contraseña
   document.getElementById('togglePassword').addEventListener('change', function () {
     const passwordInput = document.getElementById('contrasena');
     passwordInput.type = this.checked ? 'text' : 'password';
   });
 
-  // Habilitar botón solo si se aceptan los términos
   const terminos = document.getElementById('terminos');
   const btnRegistro = document.getElementById('btnRegistro');
   terminos.addEventListener('change', function () {
