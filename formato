@@ -1,0 +1,27 @@
+/gasto-simple/
+├── index.php
+├── dashboard.php
+├── login.php
+├── logout.php
+├── register.php           
+├── verificar_correo.php
+├── terminos.php
+├── /assets/
+│   ├── /css/
+│   │   └── estilos.css
+│   ├── /js/
+│   │   └── funciones.js
+│   │   └── registro.js
+│   └── /img/
+├── /includes/
+│   ├── db.php
+│   ├── auth.php
+│   ├── header.php
+│   └── footer.php
+├── /controllers/
+│   ├── ingresos.php
+│   ├── gastos.php
+│   ├── metas.php
+│   └── reportes.php
+├── /uploads/
+└── /vendor/
