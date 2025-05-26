@@ -49,7 +49,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <?php include 'includes/header.php'; ?>
 <link rel="stylesheet" href="assets/css/estilos.css">
+
 <style>
+  /* Aseguramos que el fondo ocupe toda la pantalla */
+  body, html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Fondo de partículas */
+  #particles-js {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Asegura que las partículas estén detrás del contenido */
+  }
+
+  /* Estilo para el contenedor de registro */
   .registro-wrapper {
     max-width: 400px;
     margin: 40px auto;
@@ -120,6 +141,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   }
 </style>
 
+<!-- Contenedor de partículas -->
+<div id="particles-js"></div>
+
 <div class="registro-wrapper">
   <h2>Registro de Usuario</h2>
 
@@ -156,6 +180,95 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   const btnRegistro = document.getElementById('btnRegistro');
   terminos.addEventListener('change', function () {
     btnRegistro.disabled = !this.checked;
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+<script>
+  particlesJS("particles-js", {
+    "particles": {
+      "number": {
+        "value": 80,
+        "density": {
+          "enable": true,
+          "value_area": 800
+        }
+      },
+      "color": {
+        "value": "#ffffff"
+      },
+      "shape": {
+        "type": "circle"
+      },
+      "opacity": {
+        "value": 0.5,
+        "random": false,
+        "anim": {
+          "enable": true,
+          "speed": 1,
+          "opacity_min": 0.1,
+          "sync": false
+        }
+      },
+      "size": {
+        "value": 3,
+        "random": true,
+        "anim": {
+          "enable": true,
+          "speed": 40,
+          "size_min": 0.1,
+          "sync": false
+        }
+      },
+      "line_linked": {
+        "enable": true,
+        "distance": 150,
+        "color": "#ffffff",
+        "opacity": 0.4,
+        "width": 1
+      },
+      "move": {
+        "enable": true,
+        "speed": 3,
+        "direction": "none",
+        "random": false,
+        "straight": false,
+        "out_mode": "out",
+        "bounce": false
+      }
+    },
+    "interactivity": {
+      "detect_on": "window",
+      "events": {
+        "onhover": {
+          "enable": true,
+          "mode": "repulse"
+        },
+        "onclick": {
+          "enable": true,
+          "mode": "push"
+        }
+      },
+      "modes": {
+        "grab": {
+          "distance": 400,
+          "line_linked": {
+            "opacity": 1
+          }
+        },
+        "repulse": {
+          "distance": 100,
+          "duration": 0.4
+        },
+        "push": {
+          "particles_nb": 4
+        },
+        "remove": {
+          "particles_nb": 2
+        }
+      }
+    },
+    "retina_detect": true
   });
 </script>
 
