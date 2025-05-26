@@ -109,10 +109,19 @@ $nombreUsuario = $stmt->fetchColumn();
     font-weight: bold;
     background-color: #ffffff33;
     color: white;
+    transition: background-color 0.3s;
   }
 
   .chart-filters button:hover {
     background-color: #ffffff55;
+  }
+
+  /* Nuevo estilo para botón activo */
+  .chart-filters button.activo {
+    background-color: #00D4FF;
+    color: #0C1634;
+    font-weight: bold;
+    box-shadow: 0 0 8px #00D4FF;
   }
 </style>
 
@@ -135,10 +144,10 @@ $nombreUsuario = $stmt->fetchColumn();
       <div class="grid-stack-item" gs-w="8" gs-h="6">
         <div class="grid-stack-item-content">
           <div class="chart-filters">
-            <button onclick="filtrar('dia')">Día</button>
+            <button onclick="filtrar('día')">Día</button>
             <button onclick="filtrar('semana')">Semana</button>
-            <button onclick="filtrar('mes')">Mes</button>
-            <button onclick="filtrar('anio')">Año</button>
+            <button onclick="filtrar('mes')" class="activo">Mes</button>
+            <button onclick="filtrar('año')">Año</button>
           </div>
           <canvas id="graficoFinanzas"></canvas>
         </div>
@@ -184,27 +193,86 @@ $nombreUsuario = $stmt->fetchColumn();
       responsive: true,
       plugins: {
         legend: { display: false }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Fechas'
+          }
+        },
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Cantidad ($)'
+          }
+        }
       }
     }
   });
 
+  // Función para formatear números con separadores
+  function formatNumber(num) {
+    return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+  }
+
   function filtrar(periodo) {
+    // Normalizamos el texto para comparar
+    const periodoLower = periodo.toLowerCase();
+
+    // Resaltar botón activo
+    document.querySelectorAll('.chart-filters button').forEach(btn => {
+      btn.classList.toggle('activo', btn.textContent.toLowerCase() === periodoLower);
+    });
+
     $.ajax({
       url: 'includes/filtrar_datos.php',
       method: 'POST',
-      data: { periodo: periodo },
+      data: { periodo: periodoLower },
       success: function (respuesta) {
-        // Si la respuesta viene como string, parseamos JSON
         const datos = (typeof respuesta === 'string') ? JSON.parse(respuesta) : respuesta;
 
-        // Actualizar gráfico
-        grafico.data.datasets[0].data = [datos.ingresos, datos.gastos];
-        grafico.update();
+        if (datos.fechas && datos.ingresos && datos.gastos) {
+          // Datos con detalle por fechas
+          grafico.data.labels = datos.fechas;
+          grafico.data.datasets = [
+            {
+              label: 'Ingresos',
+              data: datos.ingresos,
+              backgroundColor: '#4CAF50'
+            },
+            {
+              label: 'Gastos',
+              data: datos.gastos,
+              backgroundColor: '#F44336'
+            }
+          ];
+          grafico.options.plugins.legend.display = true; // Mostrar leyenda
+          grafico.update();
 
-        // Actualizar valores en la página
-        document.getElementById('ingresos').innerText = `$${datos.ingresos.toFixed(2)}`;
-        document.getElementById('gastos').innerText = `$${datos.gastos.toFixed(2)}`;
-        document.getElementById('ahorro').innerText = `$${datos.ahorro.toFixed(2)}`;
+          // Sumamos totales para mostrar
+          const totalIngresos = datos.ingresos.reduce((a, b) => a + b, 0);
+          const totalGastos = datos.gastos.reduce((a, b) => a + b, 0);
+
+          document.getElementById('ingresos').innerText = `$${formatNumber(totalIngresos)}`;
+          document.getElementById('gastos').innerText = `$${formatNumber(totalGastos)}`;
+          document.getElementById('ahorro').innerText = `$${formatNumber(datos.ahorro)}`;
+        } else {
+          // Datos totales simples
+          grafico.data.labels = ['Ingresos', 'Gastos'];
+          grafico.data.datasets = [{
+            label: 'Total',
+            data: [datos.ingresos, datos.gastos],
+            backgroundColor: ['#4CAF50', '#F44336']
+          }];
+          grafico.options.plugins.legend.display = false; // Ocultar leyenda
+          grafico.update();
+
+          document.getElementById('ingresos').innerText = `$${formatNumber(datos.ingresos)}`;
+          document.getElementById('gastos').innerText = `$${formatNumber(datos.gastos)}`;
+          document.getElementById('ahorro').innerText = `$${formatNumber(datos.ahorro)}`;
+        }
       },
       error: function (xhr, status, error) {
         console.error('Error al obtener datos:', error);
@@ -217,7 +285,7 @@ $nombreUsuario = $stmt->fetchColumn();
     filtrar('mes'); // carga inicial con datos del mes
   });
 
-  // Función para mostrar secciones si tienes más, puedes eliminar si no usas
+  // Mostrar secciones (si usas más secciones)
   function mostrarSeccion(id) {
     document.querySelectorAll('.main-content').forEach(div => div.style.display = 'none');
     document.getElementById(id).style.display = 'block';
