@@ -1,0 +1,17 @@
+{
+    "name": "dazus/gasto-simple",
+    "autoload": {
+        "psr-4": {
+            "Dazus\\GastoSimple\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Danny",
+            "email": "dazusxd@gmai.com"
+        }
+    ],
+    "require": {
+        "phpoffice/phpspreadsheet": "^4.2"
+    }
+}
