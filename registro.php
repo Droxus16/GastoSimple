@@ -2,26 +2,83 @@
 session_start();
 require_once 'includes/db.php';
 require_once 'includes/auth.php';
+require 'vendor/autoload.php';
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf;
 
 $conn = db::conectar();
 $idUsuario = intval($_SESSION['usuario_id']);
 
 // Obtener transacciones
 $transacciones = [];
-$sql = "SELECT tipo, fecha, monto, categoria, descripcion FROM transacciones WHERE id_usuario = ? ORDER BY fecha DESC";
+$sql = "SELECT id, tipo, fecha, monto, categoria, descripcion FROM transacciones WHERE id_usuario = ? ORDER BY fecha DESC";
 $stmt = $conn->prepare($sql);
 $stmt->execute([$idUsuario]);
 $transacciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Eliminar registro
+if (isset($_GET['eliminar'])) {
+    $id = $_GET['eliminar'];
+    $conn->query("DELETE FROM transacciones WHERE id = $id");
+}
 
-// Obtener categorías disponibles
+// Exportar a Excel
+if (isset($_POST['exportar_excel'])) {
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('Transacciones');
+
+    $sheet->fromArray(['ID', 'Tipo', 'Categoría', 'Monto', 'Fecha', 'Descripción'], NULL, 'A1');
+
+    $usuario_id = $_SESSION['usuario_id'];
+    $result = $conn->query("SELECT id, tipo, categoria, monto, fecha, descripcion FROM transacciones WHERE usuario_id = $usuario_id");
+
+    $fila = 2;
+    while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+        $sheet->fromArray(array_values($row), NULL, "A$fila");
+        $fila++;
+    }
+
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment;filename="transacciones.xlsx"');
+    header('Cache-Control: max-age=0');
+    $writer = new Xlsx($spreadsheet);
+    $writer->save('php://output');
+    exit;
+}
+
+// Exportar a PDF
+if (isset($_POST['exportar_pdf'])) {
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->fromArray(['ID', 'Tipo', 'Categoría', 'Monto', 'Fecha', 'Descripción'], NULL, 'A1');
+
+    $usuario_id = $_SESSION['usuario_id'];
+    $result = $conn->query("SELECT id, tipo, categoria, monto, fecha, descripcion FROM transacciones WHERE usuario_id = $usuario_id");
+
+    $fila = 2;
+    while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+        $sheet->fromArray(array_values($row), NULL, "A$fila");
+        $fila++;
+    }
+
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: attachment;filename="transacciones.pdf"');
+    header('Cache-Control: max-age=0');
+    $writer = new Mpdf($spreadsheet);
+    $writer->save('php://output');
+    exit;
+}
+
+// Obtener categorías
 $categorias = [];
 $sqlCategorias = "SELECT id, nombre, tipo FROM categorias WHERE usuario_id = ? OR usuario_id IS NULL ORDER BY tipo, nombre";
 $stmtCategorias = $conn->prepare($sqlCategorias);
 $stmtCategorias->execute([$idUsuario]);
 $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
 
-// Separar categorías por tipo
 $categoriasIngreso = array_filter($categorias, fn($c) => $c['tipo'] === 'ingreso');
 $categoriasGasto = array_filter($categorias, fn($c) => $c['tipo'] === 'gasto');
 ?>
@@ -39,7 +96,7 @@ $categoriasGasto = array_filter($categorias, fn($c) => $c['tipo'] === 'gasto');
     backdrop-filter: blur(5px);
     margin-bottom: 20px;
     color: white;
-    max-width: 600px;
+    max-width: 900px;
     margin-left: auto;
     margin-right: auto;
     position: relative;
@@ -52,18 +109,52 @@ $categoriasGasto = array_filter($categorias, fn($c) => $c['tipo'] === 'gasto');
     font-weight: 700;
   }
 
-  .tabla-transacciones {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
+/* Contenedor que envuelve la tabla */
+.tabla-container {
+  width: 100%;
+  overflow-x: auto; /* Agrega scroll horizontal en pantallas pequeñas */
+  -webkit-overflow-scrolling: touch; /* Mejora en iOS */
+  display: block;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
 
-  .tabla-transacciones th, .tabla-transacciones td {
-    border: 1px solid #ccc;
-    padding: 8px;
+/* Tabla principal */
+.tabla-transacciones {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px; /* Evita que la tabla se compacte demasiado */
+  margin-top: 10px;
+}
+
+/* Celdas de encabezado y cuerpo */
+.tabla-transacciones th,
+.tabla-transacciones td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: white;
+}
+
+/* Encabezados más destacados */
+.tabla-transacciones th {
+  background-color: rgba(255, 255, 255, 0.15);
+  font-weight: bold;
+}
+
+/* Indicador visual opcional para pantallas pequeñas */
+@media (max-width: 768px) {
+  .tabla-container::after {
+    content: '← desliza la tabla →';
+    display: block;
     text-align: center;
-    background-color: rgba(0,0,0,0.3);
+    font-size: 0.8rem;
+    color: #bbb;
+    margin-top: 5px;
   }
+}
+
 
   input, select, textarea {
     width: 100%;
@@ -120,7 +211,50 @@ $categoriasGasto = array_filter($categorias, fn($c) => $c['tipo'] === 'gasto');
     height: 100%;
     z-index: 0;
   }
-</style>
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* Fondo oscuro semitransparente */
+  display: none;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+  opacity: 0;
+}
+
+/* Cuando el modal está activo, hacerlo visible */
+.modal-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+
+.modal-content {
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  border-radius: 10px;
+  padding: 30px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90%;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: white;
+}
+  </style>
 
 <div id="particles-js"></div>
 
@@ -164,7 +298,6 @@ $categoriasGasto = array_filter($categorias, fn($c) => $c['tipo'] === 'gasto');
   </form>
 </div>
 
-<!-- Formulario de edición (inicialmente oculto) -->
 <!-- Modal -->
 <div id="modal-editar" class="modal-overlay">
   <div class="modal-content">
@@ -196,21 +329,23 @@ $categoriasGasto = array_filter($categorias, fn($c) => $c['tipo'] === 'gasto');
       <textarea name="descripcion" id="edit-descripcion" rows="2"></textarea>
 
       <button type="submit">Guardar Cambios</button>
+      <button type="button" id="eliminar-transaccion">Eliminar Transacción</button>
+
     </form>
   </div>
 </div>
 
 
-<!-- Tabla de transacciones -->
+<!-- Tabla -->
 <div class="tabla-container">
   <h2>Registros</h2>
   <?php if (count($transacciones) > 0): ?>
     <div class="acciones">
-      <form action="includes/exportar_excel.php" method="POST">
-        <button type="submit">Exportar Excel</button>
+      <form method="POST">
+        <button type="submit" name="exportar_excel">Exportar Excel</button>
       </form>
-      <form action="includes/exportar_pdf.php" method="POST">
-        <button type="submit">Exportar PDF</button>
+      <form method="POST">
+        <button type="submit" name="exportar_pdf">Exportar PDF</button>
       </form>
     </div>
 
@@ -234,15 +369,16 @@ $categoriasGasto = array_filter($categorias, fn($c) => $c['tipo'] === 'gasto');
             <td><?= htmlspecialchars($fila['categoria']) ?></td>
             <td><?= htmlspecialchars($fila['descripcion']) ?></td>
             <td>
-             <button class="editar-btn"
+              <button class="editar-btn"
+                data-id="<?= $fila['id'] ?>"
                 data-tipo="<?= $fila['tipo'] ?>"
                 data-fecha="<?= $fila['fecha'] ?>"
                 data-monto="<?= $fila['monto'] ?>"
                 data-categoria="<?= htmlspecialchars($fila['categoria']) ?>"
                 data-descripcion="<?= htmlspecialchars($fila['descripcion']) ?>">
-              Editar
-            </button>
-
+                Editar
+              </button>
+            </td>
           </tr>
         <?php endforeach; ?>
       </tbody>
@@ -253,129 +389,153 @@ $categoriasGasto = array_filter($categorias, fn($c) => $c['tipo'] === 'gasto');
 </div>
 
 <script>
-  document.querySelectorAll('.editar-btn').forEach(button => {
-    button.addEventListener('click', function() {
-      const id = this.getAttribute('data-id');
-      const tipo = this.getAttribute('data-tipo');
-      const fecha = this.getAttribute('data-fecha');
-      const monto = this.getAttribute('data-monto');
-      const categoria = this.getAttribute('data-categoria');
-      const descripcion = this.getAttribute('data-descripcion');
 
-      document.getElementById('edit-id').value = id;
-      document.getElementById('edit-tipo').value = tipo;
-      document.getElementById('edit-fecha').value = fecha;
-      document.getElementById('edit-monto').value = monto;
-      document.getElementById('edit-categoria').value = categoria;
-      document.getElementById('edit-descripcion').value = descripcion;
+// Mostrar el modal al hacer clic en el botón de editar
+document.querySelectorAll('.editar-btn').forEach(button => {
+  button.addEventListener('click', function() {
+    const id = this.getAttribute('data-id');
+    const tipo = this.getAttribute('data-tipo');
+    const fecha = this.getAttribute('data-fecha');
+    const monto = this.getAttribute('data-monto');
+    const categoria = this.getAttribute('data-categoria');
+    const descripcion = this.getAttribute('data-descripcion');
 
-      document.getElementById('form-editar-container').style.display = 'block'; // Mostrar el formulario de edición
-    });
+    // Rellenar el formulario con los datos de la transacción
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-tipo').value = tipo;
+    document.getElementById('edit-fecha').value = fecha;
+    document.getElementById('edit-monto').value = monto;
+    document.getElementById('edit-categoria').value = categoria;
+    document.getElementById('edit-descripcion').value = descripcion;
+
+    // Mostrar el modal
+    document.getElementById('modal-editar').classList.add('active');
+  });
+});
+
+// Función para cerrar el modal
+function cerrarModalEditar() {
+  document.getElementById('modal-editar').classList.remove('active');
+}
+
+// Cerrar el modal al hacer clic fuera de la ventana (en el overlay)
+document.getElementById('modal-editar').addEventListener('click', function(event) {
+  if (event.target === document.getElementById('modal-editar')) {
+    cerrarModalEditar();
+  }
+});
+
+// Cerrar el modal con la tecla Escape
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    cerrarModalEditar();
+  }
+});
+
+// Botón para eliminar la transacción
+document.getElementById('eliminar-transaccion').addEventListener('click', function() {
+    const id = document.getElementById('edit-id').value;  // Obtener el ID de la transacción
+
+    if (confirm('¿Estás seguro de que deseas eliminar esta transacción?')) {
+        // Realizar la solicitud para eliminar la transacción (usando POST en lugar de GET)
+        fetch('includes/eliminar_transaccion.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',  // Enviar como JSON
+            },
+            body: JSON.stringify({ id: id })  // Enviar el ID en el cuerpo como JSON
+        })
+        .then(response => {
+            if (!response.ok) {  // Verifica si la respuesta fue exitosa (código 2xx)
+                throw new Error('Error en la solicitud: ' + response.statusText);
+            }
+            return response.text();  // Obtén la respuesta como texto
+        })
+        .then(text => {
+            console.log(text);  // Muestra la respuesta cruda para depuración
+            try {
+                const data = JSON.parse(text);  // Intentamos convertir el texto a JSON
+                if (data.success) {
+                    alert('Transacción eliminada correctamente.');
+                    cerrarModalEditar();  // Cerrar el modal después de la eliminación
+                    // Aquí puedes añadir código para eliminar la fila de la tabla en la interfaz si es necesario
+                } else {
+                    alert('Hubo un error al eliminar la transacción: ' + data.error);
+                }
+            } catch (error) {
+                // Si ocurre un error al parsear el JSON
+                console.error('Error al parsear el JSON:', error);
+                alert('Hubo un error en la solicitud. Respuesta inesperada del servidor.');
+            }
+        })
+        .catch(error => {
+            console.error('Error en la solicitud:', error);
+            alert('Error en la solicitud: ' + error.message);
+        });
+    }
+});
+
+
+
+// Filtrar categorías según el tipo seleccionado
+function filtrarCategorias() {
+  const tipoSeleccionado = document.getElementById('tipo').value;
+  const selectCategorias = document.getElementById('categoria');
+  const opciones = selectCategorias.querySelectorAll('option');
+
+  opciones.forEach(op => {
+    if (op.value === '') return;
+    if (op.value === 'nueva') {
+      op.style.display = 'block';
+      return;
+    }
+    const tipo = op.dataset.tipo;
+    op.style.display = tipo === tipoSeleccionado ? 'block' : 'none';
   });
 
-  function filtrarCategorias() {
-    const tipoSeleccionado = document.getElementById('tipo').value;
-    const selectCategorias = document.getElementById('categoria');
-    const opciones = selectCategorias.querySelectorAll('option');
+  selectCategorias.value = '';
+  document.getElementById('nueva-categoria-container').style.display = 'none';
+}
 
-    opciones.forEach(op => {
-      if (op.value === '') return;
-      if (op.value === 'nueva') {
-        op.style.display = 'block';
-        return;
-      }
-      const tipo = op.dataset.tipo;
-      op.style.display = tipo === tipoSeleccionado ? 'block' : 'none';
-    });
+// Mostrar campo para nueva categoría si se selecciona la opción correspondiente
+function mostrarCampoNuevaCategoria(select) {
+  const valor = select.value;
+  const contenedor = document.getElementById('nueva-categoria-container');
+  contenedor.style.display = valor === 'nueva' ? 'block' : 'none';
+}
 
-    selectCategorias.value = '';
-    document.getElementById('nueva-categoria-container').style.display = 'none';
-  }
 
-  function mostrarCampoNuevaCategoria(select) {
-    const valor = select.value;
-    const contenedor = document.getElementById('nueva-categoria-container');
-    contenedor.style.display = valor === 'nueva' ? 'block' : 'none';
-  }
-
-  // Configuración de particles.js
-  particlesJS("particles-js", {
-    particles: {
-      number: {
-        value: 80,
-        density: {
-          enable: true,
-          value_area: 800
-        }
-      },
-      color: {
-        value: "#00D4FF"
-      },
-      shape: {
-        type: "circle",
-        stroke: {
-          width: 0,
-          color: "#000000"
-        }
-      },
-      opacity: {
-        value: 0.5,
-        random: false,
-        anim: {
-          enable: true,
-          speed: 1,
-          opacity_min: 0.1,
-          sync: false
-        }
-      },
-      size: {
-        value: 5,
-        random: true,
-        anim: {
-          enable: true,
-          speed: 40,
-          size_min: 0.1,
-          sync: false
-        }
-      },
-      line_linked: {
-        enable: true,
-        distance: 150,
-        color: "#ffffff",
-        opacity: 0.4,
-        width: 1
-      },
-      move: {
-        enable: true,
-        speed: 6,
-        direction: "none",
-        random: false,
-        straight: false,
-        out_mode: "out",
-        bounce: false,
-        attract: {
-          enable: false,
-          rotateX: 600,
-          rotateY: 1200
-        }
-      }
-    },
-    interactivity: {
-      detect_on: "canvas",
-      events: {
-        onhover: {
-          enable: true,
-          mode: "repulse"
-        },
-        onclick: {
-          enable: true,
-          mode: "push"
-        }
-      }
-    },
-    retina_detect: true
-  });
 </script>
 
+<script>
+// Particles.js config
+particlesJS("particles-js", {
+  particles: {
+    number: { value: 80, density: { enable: true, value_area: 800 } },
+    color: { value: "#00D4FF" },
+    shape: { type: "circle" },
+    opacity: {
+      value: 0.5,
+      anim: { enable: true, speed: 1, opacity_min: 0.1 }
+    },
+    size: {
+      value: 5,
+      random: true,
+      anim: { enable: true, speed: 40, size_min: 0.1 }
+    },
+    line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.4, width: 1 },
+    move: { enable: true, speed: 6, out_mode: "out" }
+  },
+  interactivity: {
+    detect_on: "canvas",
+    events: {
+      onhover: { enable: true, mode: "repulse" },
+      onclick: { enable: true, mode: "push" }
+    }
+  },
+  retina_detect: true
+});
+</script>
+
+
 <?php include 'includes/footer.php'; ?>
-``
