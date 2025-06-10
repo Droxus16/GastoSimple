@@ -24,14 +24,17 @@ $nombreUsuario = $stmt->fetchColumn();
 
 <style>
   /* Asegúrate de que el body se superponga con el canvas de particles.js */
-  body {
-    font-family: 'Inter', sans-serif;
-    position: relative;
-    color: white;
-    padding: 20px;
-    margin: 0;
-    overflow: hidden;
-  }
+body {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, #0B0B52, #1D2B64, #0C1634, #0B0B52);
+  background-size: 300% 300%;
+  animation: backgroundAnim 25s ease-in-out infinite;
+  z-index: -2;
+  opacity: 0.95; /* toque de elegancia */
+}
 
   /* Agrega el estilo para el contenedor de particles.js */
   #particles-js {

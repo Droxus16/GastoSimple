@@ -7,6 +7,7 @@ require 'vendor/autoload.php';
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 $conn = db::conectar();
 $idUsuario = intval($_SESSION['usuario_id']);
@@ -51,26 +52,41 @@ if (isset($_POST['exportar_excel'])) {
 
 // Exportar a PDF
 if (isset($_POST['exportar_pdf'])) {
+    // Crear el objeto Spreadsheet
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
+
+    // Encabezados
     $sheet->fromArray(['ID', 'Tipo', 'Categoría', 'Monto', 'Fecha', 'Descripción'], NULL, 'A1');
 
+    // Obtener ID del usuario
     $usuario_id = $_SESSION['usuario_id'];
-    $result = $conn->query("SELECT id, tipo, categoria, monto, fecha, descripcion FROM transacciones WHERE usuario_id = $usuario_id");
 
+    // Consulta segura usando prepare
+    $stmt = $conn->prepare("SELECT id, tipo, categoria, monto, fecha, descripcion FROM transacciones WHERE id_usuario = ?");
+    $stmt->execute([$usuario_id]);
+
+    // Escribir los datos en la hoja
     $fila = 2;
-    while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $sheet->fromArray(array_values($row), NULL, "A$fila");
         $fila++;
     }
 
+    // Registrar writer PDF
+    IOFactory::registerWriter('Pdf', Mpdf::class);
+
+    // Cabeceras para forzar descarga
     header('Content-Type: application/pdf');
     header('Content-Disposition: attachment;filename="transacciones.pdf"');
     header('Cache-Control: max-age=0');
-    $writer = new Mpdf($spreadsheet);
+
+    // Guardar el archivo como PDF
+    $writer = IOFactory::createWriter($spreadsheet, 'Pdf');
     $writer->save('php://output');
     exit;
 }
+
 
 // Obtener categorías
 $categorias = [];
@@ -341,11 +357,15 @@ $categoriasGasto = array_filter($categorias, fn($c) => $c['tipo'] === 'gasto');
   <h2>Registros</h2>
   <?php if (count($transacciones) > 0): ?>
     <div class="acciones">
-      <form method="POST">
-        <button type="submit" name="exportar_excel">Exportar Excel</button>
+      <!-- Botón exportar a Excel -->
+      <form action="controllers/reportes.php" method="POST" style="display:inline;">
+        <input type="hidden" name="exportar_excel" value="1">
+        <button type="submit">Exportar a Excel</button>
       </form>
-      <form method="POST">
-        <button type="submit" name="exportar_pdf">Exportar PDF</button>
+      <!-- Botón exportar a PDF -->
+      <form action="controllers/reportes.php" method="POST" style="display:inline;">
+        <input type="hidden" name="exportar_pdf" value="1">
+        <button type="submit">Exportar a PDF</button>
       </form>
     </div>
 

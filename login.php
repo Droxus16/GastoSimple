@@ -6,13 +6,22 @@
 
 <style>
   /* Aseguramos que el fondo ocupe toda la pantalla */
-  body, html {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    font-family: 'Inter', sans-serif;
-  }
+body, html {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, #0B0B52, #1D2B64, #0C1634, #0B0B52);
+  background-size: 300% 300%;
+  animation: backgroundAnim 25s ease-in-out infinite;
+  z-index: -2;
+  opacity: 0.95; /* toque de elegancia */
+}
+
+@keyframes backgroundAnim {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
 
   /* Fondo de partículas */
   #particles-js {
