@@ -1,4 +1,4 @@
-# 💰 Sistema de Gestión Financiera Personal
+# 💰 Sistema de Gestión Financiera Personal (GastoSimple)
 
 Proyecto de software desarrollado como parte del programa ADSO (Análisis y Desarrollo de Software) del SENA, enfocado en la gestión de finanzas personales: control de ingresos, egresos, metas de ahorro, reportes en PDF/Excel y dashboard interactivo.
 
