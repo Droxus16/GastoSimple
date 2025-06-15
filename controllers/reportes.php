@@ -17,8 +17,6 @@ if (!isset($_SESSION['usuario_id'])) {
 
 $conn = db::conectar();
 $usuario_id = intval($_SESSION['usuario_id']);
-
-// Crear objeto Spreadsheet
 $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 $sheet->setTitle('Transacciones');
@@ -27,7 +25,7 @@ $sheet->setTitle('Transacciones');
 $encabezados = ['ID', 'Tipo', 'Categoría', 'Monto', 'Fecha', 'Descripción'];
 $sheet->fromArray($encabezados, NULL, 'A1');
 
-// Estilo para encabezados
+// Estilo
 $estiloEncabezado = [
     'font' => [
         'bold' => true,
@@ -109,6 +107,6 @@ if (isset($_POST['exportar_pdf'])) {
     exit;
 }
 
-// Si no se pidió exportar, redirigir
+// redirigir
 header('Location: ../registro.php');
 exit;

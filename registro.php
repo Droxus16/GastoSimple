@@ -52,7 +52,6 @@ if (isset($_POST['exportar_excel'])) {
 
 // Exportar a PDF
 if (isset($_POST['exportar_pdf'])) {
-    // Crear el objeto Spreadsheet
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
 
@@ -273,8 +272,6 @@ $categoriasGasto = array_filter($categorias, fn($c) => $c['tipo'] === 'gasto');
   </style>
 
 <div id="particles-js"></div>
-
-<!-- Formulario de registro -->
 <div class="form-container">
   <h2>Registrar Gasto o Ingreso</h2>
   <form id="form-registro" action="includes/insertar_transaccion.php" method="POST">
@@ -410,7 +407,7 @@ $categoriasGasto = array_filter($categorias, fn($c) => $c['tipo'] === 'gasto');
 
 <script>
 
-// Mostrar el modal al hacer clic en el botón de editar
+// Mostrar el modal
 document.querySelectorAll('.editar-btn').forEach(button => {
   button.addEventListener('click', function() {
     const id = this.getAttribute('data-id');
@@ -420,7 +417,6 @@ document.querySelectorAll('.editar-btn').forEach(button => {
     const categoria = this.getAttribute('data-categoria');
     const descripcion = this.getAttribute('data-descripcion');
 
-    // Rellenar el formulario con los datos de la transacción
     document.getElementById('edit-id').value = id;
     document.getElementById('edit-tipo').value = tipo;
     document.getElementById('edit-fecha').value = fecha;
@@ -433,31 +429,26 @@ document.querySelectorAll('.editar-btn').forEach(button => {
   });
 });
 
-// Función para cerrar el modal
 function cerrarModalEditar() {
   document.getElementById('modal-editar').classList.remove('active');
 }
 
-// Cerrar el modal al hacer clic fuera de la ventana (en el overlay)
 document.getElementById('modal-editar').addEventListener('click', function(event) {
   if (event.target === document.getElementById('modal-editar')) {
     cerrarModalEditar();
   }
 });
-
-// Cerrar el modal con la tecla Escape
 document.addEventListener('keydown', function(event) {
   if (event.key === 'Escape') {
     cerrarModalEditar();
   }
 });
 
-// Botón para eliminar la transacción
+// Botón para eliminar
 document.getElementById('eliminar-transaccion').addEventListener('click', function() {
     const id = document.getElementById('edit-id').value;  // Obtener el ID de la transacción
 
     if (confirm('¿Estás seguro de que deseas eliminar esta transacción?')) {
-        // Realizar la solicitud para eliminar la transacción (usando POST en lugar de GET)
         fetch('includes/eliminar_transaccion.php', {
             method: 'POST',
             headers: {
@@ -472,18 +463,17 @@ document.getElementById('eliminar-transaccion').addEventListener('click', functi
             return response.text();  // Obtén la respuesta como texto
         })
         .then(text => {
-            console.log(text);  // Muestra la respuesta cruda para depuración
+            console.log(text);
             try {
-                const data = JSON.parse(text);  // Intentamos convertir el texto a JSON
+                const data = JSON.parse(text);
                 if (data.success) {
                     alert('Transacción eliminada correctamente.');
-                    cerrarModalEditar();  // Cerrar el modal después de la eliminación
-                    // Aquí puedes añadir código para eliminar la fila de la tabla en la interfaz si es necesario
+                    cerrarModalEditar();
                 } else {
                     alert('Hubo un error al eliminar la transacción: ' + data.error);
                 }
             } catch (error) {
-                // Si ocurre un error al parsear el JSON
+                // Si ocurre un error
                 console.error('Error al parsear el JSON:', error);
                 alert('Hubo un error en la solicitud. Respuesta inesperada del servidor.');
             }
@@ -494,10 +484,7 @@ document.getElementById('eliminar-transaccion').addEventListener('click', functi
         });
     }
 });
-
-
-
-// Filtrar categorías según el tipo seleccionado
+// Filtrar categorías
 function filtrarCategorias() {
   const tipoSeleccionado = document.getElementById('tipo').value;
   const selectCategorias = document.getElementById('categoria');
@@ -516,8 +503,6 @@ function filtrarCategorias() {
   selectCategorias.value = '';
   document.getElementById('nueva-categoria-container').style.display = 'none';
 }
-
-// Mostrar campo para nueva categoría si se selecciona la opción correspondiente
 function mostrarCampoNuevaCategoria(select) {
   const valor = select.value;
   const contenedor = document.getElementById('nueva-categoria-container');
