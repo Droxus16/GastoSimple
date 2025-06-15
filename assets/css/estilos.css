@@ -47,15 +47,55 @@ body::before {
 }
 
 /* HEADER */
+/* Estilo general del header */
 header {
   text-align: center;
-  margin-bottom: 3rem;
+  padding: 30px;
+  background-color: rgba(0, 0, 0, 0.2); /* Opcional */
+  border-radius: 12px;
 }
 
-header img {
-  max-width: 200px;
+/* Estilo del logo */
+.logo {
   width: 100%;
+  max-width: 320px;    /* Tamaño máximo en pantallas normales */
+  height: auto;
+  margin-bottom: 20px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
+
+/* Tamaños adaptativos según el ancho de la pantalla */
+@media (max-width: 768px) {
+  .logo {
+    max-width: 400px;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+  }
+
+  header p {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .logo {
+    max-width: 500px; /* Más grande en pantallas grandes como TV */
+  }
+
+  header h1 {
+    font-size: 2.5rem;
+  }
+
+  header p {
+    font-size: 1.3rem;
+  }
+}
+
+
 
 /* BOTONES */
 .botones {

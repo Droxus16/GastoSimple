@@ -22,10 +22,11 @@ if (isset($_SESSION['usuario'])) {
   <div id="particles-js"></div>
 
   <header>
-    <img src="img/logo1.png" alt="Logo Gasto Simple">
-    <h1>Bienvenido a Gasto Simple</h1>
-    <p>Tu solución para el control de finanzas personales</p>
+  <img src="img/logo1.png" alt="Logo Gasto Simple" class="logo">
+  <h1>Bienvenido a Gasto Simple</h1>
+  <p>Tu solución para el control de finanzas personales</p>
   </header>
+
 
   <div class="botones">
     <a href="login.php">Ingresar</a>
