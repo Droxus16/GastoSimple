@@ -1,119 +1,225 @@
-<?php
-session_start();
-if (isset($_SESSION['usuario'])) {
-    header("Location: dashboard.php");
-    exit();
-}
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GastoSimple – Controla tus Finanzas</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/estilos.css" />
-  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gasto Simple - Controla tus Finanzas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+  <style>
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      color: white;
+      overflow-x: hidden;
+      background: transparent;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, #0B0B52, #1D2B64, #0C1634, #0B0B52);
+      background-size: 300% 300%;
+      animation: backgroundAnim 25s ease-in-out infinite;
+      z-index: -2;
+    }
+    @keyframes backgroundAnim {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+        .botones {
+      text-align: center;
+      margin-top: 40px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* Botón base */
+    .btn {
+      padding: 14px 32px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Botón Login (fondo blanco, texto azul oscuro) */
+    .btn-login {
+      background-color: #ffffff;
+      color: #0B0B52;
+    }
+
+    .btn-login:hover {
+      background-color: transparent;
+      border-color: #ffffff;
+      color: #ffffff;
+    }
+
+    /* Botón Registro (transparente con borde blanco) */
+    .btn-register {
+      background-color: transparent;
+      border: 2px solid #ffffff;
+      color: #ffffff;
+    }
+
+    .btn-register:hover {
+      background-color: #00D4FF;
+      color: #0B0B52;
+      border-color: #00D4FF;
+    }
+
+
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0; left: 0;
+      z-index: -1;
+    }
+    header {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .logo {
+      max-width: 280px;
+      margin: 0 auto 20px;
+      display: block;
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    .hero p {
+      font-size: 1.2rem;
+    }
+    nav {
+      text-align: center;
+      margin: 30px 0;
+    }
+    nav a {
+      color: white;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+    section {
+      max-width: 1000px;
+      margin: auto;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    section h2 {
+      font-size: 2rem;
+      margin-bottom: 30px;
+    }
+    .features, .screenshots, .testimonials, .faq {
+      display: grid;
+      gap: 30px;
+    }
+    .features div, .testimonials div, .faq div {
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+    }
+    .screenshots img {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+    .donate img {
+      height: 60px;
+      margin: 10px;
+    }
+    footer {
+      text-align: center;
+      padding: 30px;
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+    footer a {
+      color: #00D4FF;
+      margin: 0 10px;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
   <div id="particles-js"></div>
-
-  <header>
-    <img src="img/logo1.png" alt="Logo Gasto Simple" class="logo" />
-    <h1>Domina tus finanzas personales</h1>
-    <p>Registra tus gastos, analiza tus hábitos y alcanza tus metas con <strong>GastoSimple</strong>.</p>
-    <div class="botones">
-      <a href="login.php">Ingresar</a>
-      <a href="register.php" class="btn-cta">Comienza Gratis</a>
-    </div>
-    <nav class="navegacion">
-      <a href="#caracteristicas">Características</a>
-      <a href="#capturas">Capturas</a>
-      <a href="#soporte">Soporte</a>
+  <header class="hero" data-aos="fade-down">
+    <img src="img/logo1.png" alt="Logo Gasto Simple" class="logo">
+    <h1>Bienvenido a Gasto Simple</h1>
+    <p>Tu herramienta para controlar ingresos, gastos y ahorrar con inteligencia.</p>
+    <nav class="botones">
+      <a href="login.php">Iniciar sesión</a>
+      <a href="register.php">Registrarse</a>
     </nav>
   </header>
 
-  <section id="caracteristicas" class="caracteristicas">
-    <div class="caracteristica">
-      <h3>📊 Informes claros</h3>
-      <p>Gráficas simples para visualizar ingresos y gastos.</p>
-    </div>
-    <div class="caracteristica">
-      <h3>📆 Registro diario</h3>
-      <p>Registra tus movimientos en segundos.</p>
-    </div>
-    <div class="caracteristica">
-      <h3>🎯 Metas financieras</h3>
-      <p>Define objetivos y hazles seguimiento.</p>
-    </div>
-    <div class="caracteristica">
-      <h3>🔐 Datos protegidos</h3>
-      <p>Tu información está cifrada y segura.</p>
-    </div>
+  <section class="features" data-aos="fade-up">
+    <h2>Características</h2>
+    <div>Registro rápido de ingresos y gastos</div>
+    <div>Gráficas para visualizar tus finanzas</div>
+    <div>Metas de ahorro y alertas</div>
   </section>
 
-  <section id="capturas" class="demos">
-    <div class="demo">
-      <img src="captura1.png" alt="Captura 1" />
-      <p>Controla tus finanzas con claridad</p>
-    </div>
-    <div class="demo">
-      <img src="captura2.png" alt="Captura 2" />
-      <p>Analiza tu progreso mes a mes</p>
-    </div>
+  <section class="screenshots" data-aos="fade-up">
+    <h2>Capturas del Dashboard</h2>
+    <img src="captura1.png" alt="Dashboard 1">
+    <img src="captura2.png" alt="Dashboard 2">
   </section>
 
-  <section id="soporte" class="contenedor">
-    <div class="tarjeta">
-      <h2>¿Tienes dudas o necesitas ayuda?</h2>
-      <p>Escríbenos a través del formulario de contacto o revisa nuestras preguntas frecuentes.</p>
-      <div class="acciones">
-        <a href="pqr.php">PQR</a>
-        <a href="terminos.php">Términos y Condiciones</a>
-      </div>
-    </div>
+  <section class="testimonials" data-aos="fade-up">
+    <h2>Testimonios</h2>
+    <div>"GastoSimple me ayudó a dejar de gastar en tonterías" - Ana</div>
+    <div>"En dos meses logré ahorrar lo que antes no podía en un año." - Jorge</div>
+  </section>
+
+  <section class="faq" data-aos="fade-up">
+    <h2>Preguntas Frecuentes</h2>
+    <div><strong>¿GastoSimple es gratis?</strong><br>Sí, 100% gratuito y sin anuncios molestos.</div>
+    <div><strong>¿Se guarda mi información?</strong><br>Todo se almacena de forma segura en tu cuenta personal.</div>
+  </section>
+
+  <section class="donate" data-aos="fade-up">
+    <h2>Dóname un Café ☕</h2>
+    <p>Apoya el desarrollo de Gasto Simple</p>
+    <a href="#"><img src="img/cafe-logo.png" alt="Buy me a coffee"></a>
+    <a href="#"><img src="img/patreon-logo.png" alt="Patreon"></a>
   </section>
 
   <footer>
-    <p>&copy; <?php echo date("Y"); ?> GastoSimple | <a href="nosotros.php">Nosotros</a> | <a href="pqr.php">Contacto</a></p>
+    <a href="nosotros.php">Nosotros</a> |
+    <a href="pqr.php">PQR</a> |
+    <a href="terminos.php">Términos</a>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.js"></script>
+  <script>AOS.init();</script>
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <script>
     particlesJS("particles-js", {
       "particles": {
         "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
         "color": { "value": "#ffffff" },
         "shape": { "type": "circle" },
-        "opacity": {
-          "value": 0.5,
-          "random": false,
-          "anim": { "enable": true, "speed": 1, "opacity_min": 0.1, "sync": false }
-        },
-        "size": {
-          "value": 3,
-          "random": true,
-          "anim": { "enable": true, "speed": 40, "size_min": 0.1, "sync": false }
-        },
-        "line_linked": {
-          "enable": true,
-          "distance": 150,
-          "color": "#ffffff",
-          "opacity": 0.4,
-          "width": 1
-        },
-        "move": {
-          "enable": true,
-          "speed": 3,
-          "direction": "none",
-          "random": false,
-          "straight": false,
-          "out_mode": "out",
-          "bounce": false
-        }
+        "opacity": { "value": 0.5, "anim": { "enable": true, "speed": 1 } },
+        "size": { "value": 3, "random": true, "anim": { "enable": true, "speed": 40 } },
+        "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 },
+        "move": { "enable": true, "speed": 3 }
       },
       "interactivity": {
-        "detect_on": "window",
+        "detect_on": "canvas",
         "events": {
           "onhover": { "enable": true, "mode": "repulse" },
           "onclick": { "enable": true, "mode": "push" }
