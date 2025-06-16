@@ -32,51 +32,52 @@
       50% { background-position: 100% 50%; }
     }
 
-        .botones {
-      text-align: center;
-      margin-top: 40px;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
+    .botones {
+  text-align: center;
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
 
-    /* Botón base */
-    .btn {
-      padding: 14px 32px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      border-radius: 50px;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      border: 2px solid transparent;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
+/* Botón base */
+.btn {
+  padding: 14px 32px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
 
-    /* Botón Login (fondo blanco, texto azul oscuro) */
-    .btn-login {
-      background-color: #ffffff;
-      color: #0B0B52;
-    }
+/* Botón Login (fondo blanco, texto azul oscuro) */
+.btn-login {
+  background-color: #ffffff;
+  color: #0B0B52;
+}
 
-    .btn-login:hover {
-      background-color: transparent;
-      border-color: #ffffff;
-      color: #ffffff;
-    }
+.btn-login:hover {
+  background-color: transparent;
+  border-color: #ffffff;
+  color: #ffffff;
+}
 
-    /* Botón Registro (transparente con borde blanco) */
-    .btn-register {
-      background-color: transparent;
-      border: 2px solid #ffffff;
-      color: #ffffff;
-    }
+/* Botón Registro (transparente con borde blanco) */
+.btn-register {
+  background-color: transparent;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+}
 
-    .btn-register:hover {
-      background-color: #00D4FF;
-      color: #0B0B52;
-      border-color: #00D4FF;
-    }
+.btn-register:hover {
+  background-color: #00D4FF;
+  color: #0B0B52;
+  border-color: #00D4FF;
+}
+
 
 
     #particles-js {
@@ -152,17 +153,101 @@
       margin: 0 10px;
       text-decoration: none;
     }
+
+.donate {
+  margin: 60px auto;
+  padding: 40px 20px;
+  text-align: center;
+  max-width: 800px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.donate h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.donate p {
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  color: #ccc;
+}
+
+.donate-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.donate-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  text-decoration: none;
+  color: white;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  width: 140px;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.donate-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
+}
+
+.donate-btn img {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 12px;
+  transition: transform 0.3s;
+}
+
+.donate-btn:hover img {
+  transform: rotate(8deg) scale(1.1);
+}
+
+.donate-btn span {
+  font-weight: bold;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+
+/* Extra animation if not using AOS */
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
   </style>
 </head>
 <body>
   <div id="particles-js"></div>
   <header class="hero" data-aos="fade-down">
-    <img src="img/logo1.png" alt="Logo Gasto Simple" class="logo">
+    <img src="img/logo 1.png" alt="Logo Gasto Simple" class="logo">
     <h1>Bienvenido a Gasto Simple</h1>
     <p>Tu herramienta para controlar ingresos, gastos y ahorrar con inteligencia.</p>
     <nav class="botones">
-      <a href="login.php">Iniciar sesión</a>
-      <a href="register.php">Registrarse</a>
+      <a href="login.php" class="btn btn-login">Iniciar sesión</a>
+      <a href="register.php" class="btn btn-register">Registrarse</a>
     </nav>
   </header>
 
@@ -194,8 +279,16 @@
   <section class="donate" data-aos="fade-up">
     <h2>Dóname un Café ☕</h2>
     <p>Apoya el desarrollo de Gasto Simple</p>
-    <a href="#"><img src="img/cafe-logo.png" alt="Buy me a coffee"></a>
-    <a href="#"><img src="img/patreon-logo.png" alt="Patreon"></a>
+    <div class="donate-buttons">
+      <a href="#" target="_blank" class="donate-btn">
+        <img src="img/taza-de-cafe.png" alt="Buy me a coffee">
+        <span>Buy me a coffee</span>
+      </a>
+      <a href="#" target="_blank" class="donate-btn">
+        <img src="img/patreon.png" alt="Patreon">
+        <span>Apóyame en Patreon</span>
+      </a>
+    </div>
   </section>
 
   <footer>
@@ -232,5 +325,12 @@
       "retina_detect": true
     });
   </script>
+  <script>
+  AOS.init({
+    duration: 1000,
+    once: true,
+  });
+</script>
+
 </body>
 </html>
