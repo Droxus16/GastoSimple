@@ -14,10 +14,8 @@ html, body {
   line-height: 1.6;
   position: relative;
   margin: 0;
-  padding: 0; /* ✅ Aquí lo dejamos en cero */
+  padding: 0;
 }
-
-
 /* FONDO GRADIENTE ANIMADO */
 body::before {
   content: '';
@@ -248,4 +246,58 @@ footer a:hover {
   .modal-content {
     padding: 15px;
   }
+}
+
+.navegacion {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.navegacion a {
+  color: #00D4FF;
+  margin: 0 10px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+.navegacion a:hover {
+  color: #00aacc;
+}
+
+.caracteristicas {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin: 4rem auto;
+  padding: 0 2rem;
+}
+
+.caracteristica {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  border-radius: 10px;
+  width: clamp(240px, 30%, 300px);
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.btn-cta {
+  background: #00ffae;
+  color: #0C1634;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  margin-left: 10px;
+}
+
+.btn-cta:hover {
+  background: #00c78a;
+}
+
+.acciones a {
+  margin: 10px;
 }
