@@ -23,11 +23,11 @@ $nombreUsuario = $stmt->fetchColumn();
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 
 <style>
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+body {
+overflow: auto;
+}
+.main-content {
+overflow-y: auto;
 }
 
 body {
@@ -40,6 +40,13 @@ body {
   z-index: -2;
   opacity: 0.95;
 }
+
+@keyframes backgroundAnim {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 
 #particles-js {
   position: absolute;
