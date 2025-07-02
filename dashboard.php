@@ -190,23 +190,65 @@ body {
     margin-top: 10px;
   }
 }
+.notificaciones-dropdown {
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  width: 250px;
+  background: rgba(0,0,0,0.85);
+  border-radius: 8px;
+  backdrop-filter: blur(6px);
+  color: white;
+  display: none;
+  flex-direction: column;
+  padding: 15px;
+  z-index: 999;
+}
+.notificaciones-dropdown h4 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  border-bottom: 1px solid #00D4FF;
+  padding-bottom: 5px;
+}
+.notificaciones-dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.notificaciones-dropdown li {
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.9rem;
+}
+.shake {
+  animation: shake 0.5s;
+}
+@keyframes shake {
+  0%{transform:rotate(0)}
+  20%{transform:rotate(-15deg)}
+  40%{transform:rotate(15deg)}
+  60%{transform:rotate(-10deg)}
+  80%{transform:rotate(10deg)}
+  100%{transform:rotate(0)}
+}
 </style>
-
 <div id="particles-js"></div>
 
 <div class="dashboard-container">
   <div class="sidebar">
     <div class="menu-top">
-      <button onclick="mostrarSeccion('panel')"><i class="bi bi-pie-chart-fill"></i> Panel</button>
       <button onclick="location.href='registro.php'"><i class="bi bi-pencil-square"></i> Registro</button>
       <button onclick="location.href='metas.php'"><i class="bi bi-flag-fill"></i> Metas</button>
     </div>
+    <button id="btn-notificaciones" onclick="toggleNotificaciones()">
+      <i id="icono-campana" class="bi bi-bell-fill"></i> Notificaciones
+      <span id="badge-alerta" style="display:none; background:red; border-radius:50%; width:12px; height:12px; display:inline-block; margin-left:5px;"></span>
+    </button>
+    <div id="panel-notificaciones" class="notificaciones-dropdown">
+      <h4>Notificaciones</h4>
+      <ul id="lista-notificaciones"></ul>
+    </div>
 
-    <?php if ($_SESSION['rol'] === 'admin'): ?>
-      <button onclick="location.href='admin_reportes.php'" style="background-color: #FFD700; color: black;">
-        <i class="bi bi-bar-chart-fill"></i> Reportes Globales
-      </button>
-    <?php endif; ?>
 
     <div class="menu-bottom">
       <button onclick="location.href='logout.php'"><i class="bi bi-box-arrow-right"></i> Salir</button>
@@ -334,6 +376,69 @@ function filtrar(periodo) {
 document.addEventListener('DOMContentLoaded', () => {
   GridStack.init();
   filtrar('mes');
+});
+const saldoActual = Number(<?= json_encode($ahorro['total_mes'] ?? 0) ?>);
+const ingresosTotales = Number(<?= json_encode($totalIngresos ?? 0) ?>);
+const ingresoMinimo = Number(<?= json_encode($config['ingreso_minimo'] ?? 1000) ?>);
+const saldoMinimo = Number(<?= json_encode($config['saldo_minimo'] ?? 200) ?>);
+const metas = <?= json_encode($lista_metas ?? []) ?>;
+
+const listaNotificaciones = document.getElementById('lista-notificaciones');
+const badgeAlerta = document.getElementById('badge-alerta');
+const iconoCampana = document.getElementById('icono-campana');
+const notificaciones = [];
+
+// Generar notificaciones
+if (saldoActual <= saldoMinimo) notificaciones.push(`⚠️ Saldo bajo: $${saldoActual.toFixed(2)}`);
+if (ingresosTotales <= ingresoMinimo) notificaciones.push(`⚠️ Ingresos bajos: $${ingresosTotales.toFixed(2)}`);
+if (saldoActual <= 0) notificaciones.push(`⚠️ No estás generando ahorro.`);
+
+// Metas
+const hoy = new Date();
+metas.forEach(meta => {
+  const fechaLimite = new Date(meta.fecha_limite);
+  const diasRestantes = Math.ceil((fechaLimite - hoy) / (1000 * 60 * 60 * 24));
+  const porcentaje = meta.monto_objetivo > 0
+    ? (parseFloat(meta.total_aportado) / meta.monto_objetivo) * 100
+    : 0;
+
+  if (diasRestantes <= 5 && porcentaje < 100) {
+    notificaciones.push(`📌 Meta "${meta.nombre}" vence en ${diasRestantes} día(s).`);
+  }
+  if (porcentaje >= 100) {
+    notificaciones.push(`🎉 Meta "${meta.nombre}" alcanzada.`);
+  }
+});
+
+// Pintar notificaciones
+if (notificaciones.length > 0) {
+  badgeAlerta.style.display = 'inline-block';
+  iconoCampana.classList.add('shake');
+  notificaciones.forEach(msg => {
+    const li = document.createElement('li');
+    li.textContent = msg;
+    listaNotificaciones.appendChild(li);
+  });
+} else {
+  const li = document.createElement('li');
+  li.textContent = '✅ Sin notificaciones.';
+  listaNotificaciones.appendChild(li);
+}
+
+// Toggle del panel
+function toggleNotificaciones() {
+  const panel = document.getElementById('panel-notificaciones');
+  panel.style.display = (panel.style.display === 'flex') ? 'none' : 'flex';
+  iconoCampana.classList.remove('shake');
+  badgeAlerta.style.display = 'none';
+}
+
+document.addEventListener('click', e => {
+  const panel = document.getElementById('panel-notificaciones');
+  const boton = document.getElementById('btn-notificaciones');
+  if (panel.style.display === 'flex' && !panel.contains(e.target) && !boton.contains(e.target)) {
+    panel.style.display = 'none';
+  }
 });
 </script>
 

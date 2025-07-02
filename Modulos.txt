@@ -1,0 +1,58 @@
+Módulo de Autenticación y Seguridad
+Registro (RF 1)
+Inicio de sesión (RF 2)
+Validación credenciales y errores (RF 3)
+Bloqueo por intentos fallidos (RF 4)
+Recuperar contraseña (RF 5)
+Almacenamiento seguro de contraseñas (RF 6)
+Recordar sesión (RF 7)
+Cierre automático por inactividad (RF 8)
+Verificación de duplicados DNI/correos (OR 11)
+Guardar login seguro (OR 12)
+
+
+Módulo de Finanzas Personales
+Registrar ingresos (RF 9)
+Registrar gastos (RF 10)
+Modificar ingresos y gastos (RF 11)
+Eliminar ingresos y gastos (RF 12)
+Reportes dinámicos de ingresos y gastos (RF 13)
+Exportar reportes PDF/Excel (RF 14)
+Visualizar gráficos (RF 15)
+
+
+Módulo de Metas de Ahorro
+Incluye:
+Definir metas (RF 16)
+Registrar aportes parciales y progreso (RF 17)
+Alertas/notificaciones de metas alcanzadas o plazos (RF 18)
+Alertas por fondos próximos a agotarse o vencerse (OR 13)
+
+
+Módulo de Perfiles y Preferencias
+Incluye:
+Gestionar perfiles de usuario (RF 19)
+Información básica y preferencias
+Es más pequeño, pero útil para personalización y gestión de cuenta.
+
+
+Módulo de PQRS
+Incluye:
+Capturar y almacenar PQRS (RF 20)
+
+
+
+Módulo de Administración Global
+Incluye:
+Consultar estadísticas generales de uso y generar reportes globales (RF 21)
+Específico para Administrador, permite ver cifras de uso agregadas.
+
+
+
+Módulo de Infraestructura (No funcionales)
+Los Otros Requisitos del Producto (OR) no son módulos como tal, pero condicionan:
+Performance y disponibilidad (OR 1, OR 5, OR 6)
+Interfaz intuitiva y responsive (OR 2, OR 7, OR 8)
+Seguridad y protección de datos (OR 4)
+Compatibilidad con zona horaria y baja velocidad (OR 9, OR 10)
+Documentación (OR 3)

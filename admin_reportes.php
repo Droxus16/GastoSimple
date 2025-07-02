@@ -95,7 +95,14 @@ h2 {
   text-align: center;
 }
 
-input[type="text"] {
+.form-glass {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(8px);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.form-glass input {
   width: 100%;
   padding: 10px 14px;
   border-radius: 10px;
@@ -105,16 +112,16 @@ input[type="text"] {
   font-size: 1rem;
 }
 
-input[type="text"]::placeholder {
+.form-glass input::placeholder {
   color: rgba(255,255,255,0.6);
 }
 
-input[type="text"]:focus {
+.form-glass input:focus {
   outline: none;
   box-shadow: 0 0 5px rgba(0,212,255,0.6);
 }
 
-button {
+.form-glass button {
   font-weight: bold;
   padding: 10px 18px;
   border-radius: 10px;
@@ -146,12 +153,11 @@ button {
   background: rgba(255,255,255,0.05);
   padding: 20px;
   border-radius: 12px;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
   overflow-x: auto;
   max-height: 60vh;
 }
 
-/* Responsive */
 @media screen and (max-width: 768px) {
   .dashboard-container {
     flex-direction: column;
@@ -167,38 +173,81 @@ button {
     padding: 20px;
   }
 }
+.form-glass .botones-exportar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.btn-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-custom i {
+  font-size: 1.2rem;
+}
+
+.export-excel {
+  background: #00D4FF;
+  color: #0B0B52;
+}
+
+.export-excel:hover {
+  background: #00b8e6;
+}
+
+.export-pdf {
+  background: #ff4d4d;
+  color: #fff;
+}
+
+.export-pdf:hover {
+  background: #e60000;
+}
+
 </style>
 
 <div id="particles-js"></div>
 
 <div class="dashboard-container">
   <div class="sidebar">
-    <div class="menu-top">
-      <button onclick="location.href='dashboard.php'"><i class="bi bi-pie-chart-fill"></i> Panel</button>
-      <button onclick="location.href='registro.php'"><i class="bi bi-pencil-square"></i> Registro</button>
-      <button onclick="location.href='metas.php'"><i class="bi bi-flag-fill"></i> Metas</button>
+    <div>
+      <button onclick="location.href='admin_dashboard.php'"><i class="bi bi-speedometer2"></i> Panel Admin</button>
+      <button onclick="location.href='admin_reportes.php'" class="activo"><i class="bi bi-bar-chart-fill"></i> Reportes Globales</button>
     </div>
-    <button onclick="location.href='admin_reportes.php'" class="activo">
-      <i class="bi bi-bar-chart-fill"></i> Reportes Globales
-    </button>
-    <div class="menu-bottom">
-      <button onclick="location.href='logout.php'"><i class="bi bi-box-arrow-right"></i> Salir</button>
+    <div>
+      <button onclick="location.href='logout.php'"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</button>
     </div>
   </div>
 
   <div class="main-content">
-    <h2>Reportes Globales</h2>
-    
+  <h2>📊 Reportes Globales</h2>
+
+  <div class="form-glass">
     <form id="form-exportar" method="POST" action="includes/exportar_global.php" target="_blank">
-      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+      <div class="botones-exportar">
         <input type="text" name="filtro" id="filtro" placeholder="Buscar por usuario o categoría">
-        <button type="submit" name="exportar_excel" class="btn btn-success">Exportar Excel</button>
-        <button type="submit" name="exportar_pdf" class="btn btn-danger">Exportar PDF</button>
+        <button type="submit" name="exportar_excel" class="btn-custom export-excel">
+          <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+        </button>
+        <button type="submit" name="exportar_pdf" class="btn-custom export-pdf">
+          <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+        </button>
       </div>
     </form>
-
-    <div id="tabla-resultados"></div>
   </div>
+
+  <div id="tabla-resultados"></div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
