@@ -48,7 +48,7 @@
 
 ---
 
-## ⚙️ Tecnologías y Herramientas
+## Tecnologías y Herramientas
 
 ###  Frontend
 - HTML5, CSS3, JavaScript (ES6)
@@ -96,4 +96,4 @@ Este proyecto es de uso académico y personal. Puedes modificarlo bajo las condi
 
 ---
 
-¡Gracias por apoyar **GastoSimple**! ☕✨
+¡Gracias por apoyar **GastoSimple**!
