@@ -33,13 +33,11 @@ Módulo de Perfiles y Preferencias
 Incluye:
 Gestionar perfiles de usuario (RF 19)
 Información básica y preferencias
-Es más pequeño, pero útil para personalización y gestión de cuenta.
 
 
 Módulo de PQRS
 Incluye:
 Capturar y almacenar PQRS (RF 20)
-
 
 
 Módulo de Administración Global

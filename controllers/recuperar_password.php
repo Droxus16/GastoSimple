@@ -1,23 +1,18 @@
 <?php
 session_start();
 require_once '../includes/db.php';
-
 $paso = 1;
 $mensaje = "";
 $pregunta = "";
 $correo = isset($_POST['correo']) ? trim($_POST['correo']) : "";
 $respuesta_ok = false;
-
 try {
   $db = db::conectar();
-
   if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
     if (isset($_POST['correo']) && !isset($_POST['respuesta'])) {
       // Paso 1: Mostrar pregunta
       $stmt = $db->prepare("SELECT pregunta_secreta FROM usuarios WHERE correo = ?");
       $stmt->execute([$correo]);
-
       if ($stmt->rowCount() == 1) {
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
         $pregunta = $usuario['pregunta_secreta'];
@@ -25,35 +20,28 @@ try {
       } else {
         $mensaje = "No se encontró un usuario con ese correo.";
       }
-
     } elseif (isset($_POST['respuesta']) && isset($_POST['correo']) && !isset($_POST['nueva_contrasena'])) {
-      // Paso 2: Validar respuesta
+      //Validar respuesta
       $respuesta = trim($_POST['respuesta']);
-
       $stmt = $db->prepare("SELECT respuesta_secreta FROM usuarios WHERE correo = ?");
       $stmt->execute([$correo]);
       $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
       if (strcasecmp($respuesta, $usuario['respuesta_secreta']) === 0) {
         $paso = 3;
       } else {
         $mensaje = "Respuesta incorrecta.";
         $paso = 2;
-
         // Obtener pregunta otra vez para mostrarla
         $stmt = $db->prepare("SELECT pregunta_secreta FROM usuarios WHERE correo = ?");
         $stmt->execute([$correo]);
         $pregunta = $stmt->fetch(PDO::FETCH_ASSOC)['pregunta_secreta'];
       }
-
     } elseif (isset($_POST['nueva_contrasena']) && isset($_POST['correo'])) {
-      // Paso 3: Cambiar contraseña
+      // Cambiar contraseña
       $nueva_contrasena = $_POST['nueva_contrasena'];
       $hash = password_hash($nueva_contrasena, PASSWORD_DEFAULT);
-
       $stmt = $db->prepare("UPDATE usuarios SET clave = ? WHERE correo = ?");
       $stmt->execute([$hash, $correo]);
-
       $mensaje = "Contraseña actualizada correctamente. Ahora puedes iniciar sesión.";
       $paso = 4;
     }
@@ -62,11 +50,8 @@ try {
   $mensaje = "Error: " . $e->getMessage();
 }
 ?>
-
 <?php include '../includes/header.php'; ?>
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
 <style>
 body, html {
   height: 100%;
@@ -115,18 +100,13 @@ body, html {
   margin-bottom: 15px;
 }
 </style>
-
 <div id="particles-js"></div>
-
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh; position: relative; z-index: 1;">
   <div class="glass-card p-4 col-md-6 col-lg-4">
-
     <h2 class="mb-4">Recuperar Contraseña</h2>
-
     <?php if ($mensaje): ?>
       <div class="mensaje"><?= htmlspecialchars($mensaje) ?></div>
     <?php endif; ?>
-
     <?php if ($paso == 1): ?>
       <form method="POST" action="recuperar_password.php">
         <div class="mb-3">
@@ -135,7 +115,6 @@ body, html {
         </div>
         <button type="submit" class="btn btn-info w-100">Continuar</button>
       </form>
-
     <?php elseif ($paso == 2): ?>
       <form method="POST" action="recuperar_password.php">
         <input type="hidden" name="correo" value="<?= htmlspecialchars($correo) ?>">
@@ -149,7 +128,6 @@ body, html {
         </div>
         <button type="submit" class="btn btn-info w-100">Verificar Respuesta</button>
       </form>
-
     <?php elseif ($paso == 3): ?>
       <form method="POST" action="recuperar_password.php">
         <input type="hidden" name="correo" value="<?= htmlspecialchars($correo) ?>">
@@ -159,14 +137,11 @@ body, html {
         </div>
         <button type="submit" class="btn btn-success w-100">Guardar Nueva Contraseña</button>
       </form>
-
     <?php elseif ($paso == 4): ?>
       <p class="text-center text-white">¡Listo! <a href="../login.php">Inicia sesión aquí</a></p>
     <?php endif; ?>
-
   </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <script>
 particlesJS("particles-js", {
@@ -192,5 +167,4 @@ particlesJS("particles-js", {
   "retina_detect": true
 });
 </script>
-
 <?php include '../includes/footer.php'; ?>

@@ -2,21 +2,15 @@
 session_start();
 require_once 'db.php';
 require_once 'auth.php';
-
 require '../../vendor/autoload.php';
-
 use PhpOffice\PhpSpreadsheet\IOFactory;
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_excel'])) {
     $archivo = $_FILES['archivo_excel']['tmp_name'];
-
     $spreadsheet = IOFactory::load($archivo);
     $hoja = $spreadsheet->getActiveSheet();
     $filas = $hoja->toArray();
-
     $conn = db::conectar();
     $idUsuario = $_SESSION['usuario_id'];
-
     // Asume que la primera fila son los encabezados
     for ($i = 1; $i < count($filas); $i++) {
         $fila = $filas[$i];
@@ -30,7 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_excel'])) {
                                 VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->execute([$idUsuario, $tipo, $fecha, $monto, $categoria, $descripcion]);
     }
-
     header('Location: ../registro.php');
     exit();
 } else {

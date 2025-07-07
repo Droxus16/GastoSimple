@@ -17,11 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
-
-  // Inicializar Gridstack
+  //Inicializar Gridstack
   GridStack.init();
-
-  // Función para filtrar y actualizar datos
+  //Función para filtrar y actualizar datos
   window.filtrar = function (periodo) {
     fetch('includes/filtrar_datos.php', {
       method: 'POST',
@@ -38,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .catch(error => console.error('Error al filtrar datos:', error));
   }
-
-  // Carga inicial
+  //Carga inicial
   filtrar('mes');
 });

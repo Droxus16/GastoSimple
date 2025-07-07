@@ -1,6 +1,5 @@
 <?php
 require_once 'includes/db.php';
-
 if (isset($_POST['correo'])) {
     $correo = $_POST['correo'];
     $db = db::conectar();

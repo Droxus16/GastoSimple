@@ -4,7 +4,6 @@
   padding: 0;
   box-sizing: border-box;
 }
-
 html, body {
   min-height: 100vh;
   overflow-x: hidden;
@@ -28,13 +27,10 @@ body::before {
   z-index: -2;
   opacity: 0.95; /* toque de elegancia */
 }
-
 @keyframes backgroundAnim {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
-
-
 /* PARTICULAS FONDO */
 #particles-js {
   position: fixed;
@@ -43,7 +39,6 @@ body::before {
   height: 100vh;
   z-index: -1;
 }
-
 /* HEADER */
 /* Estilo general del header */
 header {
@@ -52,7 +47,6 @@ header {
   background-color: rgba(0, 0, 0, 0.2); /* Opcional */
   border-radius: 12px;
 }
-
 /* Estilo del logo */
 .logo {
   width: 100%;
@@ -63,44 +57,34 @@ header {
   margin-left: auto;
   margin-right: auto;
 }
-
 /* Tamaños adaptativos según el ancho de la pantalla */
 @media (max-width: 768px) {
   .logo {
     max-width: 400px;
   }
-
   header h1 {
     font-size: 1.5rem;
   }
-
   header p {
     font-size: 1rem;
   }
 }
-
 @media (min-width: 1200px) {
   .logo {
     max-width: 500px; /* Más grande en pantallas grandes como TV */
   }
-
   header h1 {
     font-size: 2.5rem;
   }
-
   header p {
     font-size: 1.3rem;
   }
 }
-
-
-
 /* BOTONES */
 .botones {
   text-align: center;
   margin: 2rem 0;
 }
-
 .botones a,
 .acciones a,
 button {
@@ -115,22 +99,18 @@ button {
   transition: background 0.3s;
   font-size: clamp(1rem, 2vw, 1.2rem);
 }
-
 .botones a:hover,
 .acciones a:hover,
 button:hover {
   background: #00b8e6;
 }
-
 .logout {
   background: #ff4d4d;
   color: white;
 }
-
 .logout:hover {
   background: #cc0000;
 }
-
 /* CONTENIDO DEMOS */
 .demos {
   display: flex;
@@ -139,7 +119,6 @@ button:hover {
   gap: 24px;
   margin: 3rem 0;
 }
-
 .demo {
   background: rgba(255, 255, 255, 0.05);
   padding: 20px;
@@ -148,12 +127,10 @@ button:hover {
   backdrop-filter: blur(10px);
   text-align: center;
 }
-
 .demo img {
   width: 100%;
   border-radius: 8px;
 }
-
 /* CONTENEDOR GENERAL */
 .contenedor {
   display: flex;
@@ -162,7 +139,6 @@ button:hover {
   min-height: 70vh;
   padding: 1rem;
 }
-
 .tarjeta {
   background: rgba(255, 255, 255, 0.05);
   padding: 2rem;
@@ -172,12 +148,10 @@ button:hover {
   width: clamp(300px, 90vw, 500px);
   text-align: center;
 }
-
 .tarjeta h2 {
   font-size: clamp(1.5rem, 3vw, 2rem);
   margin-bottom: 1rem;
 }
-
 /* FOOTER */
 footer {
   margin-top: 60px;
@@ -185,17 +159,14 @@ footer {
   font-size: 0.95em;
   color: #bbb;
 }
-
 footer a {
   color: #00D4FF;
   margin: 0 10px;
   text-decoration: none;
 }
-
 footer a:hover {
   text-decoration: underline;
 }
-
 /* MODAL */
 .modal-overlay {
   position: fixed;
@@ -207,7 +178,6 @@ footer a:hover {
   align-items: center;
   z-index: 1000;
 }
-
 .modal-content {
   background-color: #ffffff;
   border-radius: 10px;
@@ -219,7 +189,6 @@ footer a:hover {
   box-sizing: border-box;
   animation: fadeIn 0.3s ease-in-out;
 }
-
 .modal-close {
   position: absolute;
   top: 10px;
@@ -228,12 +197,10 @@ footer a:hover {
   cursor: pointer;
   color: #333;
 }
-
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
-
 /* RESPONSIVE EXTRAS */
 @media (max-width: 480px) {
   .botones a,
@@ -242,17 +209,14 @@ footer a:hover {
     width: 100%;
     box-sizing: border-box;
   }
-
   .modal-content {
     padding: 15px;
   }
 }
-
 .navegacion {
   margin-top: 20px;
   text-align: center;
 }
-
 .navegacion a {
   color: #00D4FF;
   margin: 0 10px;
@@ -260,11 +224,9 @@ footer a:hover {
   font-weight: bold;
   transition: color 0.3s;
 }
-
 .navegacion a:hover {
   color: #00aacc;
 }
-
 .caracteristicas {
   display: flex;
   justify-content: center;
@@ -273,7 +235,6 @@ footer a:hover {
   margin: 4rem auto;
   padding: 0 2rem;
 }
-
 .caracteristica {
   background: rgba(255, 255, 255, 0.05);
   padding: 1.5rem;
@@ -282,7 +243,6 @@ footer a:hover {
   text-align: center;
   backdrop-filter: blur(10px);
 }
-
 .btn-cta {
   background: #00ffae;
   color: #0C1634;
@@ -293,7 +253,6 @@ footer a:hover {
   transition: all 0.3s ease;
   margin-left: 10px;
 }
-
 .btn-cta:hover {
   background: #00c78a;
 }
@@ -301,8 +260,6 @@ footer a:hover {
 .acciones a {
   margin: 10px;
 }
-
-
 .form-container {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
@@ -312,13 +269,11 @@ footer a:hover {
   width: 90%;
   max-width: 600px;
 }
-
 .form-container form {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
 .form-container input,
 .form-container button,
 .form-container textarea {
@@ -328,14 +283,12 @@ footer a:hover {
   background-color: rgba(255,255,255,0.1);
   color: white;
 }
-
 .form-container button {
   background-color: #00D4FF;
   color: #0C1634;
   font-weight: bold;
   cursor: pointer;
 }
-
 .form-container button:hover {
   background-color: #00b8e6;
 }

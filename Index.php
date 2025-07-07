@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -7,6 +6,7 @@
   <meta name="description" content="Gasto Simple es tu app web para registrar ingresos, gastos y ahorrar mejor. 100% gratuita y segura.">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <link rel="icon" href="img/favicon.png" type="image/png">
   <style>
     :root {
@@ -17,18 +17,14 @@
     }
 
     html { scroll-behavior: smooth; }
-
     body {
-      margin: 0; padding: 0; box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-      color: var(--color-text);
-      overflow-x: hidden;
-      position: relative;
+      margin: 0; font-family: 'Inter', sans-serif;
+      color: var(--color-text); overflow-x: hidden;
+      position: relative; box-sizing: border-box;
     }
 
     body::before {
-      content: '';
-      position: fixed; top: 0; left: 0;
+      content: ''; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       background: var(--color-bg-gradient);
       background-size: 300% 300%;
@@ -46,16 +42,58 @@
       z-index: -1;
     }
 
+    .navbar {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      z-index: 99;
+      padding: 12px 0;
+    }
+
+    .nav-container {
+      max-width: 1100px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .nav-logo {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: white;
+      text-decoration: none;
+    }
+
+    .nav-links a {
+      margin-left: 20px;
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--color-primary);
+    }
+
+    .nav-login {
+      font-size: 1.5rem;
+      vertical-align: middle;
+    }
+
     header {
       text-align: center;
-      padding: 80px 20px 40px;
+      padding: 50px 20px 30px;
     }
 
     header img.logo {
-      max-width: 260px;  /* Tamaño máximo responsivo */
+      max-width: 240px;
       height: auto;
       margin-bottom: 20px;
-      display: inline-block;
       transition: transform 0.3s ease;
     }
 
@@ -64,28 +102,29 @@
     }
 
     header h1 {
-      font-size: 2.8rem;
-      margin-bottom: 10px;
+      font-size: 3.2rem;
+      margin: 10px 0;
+      color: var(--color-primary);
     }
 
     header p {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       max-width: 600px;
-      margin: 0 auto;
+      margin: 0 auto 20px;
       opacity: 0.9;
     }
 
     nav.botones {
       display: flex;
       justify-content: center;
-      gap: 20px;
+      gap: 16px;
       flex-wrap: wrap;
-      margin-top: 40px;
+      margin-top: 20px;
     }
 
     .btn {
-      padding: 14px 32px;
-      font-size: 1.1rem;
+      padding: 12px 28px;
+      font-size: 1rem;
       font-weight: 600;
       border-radius: 50px;
       text-decoration: none;
@@ -118,28 +157,35 @@
     }
 
     section {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: auto;
-      padding: 60px 20px;
-      text-align: center;
+      padding: 40px 20px;
     }
 
     section h2 {
-      font-size: 2rem;
+      font-size: 2.2rem;
       margin-bottom: 30px;
       color: var(--color-primary);
+      text-align: center;
     }
 
-    .features div, .testimonials div, .faq div {
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .card {
       background: rgba(255,255,255,0.05);
       padding: 20px;
-      border-radius: 10px;
+      border-radius: 14px;
       backdrop-filter: blur(10px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       transition: transform 0.3s;
+      text-align: left;
     }
 
-    .features div:hover, .testimonials div:hover, .faq div:hover {
+    .card:hover {
       transform: translateY(-5px);
     }
 
@@ -147,53 +193,52 @@
       max-width: 100%;
       height: auto;
       border-radius: 12px;
-      margin-bottom: 20px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
 
     .donate-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  flex-wrap: wrap;
-}
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
 
-.donate-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 20px;
-  text-decoration: none;
-  color: white;
-  transition: transform 0.3s, box-shadow 0.3s;
-  width: 160px;
-  backdrop-filter: blur(6px);
-}
+    .donate-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 20px;
+      text-decoration: none;
+      color: white;
+      transition: transform 0.3s, box-shadow 0.3s;
+      width: 160px;
+      backdrop-filter: blur(6px);
+    }
 
-.donate-btn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
-}
+    .donate-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
+    }
 
-.donate-btn img {
-  max-width: 80px;   /* Controla ancho máximo */
-  height: auto;      /* Mantiene proporción */
-  margin-bottom: 12px;
-  transition: transform 0.3s;
-}
+    .donate-btn img {
+      max-width: 80px;
+      height: auto;
+      margin-bottom: 12px;
+      transition: transform 0.3s;
+    }
 
-.donate-btn:hover img {
-  transform: rotate(8deg) scale(1.1);
-}
+    .donate-btn:hover img {
+      transform: rotate(8deg) scale(1.1);
+    }
 
-.donate-btn span {
-  font-weight: bold;
-  text-align: center;
-  font-size: 0.95rem;
-}
-
+    .donate-btn span {
+      font-weight: bold;
+      text-align: center;
+      font-size: 0.95rem;
+    }
 
     footer {
       text-align: center;
@@ -207,12 +252,143 @@
       margin: 0 10px;
       text-decoration: none;
     }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      header h1 { font-size: 2.2rem; }
+      header p { font-size: 1.1rem; }
+    }
+    :root {
+      --color-primary: #00D4FF;
+      --color-bg-dark: #0B0B52;
+      --color-bg-gradient: linear-gradient(135deg, #0B0B52, #1D2B64, #0C1634, #0B0B52);
+      --color-text: #ffffff;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; font-family: 'Inter', sans-serif;
+      color: var(--color-text); overflow-x: hidden;
+      position: relative; box-sizing: border-box;
+    }
+
+    body::before {
+      content: ''; position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: var(--color-bg-gradient);
+      background-size: 300% 300%;
+      animation: backgroundAnim 25s ease-in-out infinite;
+      z-index: -2;
+    }
+
+    @keyframes backgroundAnim {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    #particles-js {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      z-index: 99;
+      padding: 12px 0;
+    }
+
+    .nav-container {
+      max-width: 1100px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .nav-logo {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: white;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-links a {
+      margin-left: 20px;
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--color-primary);
+    }
+
+    .menu-toggle {
+      display: none;
+      font-size: 1.8rem;
+      color: white;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        flex-direction: column;
+        background: rgba(0, 0, 0, 0.8);
+        position: absolute;
+        top: 60px;
+        right: 0;
+        width: 100%;
+        padding: 20px;
+      }
+
+      .nav-links.show {
+        display: flex;
+      }
+
+      .menu-toggle {
+        display: block;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="particles-js"></div>
 
-  <header class="hero" data-aos="fade-down">
+<nav class="navbar" data-aos="fade-down">
+  <div class="nav-container">
+    <a href="#inicio" class="nav-logo">GastoSimple</a>
+
+    <!-- Botón hamburguesa -->
+    <div class="menu-toggle" id="menu-toggle">
+      <i class='bx bx-menu'></i>
+    </div>
+
+    <!-- Menú de enlaces -->
+    <div class="nav-links" id="nav-links">
+      <a href="#features">Características</a>
+      <a href="#screenshots">Capturas</a>
+      <a href="#testimonials">Testimonios</a>
+      <a href="#faq">FAQ</a>
+      <a href="#donate">Donar</a>
+      <a href="login.php" class="nav-login"><i class='bx bx-user'></i></a>
+    </div>
+  </div>
+</nav>
+
+
+  <header class="hero" id="inicio" data-aos="fade-down">
     <img src="img/logo 1.png" alt="Logo Gasto Simple" class="logo">
     <h1>Gasto Simple</h1>
     <p>Tu herramienta intuitiva para registrar ingresos, gastos y ahorrar mejor.</p>
@@ -222,34 +398,42 @@
     </nav>
   </header>
 
-  <section class="features" data-aos="fade-up">
+  <section id="features" class="features" data-aos="fade-up">
     <h2>Características Principales</h2>
-    <div>Registro rápido de ingresos y gastos</div>
-    <div>Gráficas y reportes claros</div>
-    <div>Metas de ahorro y alertas automáticas</div>
+    <div class="grid">
+      <div class="card"><i class='bx bx-wallet-alt'></i> Registro rápido de ingresos y gastos</div>
+      <div class="card"><i class='bx bx-line-chart'></i> Gráficas y reportes interactivos</div>
+      <div class="card"><i class='bx bx-bullseye'></i> Metas de ahorro y alertas inteligentes</div>
+    </div>
   </section>
 
-  <section class="screenshots" data-aos="fade-up">
+  <section id="screenshots" class="screenshots" data-aos="fade-up">
     <h2>Dashboard en Acción</h2>
-    <img src="captura1.png" alt="Dashboard ejemplo 1">
-    <img src="captura2.png" alt="Dashboard ejemplo 2">
+    <div class="grid">
+      <img src="captura1.png" alt="Dashboard ejemplo 1">
+      <img src="captura2.png" alt="Dashboard ejemplo 2">
+    </div>
   </section>
 
-  <section class="testimonials" data-aos="fade-up">
+  <section id="testimonials" class="testimonials" data-aos="fade-up">
     <h2>Lo que Dicen Nuestros Usuarios</h2>
-    <div>"GastoSimple me ayudó a ahorrar sin darme cuenta." - Laura</div>
-    <div>"Una app sencilla y eficaz para controlar mis gastos." - Carlos</div>
+    <div class="grid">
+      <div class="card">“GastoSimple me ayudó a ahorrar sin darme cuenta.” — Laura</div>
+      <div class="card">“Una app sencilla y eficaz para controlar mis gastos.” — Carlos</div>
+    </div>
   </section>
 
-  <section class="faq" data-aos="fade-up">
+  <section id="faq" class="faq" data-aos="fade-up">
     <h2>Preguntas Frecuentes</h2>
-    <div><strong>¿GastoSimple es gratuito?</strong><br>Sí, sin costos ocultos ni anuncios molestos.</div>
-    <div><strong>¿Dónde se guardan mis datos?</strong><br>En servidores seguros. Tú tienes el control.</div>
+    <div class="grid">
+      <div class="card"><strong>¿GastoSimple es gratuito?</strong><br>Sí, sin costos ocultos ni anuncios molestos.</div>
+      <div class="card"><strong>¿Dónde se guardan mis datos?</strong><br>En servidores seguros. Tú tienes el control.</div>
+    </div>
   </section>
 
-  <section class="donate" data-aos="fade-up">
+  <section id="donate" class="donate" data-aos="fade-up">
     <h2>¿Te gusta Gasto Simple?</h2>
-    <p>Apoya el proyecto con un café ☕</p>
+    <p style="text-align:center;">Apoya el proyecto con un café ☕</p>
     <div class="donate-buttons">
       <a href="#" target="_blank" class="donate-btn">
         <img src="img/taza-de-cafe.png" alt="Buy me a coffee">
@@ -268,7 +452,7 @@
     <a href="terminos.php">Términos y condiciones</a>
   </footer>
 
-   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.js"></script>
   <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <script>
     AOS.init({ duration: 1000, once: true });
@@ -289,6 +473,13 @@
         }
       },
       retina_detect: true
+    });
+
+    // Toggle menú hamburguesa
+    const toggle = document.getElementById('menu-toggle');
+    const navLinks = document.getElementById('nav-links');
+    toggle.addEventListener('click', () => {
+      navLinks.classList.toggle('show');
     });
   </script>
 </body>

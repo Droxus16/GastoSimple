@@ -2,15 +2,12 @@
 session_start();
 require_once 'includes/db.php';
 require_once 'includes/auth.php';
-
 $conn = db::conectar();
 $idUsuario = $_SESSION['usuario_id'];
-
 // Obtener datos del usuario
 $stmt = $conn->prepare("SELECT nombre, correo, pregunta_secreta, ingreso_minimo, saldo_minimo FROM usuarios WHERE id = ?");
 $stmt->execute([$idUsuario]);
 $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
 // Totales para notificaciones
 $totales = $conn->prepare("
   SELECT
@@ -20,18 +17,15 @@ $totales = $conn->prepare("
 ");
 $totales->execute(['usuario_id' => $idUsuario]);
 $datos = $totales->fetch(PDO::FETCH_ASSOC);
-
 $totalIngresos = $datos['total_ingresos'];
 $totalGastos = $datos['total_gastos'];
 $totalAportes = $datos['total_aportes'];
 $saldoActual = $totalIngresos - $totalGastos - $totalAportes;
 ?>
-
 <?php include 'includes/header.php'; ?>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <style>
 body {
   margin: 0;
@@ -77,8 +71,17 @@ input, select, textarea {
 textarea { resize: vertical; }
 button[type="submit"] { background-color: #00D4FF; color: #0B0B52; font-weight: bold; padding: 10px 20px; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; }
 button[type="submit"]:hover { background-color: #00aacc; }
-</style>
 
+select {
+  color: white;  /* o tu color principal */
+}
+select option {
+  color: black; /* Opciones visibles en blanco queda mal */
+}
+select option[disabled] {
+  color: #999;  /* Un gris claro */
+}
+</style>
 <div id="particles-js"></div>
 <div class="dashboard-container">
   <div class="sidebar">
@@ -99,7 +102,6 @@ button[type="submit"]:hover { background-color: #00aacc; }
       <button onclick="location.href='logout.php'"><i class="bi bi-box-arrow-right"></i> Salir</button>
     </div>
   </div>
-
   <div class="main-content">
     <div class="form-container">
       <h2>Editar Perfil</h2>
@@ -125,17 +127,16 @@ button[type="submit"]:hover { background-color: #00aacc; }
         <button type="submit">Guardar Cambios</button>
       </form>
     </div>
-
     <div class="form-container">
       <h2>Enviar PQR</h2>
       <form id="form-pqr" method="POST">
         <label for="tipo">Tipo:</label>
-        <select name="tipo" required>
-          <option value="">-- Selecciona --</option>
-          <option value="Pregunta">Pregunta</option>
-          <option value="Queja">Queja</option>
-          <option value="Reclamo">Reclamo</option>
-        </select>
+          <select name="tipo" required>
+            <option value="" disabled selected>Selecciona tipo de PQR</option>
+            <option value="Pregunta">❓ Pregunta</option>
+            <option value="Queja">😠 Queja</option>
+            <option value="Reclamo">📝 Reclamo</option>
+          </select>
         <label for="asunto">Asunto:</label>
         <input type="text" name="asunto" required>
         <label for="descripcion">Descripción:</label>
@@ -164,28 +165,22 @@ particlesJS('particles-js', {
   },
   retina_detect: true
 });
-
-// ✅ DATOS PHP a JS
+//DATOS PHP a JS
 const saldoActual = Number(<?= json_encode($saldoActual) ?>) || 0;
 const ingresosTotales = Number(<?= json_encode($totalIngresos) ?>) || 0;
 const ingresoMinimo = Number(<?= json_encode($usuario['ingreso_minimo']) ?>) || 0;
 const saldoMinimo = Number(<?= json_encode($usuario['saldo_minimo']) ?>) || 0;
-
 console.log('Debug valores:', { saldoActual, ingresosTotales, ingresoMinimo, saldoMinimo });
-
 const listaNotificaciones = document.getElementById('lista-notificaciones');
 const badgeAlerta = document.getElementById('badge-alerta');
 const iconoCampana = document.getElementById('icono-campana');
 const notificaciones = [];
-
-// ✅ LÓGICA SEGURA
+//LÓGICA SEGURA
 if (saldoActual <= saldoMinimo) notificaciones.push(`⚠️ Saldo bajo: $${saldoActual.toFixed(2)}`);
 if (ingresosTotales <= ingresoMinimo) notificaciones.push(`⚠️ Ingresos bajos: $${ingresosTotales.toFixed(2)}`);
 if (saldoActual <= 0) notificaciones.push(`⚠️ No generas ahorro este mes.`);
-
 console.log('Notificaciones generadas:', notificaciones);
-
-// ✅ PINTAR NOTIFICACIONES
+//PINTAR NOTIFICACIONES
 if (notificaciones.length > 0) {
   badgeAlerta.style.display = 'inline-block';
   iconoCampana.classList.add('shake');
@@ -199,15 +194,13 @@ if (notificaciones.length > 0) {
   li.textContent = '✅ Sin notificaciones.';
   listaNotificaciones.appendChild(li);
 }
-
-// ✅ TOGGLE NOTIFICACIONES
+//TOGGLE NOTIFICACIONES
 function toggleNotificaciones() {
   const panel = document.getElementById('panel-notificaciones');
   panel.style.display = (panel.style.display === 'flex') ? 'none' : 'flex';
   iconoCampana.classList.remove('shake');
   badgeAlerta.style.display = 'none';
 }
-
 document.addEventListener('click', e => {
   const panel = document.getElementById('panel-notificaciones');
   const boton = document.getElementById('btn-notificaciones');
@@ -215,20 +208,17 @@ document.addEventListener('click', e => {
     panel.style.display = 'none';
   }
 });
-
-// ✅ GUARDAR AJUSTES
+//GUARDAR AJUSTES
 document.querySelector('#form-ajustes').addEventListener('submit', async function(e) {
   e.preventDefault();
   const form = e.target;
   const data = new FormData(form);
   const ingresoMinimo = parseFloat(data.get('ingreso_minimo')) || 0;
   const saldoMinimo = parseFloat(data.get('saldo_minimo')) || 0;
-
   if (ingresoMinimo < 0 || saldoMinimo < 0) {
     Swal.fire({ icon: 'error', title: 'Valores inválidos', text: '❌ No pueden ser negativos.' });
     return;
   }
-
   const response = await fetch(form.action, { method: 'POST', body: data });
   const result = await response.json();
   if (result.success) {
@@ -237,21 +227,18 @@ document.querySelector('#form-ajustes').addEventListener('submit', async functio
     Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Error inesperado.' });
   }
 });
-
-// ✅ GUARDAR PQR
+//GUARDAR PQR
 document.getElementById('form-pqr').addEventListener('submit', async e => {
   e.preventDefault();
   const form = e.target;
   const data = new FormData(form);
-
   const response = await fetch('includes/guardar_pqr.php', { method: 'POST', body: data });
   const result = await response.json();
-
   if (result.success) {
-    Swal.fire('✅ Éxito', 'Tu PQR fue enviado correctamente.', 'success');
+    Swal.fire('Éxito', 'Tu PQR fue enviado correctamente.', 'success');
     form.reset();
   } else {
-    Swal.fire('❌ Error', result.error || 'Ocurrió un error.', 'error');
+    Swal.fire('Error', result.error || 'Ocurrió un error.', 'error');
   }
 });
 </script>

@@ -1,24 +1,16 @@
 <?php
 session_start();
 require_once 'db.php';
-
 header('Content-Type: application/json');
-
-// ========================
-// 1) Seguridad: validar sesión
-// ========================
+//Seguridad: validar sesión
 if (!isset($_SESSION['usuario_id'])) {
     http_response_code(403);
     echo json_encode(['error' => 'No autorizado']);
     exit;
 }
-
 $idUsuario = $_SESSION['usuario_id'];
 $periodo   = $_POST['periodo'] ?? 'mes';
-
-// ========================
 // 2) Definir rango de fechas según periodo
-// ========================
 switch (strtolower($periodo)) {
     case 'día':
     case 'dia':
@@ -43,13 +35,9 @@ switch (strtolower($periodo)) {
         $groupBy     = 'fecha';
         break;
 }
-
 try {
     $conn = db::conectar();
-
-    // ========================
     // 3) Ingresos agrupados
-    // ========================
     $sqlIngreso = "
         SELECT 
             " . ($groupBy === 'fecha' ? "fecha" : "$groupBy AS fecha") . ",
@@ -62,10 +50,7 @@ try {
     $stmtIngreso = $conn->prepare($sqlIngreso);
     $stmtIngreso->execute([$idUsuario, $fechaInicio]);
     $ingresosRaw = $stmtIngreso->fetchAll(PDO::FETCH_ASSOC);
-
-    // ========================
     // 4) Gastos agrupados
-    // ========================
     $sqlGasto = "
         SELECT 
             " . ($groupBy === 'fecha' ? "fecha" : "$groupBy AS fecha") . ",
@@ -78,10 +63,7 @@ try {
     $stmtGasto = $conn->prepare($sqlGasto);
     $stmtGasto->execute([$idUsuario, $fechaInicio]);
     $gastosRaw = $stmtGasto->fetchAll(PDO::FETCH_ASSOC);
-
-    // ========================
     // 5) Aportes filtrados en el periodo
-    // ========================
     $sqlAportes = "
         SELECT COALESCE(SUM(a.monto), 0) AS total
         FROM aportes_ahorro a
@@ -91,10 +73,7 @@ try {
     $stmtAportes = $conn->prepare($sqlAportes);
     $stmtAportes->execute([$idUsuario, $fechaInicio]);
     $aporteTotal = $stmtAportes->fetchColumn();
-
-    // ========================
     // 6) Construir rango de fechas
-    // ========================
     $fechaFin = date('Y-m-d');
     $fechas   = [];
     if ($groupBy !== 'fecha') {
@@ -112,30 +91,20 @@ try {
             $inicioDate->modify('+1 day');
         }
     }
-
-    // ========================
-    // 7) Mapear ingresos y gastos por fecha
-    // ========================
+    //Mapear ingresos y gastos por fecha
     $ingresos = array_fill_keys($fechas, 0);
     foreach ($ingresosRaw as $item) {
         $ingresos[$item['fecha']] = (float)$item['total'];
     }
-
     $gastos = array_fill_keys($fechas, 0);
     foreach ($gastosRaw as $item) {
         $gastos[$item['fecha']] = (float)$item['total'];
     }
-
-    // ========================
-    // 8) Calcular totales coherentes
-    // ========================
+    //Calcular totales coherentes
     $totalIngresos = array_sum($ingresos);
     $totalGastos   = array_sum($gastos);
     $ahorro        = $totalIngresos - $totalGastos - $aporteTotal;
-
-    // ========================
-    // 9) Respuesta JSON
-    // ========================
+    //Respuesta JSON
     echo json_encode([
         'fechas'   => $fechas,
         'ingresos' => array_values($ingresos),
@@ -143,7 +112,6 @@ try {
         'aportes'  => $aporteTotal,
         'ahorro'   => $ahorro
     ]);
-
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode(['error' => 'Error en la base de datos: ' . $e->getMessage()]);

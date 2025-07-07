@@ -1,43 +1,61 @@
 <?php
 require_once '../includes/db.php';
 $conn = db::conectar();
-
-$filtro = $_POST['filtro'] ?? '';
-
-$sql = "SELECT u.nombre AS usuario, t.tipo, t.categoria, t.monto, t.fecha, t.descripcion 
-        FROM transacciones t 
-        INNER JOIN usuarios u ON t.id_usuario = u.id 
-        WHERE u.nombre LIKE ? OR t.categoria LIKE ?
-        ORDER BY t.fecha DESC";
-
-$stmt = $conn->prepare($sql);
+$filtro = trim($_POST['filtro'] ?? '');
+$modoFiltro = trim($_POST['modo_filtro'] ?? 'nombre');
+if (!in_array($modoFiltro, ['nombre', 'categoria'])) $modoFiltro = 'nombre';
 $filtroSQL = "%$filtro%";
-$stmt->execute([$filtroSQL, $filtroSQL]);
+$sql = "
+  SELECT u.nombre AS usuario, t.tipo, t.categoria, t.monto, t.fecha, t.descripcion 
+  FROM transacciones t 
+  INNER JOIN usuarios u ON t.id_usuario = u.id 
+";
+$where = " WHERE 1 ";
+$params = [];
+if ($filtro !== '') {
+  if ($modoFiltro === 'nombre') {
+    $where .= " AND u.nombre LIKE ? ";
+    $params[] = $filtroSQL;
+  } elseif ($modoFiltro === 'categoria') {
+    $where .= " AND t.categoria LIKE ? ";
+    $params[] = $filtroSQL;
+  }
+}
+$sql .= $where . " ORDER BY t.fecha DESC";
+$stmt = $conn->prepare($sql);
+$stmt->execute($params);
 $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// ✅ Tabla coherente con diseño glass-table
-echo '<div class="table-responsive">';
-echo '<table class="table table-striped table-hover glass-table" style="backdrop-filter: blur(8px); background: rgba(255,255,255,0.05); border-radius:12px; color:white;">';
-echo '<thead class="text-center" style="background: rgba(255,255,255,0.1);">';
-echo '<tr>';
-echo '<th>Usuario</th><th>Tipo</th><th>Categoría</th><th>Monto</th><th>Fecha</th><th>Descripción</th>';
-echo '</tr></thead><tbody>';
-
+// Render tabla coherente
+echo '<div style="overflow-x:auto; border-radius:12px; margin-top:20px;">';
+echo '<table style="
+  width:100%; border-collapse:collapse; 
+  backdrop-filter: blur(8px); 
+  background: rgba(255,255,255,0.05); 
+  border-radius:12px; color:white;
+">';
+echo '<thead style="background: rgba(255,255,255,0.1);">';
+echo '<tr>
+<th style="padding:12px;">Usuario</th>
+<th style="padding:12px;">Tipo</th>
+<th style="padding:12px;">Categoría</th>
+<th style="padding:12px;">Monto</th>
+<th style="padding:12px;">Fecha</th>
+<th style="padding:12px;">Descripción</th>
+</tr></thead><tbody>';
 if ($resultados) {
   foreach ($resultados as $row) {
-    echo '<tr>';
-    echo '<td>' . htmlspecialchars($row['usuario']) . '</td>';
-    echo '<td>' . htmlspecialchars($row['tipo']) . '</td>';
-    echo '<td>' . htmlspecialchars($row['categoria']) . '</td>';
-    echo '<td>$' . number_format($row['monto'], 2) . '</td>';
-    echo '<td>' . htmlspecialchars($row['fecha']) . '</td>';
-    echo '<td>' . htmlspecialchars($row['descripcion']) . '</td>';
+    echo '<tr style="text-align:center; border-bottom:1px solid rgba(255,255,255,0.1);">';
+    echo '<td style="padding:10px;">' . htmlspecialchars($row['usuario']) . '</td>';
+    echo '<td style="padding:10px;">' . htmlspecialchars($row['tipo']) . '</td>';
+    echo '<td style="padding:10px;">' . htmlspecialchars($row['categoria']) . '</td>';
+    echo '<td style="padding:10px;">$' . number_format($row['monto'], 2) . '</td>';
+    echo '<td style="padding:10px;">' . htmlspecialchars($row['fecha']) . '</td>';
+    echo '<td style="padding:10px;">' . htmlspecialchars($row['descripcion']) . '</td>';
     echo '</tr>';
   }
 } else {
-  echo '<tr><td colspan="6" class="text-center">⚠️ No se encontraron resultados para este filtro.</td></tr>';
+  echo '<tr><td colspan="6" style="text-align:center; padding:20px;">⚠️ No se encontraron resultados.</td></tr>';
 }
-
 echo '</tbody></table>';
 echo '</div>';
 ?>

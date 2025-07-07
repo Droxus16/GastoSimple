@@ -1,64 +1,52 @@
 <?php
 session_start();
 require_once 'db.php';
-
-// Validar usuario
+//Validar usuario
 $idUsuario = $_SESSION['usuario_id'] ?? null;
 if (!$idUsuario) {
-    header('Location: ../login.php'); // o la página que uses para login
+    header('Location: ../login.php');
     exit;
 }
-
-// Obtener datos del POST
+//Obtener datos del POST
 $tipo = $_POST['tipo'] ?? '';
-$monto = $_POST['monto'] ?? 0;
+$monto = floatval($_POST['monto'] ?? 0);
 $fecha = $_POST['fecha'] ?? date('Y-m-d');
-$descripcion = $_POST['descripcion'] ?? '';
+$descripcion = trim($_POST['descripcion'] ?? '');
 $idCategoria = $_POST['categoria'] ?? null;
-
 try {
     $conn = db::conectar();
-
-    // Manejar nueva categoría
-    if ($idCategoria === 'nueva') {
-        $nuevaCategoriaNombre = trim($_POST['nueva_categoria'] ?? '');
-        if ($nuevaCategoriaNombre === '') {
-            // Podrías manejar un error o redirigir con mensaje
-            die('Nombre de nueva categoría requerido');
-        }
-
+    // Manejar nueva categoría si fue seleccionada
+    if ($idCategoria === 'nueva' && !empty($_POST['nueva_categoria'])) {
+        $nuevaCategoriaNombre = trim($_POST['nueva_categoria']);
         $sqlCat = "INSERT INTO categorias (nombre, tipo, usuario_id) VALUES (:nombre, :tipo, :usuario_id)";
         $stmtCat = $conn->prepare($sqlCat);
-        $stmtCat->bindParam(':nombre', $nuevaCategoriaNombre);
-        $stmtCat->bindParam(':tipo', $tipo);
-        $stmtCat->bindParam(':usuario_id', $idUsuario);
-        $stmtCat->execute();
-
+        $stmtCat->execute([
+            ':nombre'     => $nuevaCategoriaNombre,
+            ':tipo'       => $tipo,
+            ':usuario_id' => $idUsuario
+        ]);
         $idCategoria = $conn->lastInsertId();
     }
-
-    // Insertar en ingresos o gastos
-    if ($tipo === 'ingreso') {
-        $sql = "INSERT INTO ingresos (usuario_id, categoria_id, monto, fecha, descripcion) 
-                VALUES (:usuario_id, :categoria_id, :monto, :fecha, :descripcion)";
-    } else {
-        $sql = "INSERT INTO gastos (usuario_id, categoria_id, monto, fecha, descripcion) 
-                VALUES (:usuario_id, :categoria_id, :monto, :fecha, :descripcion)";
+    // Verificar tipo válido
+    if ($tipo !== 'ingreso' && $tipo !== 'gasto') {
+        throw new Exception("Tipo de transacción no válido.");
     }
-
+    // Insertar según tipo
+    $tablaDestino = ($tipo === 'ingreso') ? 'ingresos' : 'gastos';
+    $sql = "INSERT INTO $tablaDestino (usuario_id, categoria_id, monto, fecha, descripcion) 
+            VALUES (:usuario_id, :categoria_id, :monto, :fecha, :descripcion)";
     $stmt = $conn->prepare($sql);
-    $stmt->bindParam(':usuario_id', $idUsuario);
-    $stmt->bindParam(':categoria_id', $idCategoria);
-    $stmt->bindParam(':monto', $monto);
-    $stmt->bindParam(':fecha', $fecha);
-    $stmt->bindParam(':descripcion', $descripcion);
-
-    $stmt->execute();
-
-    // Redirigir al dashboard después del éxito
-    header('Location: ../dashboard.php');
+    $stmt->execute([
+        ':usuario_id'   => $idUsuario,
+        ':categoria_id' => $idCategoria,
+        ':monto'        => $monto,
+        ':fecha'        => $fecha,
+        ':descripcion'  => $descripcion
+    ]);
+    header('Location: ../registro.php'); // redirigir al formulario, no al dashboard
     exit;
-
 } catch (PDOException $e) {
     die("Error en la base de datos: " . $e->getMessage());
+} catch (Exception $e) {
+    die("Error: " . $e->getMessage());
 }

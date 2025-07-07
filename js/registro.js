@@ -4,21 +4,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const btnRegistro = document.getElementById("btnRegistro");
     const passwordInput = document.getElementById("contrasena");
     const togglePassword = document.getElementById("togglePassword");
-
     // Mostrar/ocultar contraseña
     togglePassword.addEventListener("change", function () {
         passwordInput.type = this.checked ? "text" : "password";
     });
-
     // Habilitar botón solo si acepta términos
     terminosCheckbox.addEventListener("change", function () {
         btnRegistro.disabled = !this.checked;
     });
-
     // Verificación AJAX del correo
     correoInput.addEventListener("input", function () {
         const correo = this.value;
-
         if (correo.length > 5) {
             fetch("verificar_correo.php", {
                 method: "POST",
