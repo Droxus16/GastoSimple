@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Toggle del panel de notificaciones
   window.toggleNotificaciones = function () {
     if (!panelNotificaciones) return;
-
     if (panelNotificaciones.style.display === 'flex') {
       panelNotificaciones.style.display = 'none';
     } else {
