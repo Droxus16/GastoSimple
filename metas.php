@@ -56,9 +56,7 @@ $ahorro = $totales->fetch(PDO::FETCH_ASSOC);
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 <style>
-/* ===============================
-   FONDO Y ANIMACIÓN
-=============================== */
+/*FONDO Y ANIMACIÓN*/
 body {
   margin: 0;
   background: linear-gradient(135deg, #0B0B52, #1D2B64, #0C1634);
@@ -82,9 +80,7 @@ body {
   z-index: -1;
 }
 
-/* ===============================
-   LAYOUT PRINCIPAL
-=============================== */
+/*LAYOUT PRINCIPAL*/
 .dashboard-container {
   display: flex;
   height: 100vh;
@@ -134,9 +130,7 @@ body {
   box-sizing: border-box;
 }
 
-/* ===============================
-   RESUMEN AHORRO Y FORMULARIO
-=============================== */
+/*RESUMEN AHORRO Y FORMULARIO*/
 .card-valor {
   flex: 1;
   background: rgba(255, 255, 255, 0.15);
@@ -181,9 +175,7 @@ body {
   transform: scale(1.05);
 }
 
-/* ===============================
-   TABLA DE METAS
-=============================== */
+/*TABLA DE METAS*/
 .table-container {
   width: 100%;
   overflow-x: auto;
@@ -222,17 +214,14 @@ th {
   background-color: rgba(255, 255, 255, 0.15);
   font-weight: bold;
 }
-
 tr:nth-child(even) td {
   background-color: rgba(0, 0, 0, 0.2);
 }
-
 .barra-progreso {
   background: #444;
   border-radius: 5px;
   overflow: hidden;
 }
-
 .barra-progreso > div {
   background: #00D4FF;
   color: #0C1634;
@@ -240,10 +229,7 @@ tr:nth-child(even) td {
   text-align: center;
   font-weight: bold;
 }
-
-/* ===============================
-   MODAL EDICIÓN
-=============================== */
+/*MODAL EDICIÓN */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0;
@@ -256,12 +242,10 @@ tr:nth-child(even) td {
   z-index: 1000;
   opacity: 0;
 }
-
 .modal-overlay.active {
   display: flex;
   opacity: 1;
 }
-
 .modal-content {
   background-color: rgba(0, 0, 0, 0.85);
   color: white;
@@ -276,11 +260,9 @@ tr:nth-child(even) td {
   transform: translateY(20px);
   transition: transform 0.3s ease;
 }
-
 .modal-overlay.active .modal-content {
   transform: translateY(0);
 }
-
 .modal-close {
   position: absolute;
   top: 10px; right: 15px;
@@ -288,7 +270,6 @@ tr:nth-child(even) td {
   cursor: pointer;
   color: white;
 }
-
 button#eliminar-meta-btn {
   background: #FF6B6B;
   color: #fff;
@@ -299,11 +280,9 @@ button#eliminar-meta-btn {
   font-weight: bold;
   cursor: pointer;
 }
-
 button#eliminar-meta-btn:hover {
   background: #FF4C4C;
 }
-
   .notificaciones-dropdown {
     position: absolute;
     top: 80px;
@@ -445,7 +424,7 @@ button#eliminar-meta-btn:hover {
     </div>
   </div>
 </div>
-<!-- ✅ Modal global al final -->
+<!--Modal global al final -->
 <div id="modal-editar-meta" class="modal-overlay">
   <div class="modal-content">
     <span class="modal-close" onclick="cerrarModalMeta()">&times;</span>
@@ -537,9 +516,7 @@ document.getElementById('eliminar-meta-btn').addEventListener('click', function 
 });
 </script>
 <script>
-  // ============================================
-  // 🚩 VARIABLES GLOBALES: SOLO NOTIFICACIONES METAS
-  // ============================================
+  // VARIABLES GLOBALES: SOLO NOTIFICACIONES METAS
   const listaNotificaciones = document.getElementById('lista-notificaciones');
   const badgeAlerta = document.getElementById('badge-alerta');
   const iconoCampana = document.getElementById('icono-campana');
@@ -547,10 +524,7 @@ document.getElementById('eliminar-meta-btn').addEventListener('click', function 
   const metas = <?= json_encode($lista_metas ?? []) ?>;
 
   const notificaciones = [];
-
-  // ============================================
-  // 🚩 LÓGICA: Generar notificaciones SOLO de metas
-  // ============================================
+  //  LÓGICA: Generar notificaciones SOLO de metas
   const hoy = new Date();
 
   metas.forEach(meta => {
@@ -569,10 +543,7 @@ document.getElementById('eliminar-meta-btn').addEventListener('click', function 
       notificaciones.push(`🎉 Meta "${meta.nombre}" alcanzada.`);
     }
   });
-
-  // ============================================
-  // 🚩 Renderizar lista en DOM
-  // ============================================
+  //Renderizar lista en DOM
   if (listaNotificaciones) {
     listaNotificaciones.innerHTML = '';
 
@@ -591,10 +562,7 @@ document.getElementById('eliminar-meta-btn').addEventListener('click', function 
       listaNotificaciones.appendChild(li);
     }
   }
-
-  // ============================================
-  // 🚩 Abrir / cerrar panel
-  // ============================================
+  // Abrir / cerrar panel
   function toggleNotificaciones() {
     if (!panelNotificaciones) return;
 
@@ -607,7 +575,7 @@ document.getElementById('eliminar-meta-btn').addEventListener('click', function 
     }
   }
 
-  // 🚩 Cerrar al hacer clic fuera
+  //  Cerrar al hacer clic fuera
   document.addEventListener('click', function (e) {
     if (!panelNotificaciones) return;
     const boton = document.getElementById('btn-notificaciones');

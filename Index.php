@@ -365,16 +365,13 @@
 </head>
 <body>
   <div id="particles-js"></div>
-
 <nav class="navbar" data-aos="fade-down">
   <div class="nav-container">
     <a href="#inicio" class="nav-logo">GastoSimple</a>
-
     <!-- Botón hamburguesa -->
     <div class="menu-toggle" id="menu-toggle">
       <i class='bx bx-menu'></i>
     </div>
-
     <!-- Menú de enlaces -->
     <div class="nav-links" id="nav-links">
       <a href="#features">Características</a>
@@ -386,8 +383,6 @@
     </div>
   </div>
 </nav>
-
-
   <header class="hero" id="inicio" data-aos="fade-down">
     <img src="img/logo 1.png" alt="Logo Gasto Simple" class="logo">
     <h1>Gasto Simple</h1>
@@ -397,7 +392,6 @@
       <a href="register.php" class="btn btn-register">Registrarse</a>
     </nav>
   </header>
-
   <section id="features" class="features" data-aos="fade-up">
     <h2>Características Principales</h2>
     <div class="grid">
@@ -406,15 +400,13 @@
       <div class="card"><i class='bx bx-bullseye'></i> Metas de ahorro y alertas inteligentes</div>
     </div>
   </section>
-
   <section id="screenshots" class="screenshots" data-aos="fade-up">
-    <h2>Dashboard en Acción</h2>
-    <div class="grid">
-      <img src="captura1.png" alt="Dashboard ejemplo 1">
-      <img src="captura2.png" alt="Dashboard ejemplo 2">
+    <h2>Tendras control financiero con nosotros</h2>
+    <div class="grid"> 
+      <img src="img/reportes/descontrol.jpg" alt="Sin GastoSimple">
+      <img src="img/reportes/control.jpg" alt="Con GastoSimple">
     </div>
   </section>
-
   <section id="testimonials" class="testimonials" data-aos="fade-up">
     <h2>Lo que Dicen Nuestros Usuarios</h2>
     <div class="grid">
@@ -422,7 +414,6 @@
       <div class="card">“Una app sencilla y eficaz para controlar mis gastos.” — Carlos</div>
     </div>
   </section>
-
   <section id="faq" class="faq" data-aos="fade-up">
     <h2>Preguntas Frecuentes</h2>
     <div class="grid">
