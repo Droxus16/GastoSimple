@@ -59,12 +59,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $recordarSesion = isset($_POST["recordar_sesion"]);
   if (!empty($correo) && !empty($claveIngresada)) {
     try {
-      $db = db::conectar();
+      $db = DB::conectar();
       $stmt = $db->prepare("SELECT id, nombre, clave, rol, intentos_fallidos, bloqueado_hasta FROM usuarios WHERE correo = ?");
       $stmt->execute([$correo]);
       if ($stmt->rowCount() == 1) {
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($usuario['bloqueado_hasta'] && strtotime($usuario['bloqueado_hasta']) > time()) {
+        // Solo bloquear si es estandar
+        if ($usuario['rol'] === 'estandar' && $usuario['bloqueado_hasta'] && strtotime($usuario['bloqueado_hasta']) > time()) {
           $mensaje = "Cuenta bloqueada hasta: " . $usuario['bloqueado_hasta'];
         } else {
           if (password_verify($claveIngresada, $usuario['clave'])) {
@@ -87,16 +88,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             exit;
           } else {
-            $intentos = $usuario['intentos_fallidos'] + 1;
-            if ($intentos >= MAX_INTENTOS) {
-              $bloqueado_hasta = date("Y-m-d H:i:s", time() + TIEMPO_BLOQUEO);
-              $db->prepare("UPDATE usuarios SET intentos_fallidos = ?, bloqueado_hasta = ? WHERE id = ?")
-                 ->execute([$intentos, $bloqueado_hasta, $usuario['id']]);
-              $mensaje = "Demasiados intentos. Bloqueado por 15 minutos.";
+            if ($usuario['rol'] === 'estandar') {
+              $intentos = $usuario['intentos_fallidos'] + 1;
+              if ($intentos >= MAX_INTENTOS) {
+                $bloqueado_hasta = date("Y-m-d H:i:s", time() + TIEMPO_BLOQUEO);
+                $db->prepare("UPDATE usuarios SET intentos_fallidos = ?, bloqueado_hasta = ? WHERE id = ?")
+                   ->execute([$intentos, $bloqueado_hasta, $usuario['id']]);
+                $mensaje = "Demasiados intentos. Bloqueado por 15 minutos.";
+              } else {
+                $db->prepare("UPDATE usuarios SET intentos_fallidos = ? WHERE id = ?")
+                   ->execute([$intentos, $usuario['id']]);
+                $mensaje = "Contraseña incorrecta. Intentos: $intentos.";
+              }
             } else {
-              $db->prepare("UPDATE usuarios SET intentos_fallidos = ? WHERE id = ?")
-                 ->execute([$intentos, $usuario['id']]);
-              $mensaje = "Contraseña incorrecta. Intentos: $intentos.";
+              // Si es admin, solo mostrar mensaje de error
+              $mensaje = "Contraseña incorrecta.";
             }
           }
         }

@@ -2,35 +2,46 @@
 session_start();
 require_once 'includes/db.php';
 require_once 'includes/auth.php';
+
+if (!isset($_SESSION['usuario_id'])) {
+    header('Location: login.php');
+    exit();
+}
+
 $conn = db::conectar();
 $usuario_id = $_SESSION['usuario_id'];
-// Consulta metas
+
+// Consulta de metas con total aportado
 $metas = $conn->prepare("
     SELECT m.*, 
-    (SELECT SUM(a.monto) FROM aportes_ahorro a WHERE a.meta_id = m.id) AS total_aportado
+        (SELECT COALESCE(SUM(a.monto), 0) FROM aportes_ahorro a WHERE a.meta_id = m.id) AS total_aportado
     FROM metas_ahorro m 
     WHERE m.usuario_id = ?
     ORDER BY m.fecha_limite ASC
 ");
 $metas->execute([$usuario_id]);
 $lista_metas = $metas->fetchAll(PDO::FETCH_ASSOC);
-// Totales ahorro: INGRESOS - GASTOS - APORTES
+
+// Cálculo del ahorro total mensual y anual
 $totales = $conn->prepare("
     SELECT
         (
             (SELECT COALESCE(SUM(monto), 0) FROM ingresos 
              WHERE usuario_id = :usuario_id 
-               AND MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE()))
+               AND MONTH(fecha) = MONTH(CURDATE()) 
+               AND YEAR(fecha) = YEAR(CURDATE()))
           -
             (SELECT COALESCE(SUM(monto), 0) FROM gastos 
              WHERE usuario_id = :usuario_id 
-               AND MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE()))
+               AND MONTH(fecha) = MONTH(CURDATE()) 
+               AND YEAR(fecha) = YEAR(CURDATE()))
           -
             (SELECT COALESCE(SUM(a.monto), 0)
              FROM aportes_ahorro a
              JOIN metas_ahorro m ON a.meta_id = m.id
              WHERE m.usuario_id = :usuario_id 
-               AND MONTH(a.fecha) = MONTH(CURDATE()) AND YEAR(a.fecha) = YEAR(CURDATE()))
+               AND MONTH(a.fecha) = MONTH(CURDATE()) 
+               AND YEAR(a.fecha) = YEAR(CURDATE()))
         ) AS total_mes,
         (
             (SELECT COALESCE(SUM(monto), 0) FROM ingresos 
@@ -50,7 +61,15 @@ $totales = $conn->prepare("
 ");
 $totales->execute(['usuario_id' => $usuario_id]);
 $ahorro = $totales->fetch(PDO::FETCH_ASSOC);
+
+// Notificación (si existe)
+$mensaje = '';
+if (isset($_SESSION['mensaje'])) {
+    $mensaje = $_SESSION['mensaje'];
+    unset($_SESSION['mensaje']);
+}
 ?>
+
 <?php include 'includes/header.php'; ?>
 <link rel="stylesheet" href="assets/css/estilos.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -516,34 +535,62 @@ document.getElementById('eliminar-meta-btn').addEventListener('click', function 
 });
 </script>
 <script>
-  // VARIABLES GLOBALES: SOLO NOTIFICACIONES METAS
+  // VARIABLES GLOBALES
   const listaNotificaciones = document.getElementById('lista-notificaciones');
   const badgeAlerta = document.getElementById('badge-alerta');
   const iconoCampana = document.getElementById('icono-campana');
   const panelNotificaciones = document.getElementById('panel-notificaciones');
-  const metas = <?= json_encode($lista_metas ?? []) ?>;
 
+  const metas = <?= json_encode($lista_metas ?? []) ?>;
   const notificaciones = [];
-  //  LÓGICA: Generar notificaciones SOLO de metas
+
   const hoy = new Date();
 
   metas.forEach(meta => {
-    if (!meta.fecha_limite || !meta.nombre) return;
+    if (!meta || !meta.fecha_limite || !meta.nombre) return;
 
     const fechaLimite = new Date(meta.fecha_limite);
     const diasRestantes = Math.ceil((fechaLimite - hoy) / (1000 * 60 * 60 * 24));
     const porcentaje = meta.monto_objetivo > 0
-      ? (parseFloat(meta.total_aportado) / meta.monto_objetivo) * 100
+      ? (parseFloat(meta.total_aportado || 0) / meta.monto_objetivo) * 100
       : 0;
 
-    if (diasRestantes <= 5 && porcentaje < 100) {
-      notificaciones.push(`📌 Meta "${meta.nombre}" vence en ${diasRestantes} día(s).`);
+    // Notificación: meta creada hace menos de 1 día
+    const fechaCreacion = new Date(meta.created_at);
+    const horasDesdeCreacion = Math.abs(hoy - fechaCreacion) / 36e5;
+    if (horasDesdeCreacion <= 24) {
+      notificaciones.push(`Nueva meta "${meta.nombre}" creada hoy.`);
     }
+
+    // Notificación: sin fecha límite
+    if (!meta.fecha_limite) {
+      notificaciones.push(`La meta "${meta.nombre}" no tiene fecha límite.`);
+    }
+
+    // Notificación: cerca de vencer y no alcanzada
+    if (diasRestantes <= 5 && porcentaje < 100 && diasRestantes >= 0) {
+      notificaciones.push(`Meta "${meta.nombre}" vence en ${diasRestantes} día(s).`);
+    }
+
+    // Notificación: vencida sin lograr
+    if (diasRestantes < 0 && porcentaje < 100) {
+      notificaciones.push(`Meta "${meta.nombre}" venció sin cumplirse.`);
+    }
+
+    // Notificación: alcanzada
     if (porcentaje >= 100) {
-      notificaciones.push(`🎉 Meta "${meta.nombre}" alcanzada.`);
+      notificaciones.push(`Meta "${meta.nombre}" alcanzada.`);
+    }
+
+    // Notificación: sin aportes en 7 días
+    const fechaUltimoAporte = new Date(meta.updated_at);
+    const diasSinAportes = Math.floor((hoy - fechaUltimoAporte) / (1000 * 60 * 60 * 24));
+    if (diasSinAportes >= 7 && porcentaje < 100) {
+      notificaciones.push(`Meta "${meta.nombre}" no tiene aportes hace ${diasSinAportes} días.`);
     }
   });
-  //Renderizar lista en DOM
+
+  // Renderizar notificaciones
   if (listaNotificaciones) {
     listaNotificaciones.innerHTML = '';
 
@@ -558,11 +605,12 @@ document.getElementById('eliminar-meta-btn').addEventListener('click', function 
       });
     } else {
       const li = document.createElement('li');
-      li.textContent = '✅ Sin notificaciones.';
+      li.textContent = 'Sin notificaciones.';
       listaNotificaciones.appendChild(li);
     }
   }
-  // Abrir / cerrar panel
+
+  // Toggle de panel
   function toggleNotificaciones() {
     if (!panelNotificaciones) return;
 
@@ -575,11 +623,15 @@ document.getElementById('eliminar-meta-btn').addEventListener('click', function 
     }
   }
 
-  //  Cerrar al hacer clic fuera
+  // Cerrar al hacer clic fuera
   document.addEventListener('click', function (e) {
-    if (!panelNotificaciones) return;
     const boton = document.getElementById('btn-notificaciones');
-    if (panelNotificaciones.style.display === 'flex' && !panelNotificaciones.contains(e.target) && !boton.contains(e.target)) {
+    if (
+      panelNotificaciones &&
+      panelNotificaciones.style.display === 'flex' &&
+      !panelNotificaciones.contains(e.target) &&
+      !boton.contains(e.target)
+    ) {
       panelNotificaciones.style.display = 'none';
     }
   });

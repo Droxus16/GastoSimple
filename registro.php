@@ -63,6 +63,9 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
 <link rel="stylesheet" href="assets/css/estilos.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
 <style>
   /*CONTENEDORES PRINCIPALES */
   .form-container, .tabla-container {
@@ -294,6 +297,20 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
     80% { transform: rotate(10deg); }
     100% { transform: rotate(0deg); }
   }
+
+  /* Animación suave personalizada */
+.collapse-custom {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease, opacity 0.5s ease;
+}
+
+.collapse-custom.show {
+  max-height: 500px; /* Ajustable según el contenido */
+  opacity: 1;
+}
+
 </style>
 <div id="particles-js"></div>
 <div class="dashboard-container">
@@ -316,41 +333,84 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
       <button onclick="location.href='ajustes.php'"><i class="bi bi-gear-fill"></i> Ajustes</button>
     </div>
   </div>
-  <!-- Contenido principal -->
-  <div class="main-content">
-    <!-- Formulario de registro -->
-    <div class="form-container">
-      <h2>Registrar Gasto o Ingreso</h2>
-      <form id="form-registro" action="includes/insertar_transaccion.php" method="POST">
-        <label for="tipo">Tipo:</label>
-        <select name="tipo" id="tipo" required onchange="filtrarCategorias()">
-          <option value="">-- Selecciona --</option>
-          <option value="ingreso">Ingreso</option>
-          <option value="gasto">Gasto</option>
+ <!-- Contenido principal -->
+<div class="main-content">
+  <!-- Formulario de registro -->
+  <div class="form-container">
+    <h2>Registrar Gasto o Ingreso</h2>
+
+    <form id="form-registro" action="includes/insertar_transaccion.php" method="POST">
+      <label for="tipo">Tipo:</label>
+      <select name="tipo" id="tipo" required onchange="filtrarCategorias()">
+        <option value="">-- Selecciona --</option>
+        <option value="ingreso">Ingreso</option>
+        <option value="gasto">Gasto</option>
+      </select>
+
+      <label for="fecha">Fecha:</label>
+      <input type="date" name="fecha" required>
+
+      <label for="monto">Monto:</label>
+      <input type="number" name="monto" step="0.01" required>
+
+      <label for="categoria">Categoría:</label>
+      <select name="categoria" id="categoria" required onchange="mostrarCampoNuevaCategoria(this)">
+        <option value="">-- Selecciona categoría --</option>
+        <?php foreach ($categorias as $cat): ?>
+          <option value="<?= $cat['id'] ?>" data-tipo="<?= $cat['tipo'] ?>">
+            <?= htmlspecialchars(ucfirst($cat['tipo']) . " - " . $cat['nombre']) ?>
+          </option>
+        <?php endforeach; ?>
+        <option value="nueva">+ Agregar nueva categoría</option>
+      </select>
+
+      <div id="nueva-categoria-container" style="display:none;">
+        <label for="nueva_categoria">Nueva Categoría:</label>
+        <input type="text" name="nueva_categoria" id="nueva_categoria">
+      </div>
+
+      <label for="descripcion">Descripción:</label>
+      <textarea name="descripcion" rows="2"></textarea>
+
+      <!-- NUEVA SECCIÓN DE CONFIGURACIÓN RECURRENTE -->
+      <!-- Activador de configuración recurrente -->
+      <div class="form-check form-switch my-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="recurrente" name="recurrente">
+        <label class="form-check-label fw-bold text-white" for="recurrente">
+          <i class="bi bi-arrow-repeat me-1"></i> Registrar automáticamente
+        </label>
+      </div>
+
+      <!-- Sección de configuración recurrente con animación -->
+      <div id="config-recurrente" class="recurrente-config collapse-custom">
+        <label for="frecuencia" class="form-label text-white">
+          <i class="bi bi-calendar2-week-fill me-1"></i> Frecuencia:
+        </label>
+        <select class="form-select mb-3" name="frecuencia" id="frecuencia">
+          <option value="mensual">Mensual</option>
+          <option value="quincenal">Quincenal</option>
+          <option value="semanal">Semanal</option>
         </select>
-        <label for="fecha">Fecha:</label>
-        <input type="date" name="fecha" required>
-        <label for="monto">Monto:</label>
-        <input type="number" name="monto" step="0.01" required>
-        <label for="categoria">Categoría:</label>
-        <select name="categoria" id="categoria" required onchange="mostrarCampoNuevaCategoria(this)">
-          <option value="">-- Selecciona categoría --</option>
-          <?php foreach ($categorias as $cat): ?>
-            <option value="<?= $cat['id'] ?>" data-tipo="<?= $cat['tipo'] ?>">
-              <?= htmlspecialchars(ucfirst($cat['tipo']) . " - " . $cat['nombre']) ?>
-            </option>
-          <?php endforeach; ?>
-          <option value="nueva">+ Agregar nueva categoría</option>
-        </select>
-        <div id="nueva-categoria-container" style="display:none;">
-          <label for="nueva_categoria">Nueva Categoría:</label>
-          <input type="text" name="nueva_categoria" id="nueva_categoria">
+
+        <label for="dia_fijo" class="form-label text-white">
+          <i class="bi bi-clock-fill me-1"></i> Día de ejecución (1-31):
+        </label>
+        <input type="number" class="form-control mb-3" name="dia_fijo" id="dia_fijo" min="1" max="31">
+
+        <div class="form-check mt-2">
+          <input class="form-check-input" type="checkbox" id="monto_variable" name="monto_variable">
+          <label class="form-check-label text-white" for="monto_variable">
+            <i class="bi bi-exclamation-circle-fill me-1"></i> Monto variable (pedir confirmación)
+          </label>
         </div>
-        <label for="descripcion">Descripción:</label>
-        <textarea name="descripcion" rows="2"></textarea>
-        <button type="submit">Guardar Registro</button>
-      </form>
-    </div>
+      </div>
+
+
+
+      <button type="submit">Guardar Registro</button>
+    </form>
+  </div>
+
     <!-- Tabla de registros -->
     <div class="tabla-container">
       <h2>Registros</h2>
@@ -433,6 +493,23 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
     </form>
   </div>
 </div>
+<script>
+document.getElementById('recurrente').addEventListener('change', function () {
+  const config = document.getElementById('config-recurrente');
+  if (this.checked) {
+    config.classList.add('show');
+  } else {
+    config.classList.remove('show');
+  }
+});
+</script>
+<script>
+function toggleRecurrente() {
+  const container = document.getElementById('config-recurrente');
+  const checked = document.getElementById('recurrente').checked;
+  container.style.display = checked ? 'block' : 'none';
+}
+</script>
 <script>
 particlesJS("particles-js", {
   particles: {
