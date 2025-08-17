@@ -173,11 +173,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   particlesJS("particles-js", {
     "particles": {
       "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
-      "color": { "value": "#ffffff" },
+      "color": { "value": "#00D4FF" },
       "shape": { "type": "circle" },
       "opacity": { "value": 0.5, "anim": { "enable": true, "speed": 1 } },
       "size": { "value": 3, "random": true, "anim": { "enable": true, "speed": 40 } },
-      "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 },
+      "line_linked": { "enable": true, "distance": 150, "color": "#00D4FF", "opacity": 0.4, "width": 1 },
       "move": { "enable": true, "speed": 3 }
     },
     "interactivity": {

@@ -7,6 +7,7 @@ if ($_SESSION['rol'] !== 'admin') {
 }
 $conn = db::conectar();
 ?>
+<div id="particles-js"></div>
 <?php include 'includes/header.php'; ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 <style>
@@ -30,9 +31,13 @@ $conn = db::conectar();
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    z-index: -1;
+    z-index: 0;
   }
 
+  .dashboard-container {
+  position: relative; /* asegura que quede sobre las partículas */
+  z-index: 0;
+  }
   .dashboard-container {
     display: flex;
     height: 100vh;
@@ -261,6 +266,7 @@ $conn = db::conectar();
     </div>
   <div id="tabla-resultados"></div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 function cargarDatos() {
@@ -282,5 +288,25 @@ $(document).ready(function() {
   $('#filtro').on('input', cargarDatos);
   $('#modo_filtro').on('change', cargarDatos);
   cargarDatos();
+});
+</script>
+<script>
+particlesJS('particles-js', {
+  particles: {
+    number: { value: 80, density: { enable: true, value_area: 800 } },
+    color: { value: "#00D4FF" },
+    shape: { type: "circle" },
+    opacity: { value: 0.5, random: true },
+    size: { value: 3, random: true },
+    line_linked: { enable: true, distance: 150, color: "#00D4FF", opacity: 0.4, width: 1 },
+    move: { enable: true, speed: 6 }
+  },
+  interactivity: {
+    events: {
+      onhover: { enable: true, mode: "repulse" },
+      onclick: { enable: true, mode: "push" }
+    }
+  },
+  retina_detect: true
 });
 </script>

@@ -178,27 +178,27 @@ terminos.addEventListener('change', function () {
 <!-- Partículas -->
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <script>
-particlesJS("particles-js", {
-  "particles": {
-    "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
-    "color": { "value": "#ffffff" },
-    "shape": { "type": "circle" },
-    "opacity": { "value": 0.5, "anim": { "enable": true, "speed": 1 } },
-    "size": { "value": 3, "random": true, "anim": { "enable": true, "speed": 40 } },
-    "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 },
-    "move": { "enable": true, "speed": 3 }
-  },
-  "interactivity": {
-    "events": {
-      "onhover": { "enable": true, "mode": "repulse" },
-      "onclick": { "enable": true, "mode": "push" }
+  particlesJS("particles-js", {
+    "particles": {
+      "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+      "color": { "value": "#00D4FF" },
+      "shape": { "type": "circle" },
+      "opacity": { "value": 0.5, "anim": { "enable": true, "speed": 1 } },
+      "size": { "value": 3, "random": true, "anim": { "enable": true, "speed": 40 } },
+      "line_linked": { "enable": true, "distance": 150, "color": "#00D4FF", "opacity": 0.4, "width": 1 },
+      "move": { "enable": true, "speed": 3 }
     },
-    "modes": {
-      "repulse": { "distance": 100, "duration": 0.4 },
-      "push": { "particles_nb": 4 }
-    }
-  },
-  "retina_detect": true
-});
+    "interactivity": {
+      "events": {
+        "onhover": { "enable": true, "mode": "repulse" },
+        "onclick": { "enable": true, "mode": "push" }
+      },
+      "modes": {
+        "repulse": { "distance": 100, "duration": 0.4 },
+        "push": { "particles_nb": 4 }
+      }
+    },
+    "retina_detect": true
+  });
 </script>
 <?php include 'includes/footer.php'; ?>

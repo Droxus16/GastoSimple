@@ -990,7 +990,6 @@
     <!-- Menú de enlaces -->
     <div class="nav-links" id="nav-links">
       <a href="#features">Características</a>
-      <a href="#testimonials">Testimonios</a>
       <a href="#faq">Preguntas frecuentes</a>
       <a href="#donate">Donar</a>
       <a href="login.php" class="nav-login"><i class='bx bx-user'></i></a>
