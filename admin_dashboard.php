@@ -206,17 +206,14 @@ h2 { font-size: 2rem; color: #00D4FF; text-align: center; }
       "line_linked": { "enable": true, "distance": 150, "color": "#00D4FF", "opacity": 0.4, "width": 1 },
       "move": { "enable": true, "speed": 3 }
     },
-    "interactivity": {
-      "events": {
-        "onhover": { "enable": true, "mode": "repulse" },
-        "onclick": { "enable": true, "mode": "push" }
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": { "enable": false },
+          "onclick": { "enable": false }
+        }
       },
-      "modes": {
-        "repulse": { "distance": 100, "duration": 0.4 },
-        "push": { "particles_nb": 4 }
-      }
-    },
-    "retina_detect": true
+      "retina_detect": true
   });
 </script>
 <?php include 'includes/footer.php'; ?>

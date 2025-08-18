@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <link rel="icon" href="img/favicon.png" type="image/png">
-  <style>
+  <style> 
     :root {
       --color-primary: #00D4FF;
       --color-bg-dark: #0B0B52;
@@ -47,9 +47,14 @@
       top: 0;
       width: 100%;
       background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(10px);
+      background: rgba(11, 11, 82, 0.65);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 24px 0 rgba(0,212,255,0.10);
       z-index: 99;
       padding: 12px 0;
+      border-bottom: 3px solid transparent;
+      border-image: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
+      border-image-slice: 1;
     }
 
     .nav-container {
@@ -62,13 +67,39 @@
     }
 
     .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       font-size: 1.4rem;
       font-weight: bold;
       color: white;
       text-decoration: none;
+      letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+    .nav-logo-img {
+      height: 38px;
+      width: 38px;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,212,255,0.13);
+      background: transparent;
+      object-fit: contain;
+      transition: transform 0.22s;
+    }
+    .nav-logo:hover .nav-logo-img {
+      transform: scale(1.08) rotate(-6deg);
+      box-shadow: 0 4px 16px rgba(0,212,255,0.22);
+    }
+    .nav-logo-text {
+      color: var(--color-primary);
+      font-weight: 700;
+      font-size: 1.25em;
+      letter-spacing: 1px;
+      text-shadow: 0 1px 8px rgba(0,212,255,0.10);
     }
 
     .nav-links a {
+      position: relative;
       margin-left: 20px;
       text-decoration: none;
       color: white;
@@ -85,33 +116,75 @@
       vertical-align: middle;
     }
 
-    header {
+    header.hero {
+      min-height: 100vh;
+      width: 100vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background: transparent; /* O usa un gradiente si prefieres */
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    .hero-content {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
       text-align: center;
-      padding: 50px 20px 30px;
+      padding: 100px 400px 150px 400px;
+      background: rgba(11, 11, 82, 0.60);
+      border-radius: 32px;
+      box-shadow: 0 8px 32px 0 rgba(0,212,255,0.10), 0 1.5px 8px rgba(0,0,0,0.12);
+      backdrop-filter: blur(2px);
     }
 
-    header img.logo {
-      max-width: 240px;
-      height: auto;
-      margin-bottom: 20px;
-      transition: transform 0.3s ease;
+    header.hero img.logo {
+      max-width: 400px;
+      width: 60vw;
+      margin-bottom: 40px;
     }
 
-    header img.logo:hover {
-      transform: scale(1.05);
-    }
-
-    header h1 {
-      font-size: 3.2rem;
+    header.hero h1 {
+      font-size: 3rem;
       margin: 10px 0;
       color: var(--color-primary);
     }
 
-    header p {
-      font-size: 1.3rem;
-      max-width: 600px;
-      margin: 0 auto 20px;
-      opacity: 0.9;
+    header.hero p {
+      font-size: 1.8rem;
+      margin: 0 auto 24px;
+      color: #e0f7fa;
+      opacity: 0.95;
+      max-width: 420px;
+    }
+
+    nav.botones {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 700px) {
+      .hero-content {
+        max-width: 98vw;
+        padding: 24px 6vw 36px 6vw;
+        border-radius: 18px;
+      }
+      header.hero img.logo {
+        max-width: 140px;
+        width: 80vw;
+      }
+      header.hero h1 {
+        font-size: 2rem;
+      }
+      header.hero p {
+        font-size: 1rem;
+        max-width: 95vw;
+      }
     }
 
     nav.botones {
@@ -124,7 +197,7 @@
 
     .btn {
       padding: 12px 28px;
-      font-size: 1rem;
+      font-size: 1.3rem;
       font-weight: 600;
       border-radius: 50px;
       text-decoration: none;
@@ -195,6 +268,146 @@
       border-radius: 12px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
+
+    .screenshots-desc {
+    text-align: center;
+    color: #e0f7fa;
+    max-width: 600px;
+    margin: 0 auto 30px;
+    font-size: 1.18rem;
+    opacity: 0.95;
+  }
+
+  .screenshots-steps {
+  display: flex;
+  gap: 48px;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: wrap;
+  margin-top: 40px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  }
+  .screenshot-card.step {
+  background: rgba(11, 20, 60, 0.80);
+  border-radius: 28px;
+  box-shadow: 0 12px 40px 0 rgba(0,212,255,0.18), 0 4px 16px rgba(0,0,0,0.13);
+  padding: 38px 32px 28px 32px;
+  max-width: 370px;
+  min-width: 260px;
+  width: 100%;
+  text-align: center;
+  transition: transform 0.28s cubic-bezier(.4,2,.6,1), box-shadow 0.28s cubic-bezier(.4,2,.6,1), background 0.28s;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(0,212,255,0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+.screenshot-card.step:hover {
+  transform: translateY(-12px) scale(1.045);
+  box-shadow: 0 24px 64px 0 rgba(0,212,255,0.22), 0 8px 32px rgba(0,0,0,0.18);
+  background: linear-gradient(135deg, rgba(0,212,255,0.13) 0%, rgba(11,20,60,0.92) 100%);
+  border-color: var(--color-primary);
+}
+.step-icon {
+  background: linear-gradient(135deg, #00D4FF 0%, #0B0B52 100%);
+  color: #fff;
+  border-radius: 50%;
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 12px rgba(0,212,255,0.10);
+  transition: background 0.25s, color 0.25s;
+  animation: bounceIn 1.2s;
+}
+@keyframes bounceIn {
+  0% { transform: scale(0.7); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.screenshot-card.step h3 {
+  font-size: 1.25rem;
+  margin: 18px 0 10px 0;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.screenshot-card.step p {
+  color: #e0f7fa;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin: 0;
+}
+.security-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: linear-gradient(90deg, rgba(0,212,255,0.13) 0%, rgba(11,20,60,0.92) 100%);
+  border-radius: 22px;
+  padding: 22px 36px;
+  margin: 48px auto 0 auto;
+  box-shadow: 0 2px 18px rgba(0,212,255,0.10);
+  max-width: 800px;
+  border: 2px solid rgba(0,212,255,0.18);
+  position: relative;
+}
+.security-icon {
+  background: #fff;
+  color: var(--color-primary);
+  border-radius: 50%;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 2px 8px rgba(0,212,255,0.10);
+  margin-right: 10px;
+}
+.security-text {
+  color: #e0f7fa;
+  font-size: 1.13rem;
+  font-weight: 500;
+  text-align: left;
+}
+.security-text strong {
+  color: #00D4FF;
+  font-weight: 700;
+}
+.security-note {
+  display: block;
+  color: #b2ebf2;
+  font-size: 0.98rem;
+  margin-top: 6px;
+  font-weight: 400;
+  opacity: 0.92;
+}
+@media (max-width: 900px) {
+  .screenshots-steps {
+    flex-direction: column;
+    gap: 28px;
+    align-items: center;
+  }
+  .security-banner {
+    flex-direction: column;
+    padding: 18px 12px;
+    text-align: center;
+    gap: 10px;
+  }
+  .security-icon {
+    margin: 0 auto 8px auto;
+  }
+}
 
 .donate {
   text-align: center;
@@ -277,6 +490,7 @@
   letter-spacing: 0.2px;
 }
 
+
 @media (max-width: 700px) {
   .donate-buttons {
     gap: 18px;
@@ -287,13 +501,105 @@
     padding: 18px 8vw 14px 8vw;
   }
 }
+.donate-impact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: linear-gradient(90deg, rgba(0,212,255,0.13) 0%, rgba(11,20,60,0.92) 100%);
+  border-radius: 18px;
+  padding: 16px 28px;
+  margin: 24px auto 0 auto;
+  box-shadow: 0 2px 12px rgba(0,212,255,0.10);
+  max-width: 600px;
+  color: #e0f7fa;
+  font-size: 1.08rem;
+  font-weight: 500;
+}
+.donate-impact i {
+  color: #ff4081;
+  font-size: 2.2rem;
+  background: #fff;
+  border-radius: 50%;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0,212,255,0.10);
+}
+.donate-thanks {
+  margin-top: 32px;
+  color: #b2ebf2;
+  font-size: 1.08rem;
+  text-align: center;
+  opacity: 0.95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.donate-thanks i {
+  color: #00D4FF;
+  font-size: 1.5rem;
+  vertical-align: middle;
+}
 
-    footer {
-      text-align: center;
-      padding: 30px;
-      font-size: 0.9rem;
-      color: #ccc;
-    }
+footer {
+  background: rgba(11, 20, 60, 0.92);
+  border-top: 2px solid var(--color-primary);
+  padding: 36px 0 18px 0;
+  color: #b2ebf2;
+  font-size: 1.05rem;
+  margin-top: 60px;
+  box-shadow: 0 -4px 24px 0 rgba(0,212,255,0.10);
+}
+.footer-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+.footer-links {
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.footer-links a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+  font-size: 1.08rem;
+}
+.footer-links a:hover {
+  color: #fff;
+}
+.footer-sep {
+  color: #b2ebf2;
+  opacity: 0.5;
+  font-size: 1.2rem;
+}
+.footer-copy {
+  color: #b2ebf2;
+  font-size: 0.98rem;
+  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+@media (max-width: 700px) {
+  .footer-links {
+    flex-direction: column;
+    gap: 8px;
+  }
+  footer {
+    padding: 28px 0 12px 0;
+    font-size: 0.98rem;
+  }
+}
 
     footer a {
       color: var(--color-primary);
@@ -343,10 +649,10 @@
       position: sticky;
       top: 0;
       width: 100%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(10px);
       z-index: 99;
-      padding: 12px 0;
+      padding: 10px 0px;
     }
 
     .nav-container {
@@ -357,29 +663,26 @@
       justify-content: space-between;
       padding: 0 20px;
     }
-
-    .nav-logo {
-      font-size: 1.4rem;
-      font-weight: bold;
-      color: white;
-      text-decoration: none;
-    }
-
     .nav-links {
       display: flex;
       align-items: center;
     }
 
     .nav-links a {
-      margin-left: 20px;
-      text-decoration: none;
-      color: white;
-      font-weight: 500;
-      transition: color 0.3s;
+      position: relative;
     }
-
-    .nav-links a:hover {
-      color: var(--color-primary);
+    .nav-links a::after {
+      content: '';
+      display: block;
+      height: 2px;
+      width: 0;
+      background: var(--color-primary);
+      transition: width 0.3s;
+      position: absolute;
+      left: 0; bottom: -4px;
+    }
+    .nav-links a:hover::after {
+      width: 100%;
     }
 
     .menu-toggle {
@@ -974,36 +1277,134 @@
   .faq-question { font-size: 1rem; padding: 18px 12px; }
   .faq-answer { padding-left: 40px; }
 }
+.faq-intro {
+  text-align: center;
+  color: #b2ebf2;
+  font-size: 1.08rem;
+  margin-bottom: 24px;
+  opacity: 0.92;
+}
+.faq-intro a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  font-weight: 600;
+}
+.faq-accordion {
+  max-width: 700px;
+  margin: 32px auto 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.faq-item {
+  border-radius: 18px;
+  background: rgba(11, 20, 60, 0.82);
+  box-shadow: 0 4px 18px rgba(0,212,255,0.10);
+  border: 1.5px solid rgba(0,212,255,0.13);
+  overflow: hidden;
+  transition: box-shadow 0.22s;
+}
+.faq-item.open {
+  box-shadow: 0 8px 32px rgba(0,212,255,0.18);
+  border-color: var(--color-primary);
+}
+.faq-question {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-align: left;
+  padding: 22px 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  outline: none;
+  transition: background 0.18s;
+  position: relative;
+}
+.faq-icon {
+  background: #fff;
+  color: var(--color-primary);
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-right: 8px;
+  box-shadow: 0 2px 8px rgba(0,212,255,0.10);
+}
+.faq-toggle {
+  margin-left: auto;
+  transition: transform 0.3s;
+  display: flex;
+  align-items: center;
+  color: var(--color-primary);
+  font-size: 1.5rem;
+}
+.faq-question[aria-expanded="true"] .faq-toggle {
+  transform: rotate(180deg);
+}
+.faq-answer {
+  background: rgba(0,212,255,0.07);
+  color: #e0f7fa;
+  font-size: 1.08rem;
+  padding: 0 24px 18px 64px;
+  line-height: 1.6;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(.4,2,.6,1), padding 0.2s;
+}
+.faq-item.open .faq-answer,
+.faq-question[aria-expanded="true"] + .faq-answer {
+  max-height: 300px;
+  padding: 12px 24px 18px 64px;
+}
+@media (max-width: 700px) {
+  .faq-accordion { max-width: 98vw; }
+  .faq-question { font-size: 1rem; padding: 18px 12px; }
+  .faq-answer { padding-left: 40px; }
+  .faq-icon { width: 30px; height: 30px; font-size: 1.1rem; }
+}
   </style>
 </head>
 <body>
   <div id="particles-js"></div>
-  <nav class="navbar" data-aos="fade-down">
-  <div class="nav-container">
-    <a href="#inicio" class="nav-logo">GastoSimple</a>
-    <!-- Botón hamburguesa -->
-    <div class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
-      <span></span>
-      <span></span>
-      <span></span>
+    <nav class="navbar" data-aos="fade-down">
+      <div class="nav-container">
+        <a href="#inicio" class="nav-logo">
+          <img src="img/logo 1.png" alt="Logo Gasto Simple" class="nav-logo-img">
+          <span class="nav-logo-text">GastoSimple</span>
+        </a>
+        <!-- Botón hamburguesa -->
+        <div class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <!-- Menú de enlaces -->
+        <div class="nav-links" id="nav-links">
+          <a href="#features">Características</a>
+          <a href="#faq">Preguntas frecuentes</a>
+          <a href="#donate">Donar</a>
+          <a href="login.php" class="nav-login"><i class='bx bx-user'></i></a>
+      </div>
     </div>
-    <!-- Menú de enlaces -->
-    <div class="nav-links" id="nav-links">
-      <a href="#features">Características</a>
-      <a href="#faq">Preguntas frecuentes</a>
-      <a href="#donate">Donar</a>
-      <a href="login.php" class="nav-login"><i class='bx bx-user'></i></a>
-    </div>
-  </div>
   </nav>
   <header class="hero" id="inicio" data-aos="fade-down">
-    <img src="img/logo 1.png" alt="Logo Gasto Simple" class="logo">
-    <h1>Gasto Simple</h1>
-    <p>Tu herramienta intuitiva para registrar ingresos, gastos y ahorrar mejor.</p>
-    <nav class="botones">
-      <a href="login.php" class="btn btn-login">Iniciar sesión</a>
-      <a href="register.php" class="btn btn-register">Registrarse</a>
-    </nav>
+      <div class="hero-content">
+          <img src="img/logo 1.png" alt="Logo Gasto Simple" class="logo">
+          <h1>Gasto Simple</h1>
+          <p>Tu herramienta intuitiva para registrar ingresos, gastos y ahorrar mejor.</p>
+          <nav class="botones">
+              <a href="login.php" class="btn btn-login">Iniciar sesión</a>
+              <a href="register.php" class="btn btn-register">Registrarse</a>
+          </nav>
+      </div>
   </header>
     <section id="features" class="features" data-aos="fade-up">
       <h2>Características Principales</h2>
@@ -1026,25 +1427,37 @@
       </div>
     </section>
     <section id="screenshots" class="screenshots" data-aos="fade-up">
-      <h2>Antes y Después de Usar GastoSimple</h2>
-      <p style="text-align:center; color:#e0f7fa; max-width:600px; margin:0 auto 30px;">
-        Descubre cómo GastoSimple transforma tu control financiero. Visualiza la diferencia entre la desorganización y la claridad financiera que puedes lograr.
+      <h2>¿Cómo funciona GastoSimple?</h2>
+      <p class="screenshots-desc">
+        Gestiona tus finanzas en 3 pasos simples, con la tranquilidad de que tu información está protegida.
       </p>
-      <div class="screenshots-grid">
-        <div class="screenshot-card">
-          <figure>
-            <img src="img/reportes/descontrol.jpg" alt="Sin GastoSimple">
-            <figcaption>Antes: Sin control financiero</figcaption>
-          </figure>
+      <div class="screenshots-steps">
+        <div class="screenshot-card step">
+          <div class="step-icon"><i class='bx bx-user-check'></i></div>
+          <h3>1. Regístrate y Personaliza</h3>
+          <p>Crea tu cuenta en segundos. Personaliza categorías y ajusta tus preferencias de seguridad.</p>
         </div>
-        <div class="screenshot-card">
-          <figure>
-            <img src="img/reportes/control.jpg" alt="Con GastoSimple">
-            <figcaption>Después: Finanzas organizadas con GastoSimple</figcaption>
-          </figure>
+        <div class="screenshot-card step">
+          <div class="step-icon"><i class='bx bx-edit-alt'></i></div>
+          <h3>2. Registra tus Movimientos</h3>
+          <p>Agrega ingresos y gastos de forma rápida y sencilla. Visualiza tu evolución con reportes claros.</p>
+        </div>
+        <div class="screenshot-card step">
+          <div class="step-icon"><i class='bx bx-shield-quarter'></i></div>
+          <h3>3. Seguridad y Privacidad</h3>
+          <p>Tus datos están cifrados y protegidos. Solo tú tienes acceso a tu información financiera.</p>
         </div>
       </div>
-    </section>
+      <div class="security-banner" data-aos="zoom-in">
+        <div class="security-icon">
+          <i class='bx bx-lock-alt'></i>
+        </div>
+        <div class="security-text">
+          <strong>Protección de nivel bancario:</strong> cifrado avanzado, confidencialidad absoluta y control exclusivo de tus datos.<br>
+          <span class="security-note">Nunca solicitamos claves, códigos de seguridad ni información confidencial. Tu tranquilidad está siempre garantizada.</span>
+        </div>
+      </div>
+  </section>
   </section>
     <section id="testimonials" class="testimonials" data-aos="fade-up">
       <h2>Lo que Dicen Nuestros Usuarios</h2>
@@ -1158,52 +1571,74 @@
     </section>
     <section id="faq" class="faq" data-aos="fade-up">
       <h2>Preguntas Frecuentes</h2>
-      <div class="faq-accordion">
-        <div class="faq-item">
-          <button class="faq-question" aria-expanded="false">
-            <i class='bx bx-help-circle'></i>
-            ¿GastoSimple es gratuito?
-            <span class="faq-toggle"><i class='bx bx-chevron-down'></i></span>
-          </button>
-          <div class="faq-answer">
-            Sí, sin costos ocultos ni anuncios molestos.
+        <p class="faq-intro">
+          ¿Tienes dudas? Aquí resolvemos las preguntas más comunes sobre GastoSimple. Si necesitas más ayuda, <a href="pqr_guia.php">contáctanos</a>.
+        </p>
+        <div class="faq-accordion">
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-icon"><i class='bx bx-help-circle'></i></span>
+              ¿GastoSimple es realmente gratuito?
+              <span class="faq-toggle"><i class='bx bx-chevron-down'></i></span>
+            </button>
+            <div class="faq-answer">
+              <strong>Sí.</strong> GastoSimple es 100% gratuito, sin costos ocultos ni anuncios invasivos. Nuestro objetivo es ayudarte a mejorar tus finanzas, no vender tus datos ni mostrarte publicidad.
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-icon"><i class='bx bx-lock-alt'></i></span>
+              ¿Dónde y cómo se guardan mis datos?
+              <span class="faq-toggle"><i class='bx bx-chevron-down'></i></span>
+            </button>
+            <div class="faq-answer">
+              Tus datos se almacenan en servidores seguros con cifrado avanzado. Solo tú puedes acceder a tu información y nunca compartimos tus datos con terceros.
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-icon"><i class='bx bx-shield-quarter'></i></span>
+              ¿Mis datos están protegidos?
+              <span class="faq-toggle"><i class='bx bx-chevron-down'></i></span>
+            </button>
+            <div class="faq-answer">
+              Absolutamente. Utilizamos tecnología de seguridad bancaria, cifrado SSL y buenas prácticas para proteger tu privacidad. Jamás solicitamos contraseñas bancarias ni información confidencial.
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-icon"><i class='bx bx-mobile-alt'></i></span>
+              ¿Puedo usar GastoSimple en mi móvil o tablet?
+              <span class="faq-toggle"><i class='bx bx-chevron-down'></i></span>
+            </button>
+            <div class="faq-answer">
+              ¡Por supuesto! GastoSimple es 100% responsive y funciona perfectamente en cualquier dispositivo: móvil, tablet o computadora.
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-icon"><i class='bx bx-support'></i></span>
+              ¿Qué hago si tengo otra pregunta?
+              <span class="faq-toggle"><i class='bx bx-chevron-down'></i></span>
+            </button>
+            <div class="faq-answer">
+              Puedes visitar nuestra sección <a href="pqr_guia.php">PQR</a> o escribirnos directamente. ¡Estamos para ayudarte!
+            </div>
           </div>
         </div>
-        <div class="faq-item">
-          <button class="faq-question" aria-expanded="false">
-            <i class='bx bx-lock-alt'></i>
-            ¿Dónde se guardan mis datos?
-            <span class="faq-toggle"><i class='bx bx-chevron-down'></i></span>
-          </button>
-          <div class="faq-answer">
-            En servidores seguros. Tú tienes el control.
-          </div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question" aria-expanded="false">
-            <i class='bx bx-shield-quarter'></i>
-            ¿Mis datos están protegidos?
-            <span class="faq-toggle"><i class='bx bx-chevron-down'></i></span>
-          </button>
-          <div class="faq-answer">
-            Sí, usamos cifrado y buenas prácticas de seguridad para proteger tu información.
-          </div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question" aria-expanded="false">
-            <i class='bx bx-mobile-alt'></i>
-            ¿Puedo usar GastoSimple en mi móvil?
-            <span class="faq-toggle"><i class='bx bx-chevron-down'></i></span>
-          </button>
-          <div class="faq-answer">
-            Sí, la plataforma es 100% responsive y funciona en cualquier dispositivo.
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
       <section id="donate" class="donate" data-aos="fade-up">
         <h2>¿Te gusta Gasto Simple?</h2>
-        <p class="donate-desc">Apoya el proyecto y ayúdanos a seguir creciendo 🚀</p>
+        <p class="donate-desc">
+          Si Gasto Simple te ayuda a mejorar tus finanzas, considera apoyarnos.<br>
+          Tu aporte permite que la plataforma siga siendo gratuita, segura y en constante evolución para ti y toda la comunidad.
+        </p>
+        <div class="donate-impact">
+          <i class='bx bx-heart-circle'></i>
+          <span>
+            <strong>Cada donación cuenta:</strong> Ayudas a mantener servidores, mejorar funciones y crear nuevas herramientas para todos.
+          </span>
+        </div>
         <div class="donate-buttons">
           <a href="#" target="_blank" class="donate-btn">
             <div class="donate-icon">
@@ -1218,12 +1653,25 @@
             <span>Apóyame en Patreon</span>
           </a>
         </div>
+        <p class="donate-thanks">
+          <i class='bx bx-happy'></i>
+          ¡Gracias por ser parte de esta comunidad y confiar en Gasto Simple!
+        </p>
       </section>
-  <footer>
-    <a href="nosotros.php">Nosotros</a> |
-    <a href="pqr_guia.php">PQR</a> |
-    <a href="terminos.php">Términos y condiciones</a>
-  </footer>
+      <footer>
+        <div class="footer-content">
+          <div class="footer-links">
+            <a href="nosotros.html"><i class='bx bx-group'></i> Nosotros</a>
+            <span class="footer-sep">|</span>
+            <a href="pqr_guia.php"><i class='bx bx-help-circle'></i> PQR</a>
+            <span class="footer-sep">|</span>
+            <a href="terminos.php"><i class='bx bx-file'></i> Términos y condiciones</a>
+          </div>
+          <div class="footer-copy">
+            <i class='bx bx-copyright'></i> 2025 Gasto Simple. Todos los derechos reservados.
+          </div>
+        </div>
+      </footer>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.js"></script>
   <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <script>
@@ -1323,4 +1771,3 @@
   </script>
 </body>
 </html>
-<?php include 'includes/footer.php'; ?>

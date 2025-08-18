@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nosotros | GastoSimple</title>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      background: #0b143c;
+      color: #e0f7fa;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    #particles-js {
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      top: 0; left: 0;
+    }
+    .about-container {
+      position: relative;
+      z-index: 1;
+      max-width: 740px;
+      margin: 60px auto 0 auto;
+      background: rgba(11, 20, 60, 0.92);
+      border-radius: 28px;
+      box-shadow: 0 8px 32px 0 rgba(0,212,255,0.13), 0 2px 12px rgba(0,0,0,0.10);
+      padding: 38px 32px 32px 32px;
+      text-align: center;
+    }
+    .about-logo {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+      margin-bottom: 18px;
+      background: transparent;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,212,255,0.13);
+    }
+    h1 {
+      color: var(--color-primary, #00D4FF);
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+    .about-buttons {
+      margin: 24px 0 18px 0;
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .about-btn {
+      background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      padding: 12px 28px;
+      font-size: 1.08rem;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 2px 12px rgba(0,212,255,0.10);
+      transition: background 0.18s, color 0.18s, transform 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .about-btn:hover {
+      background: #fff;
+      color: #00D4FF;
+      transform: translateY(-2px) scale(1.04);
+    }
+    .about-section {
+      margin: 32px 0 0 0;
+      text-align: left;
+    }
+    .about-section h2 {
+      color: #00D4FF;
+      font-size: 1.25rem;
+      margin-bottom: 8px;
+      margin-top: 24px;
+      letter-spacing: 0.5px;
+    }
+    .about-section p {
+      color: #e0f7fa;
+      font-size: 1.08rem;
+      margin: 0 0 12px 0;
+      line-height: 1.7;
+      opacity: 0.95;
+    }
+    .about-context {
+      background: rgba(0,212,255,0.10);
+      border-radius: 16px;
+      padding: 18px 18px 10px 18px;
+      margin: 36px 0 0 0;
+      box-shadow: 0 2px 12px rgba(0,212,255,0.10);
+    }
+    .about-context h2 {
+      color: #00D4FF;
+      font-size: 1.18rem;
+      margin-bottom: 10px;
+      margin-top: 0;
+    }
+    .about-context ul {
+      margin: 0 0 0 18px;
+      padding: 0;
+      color: #b2ebf2;
+      font-size: 1.03rem;
+    }
+    .about-context li {
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .about-context a {
+      color: #00D4FF;
+      text-decoration: underline;
+      font-weight: 500;
+    }
+    .about-quote {
+      margin: 38px 0 0 0;
+      padding: 22px 18px;
+      background: rgba(0,212,255,0.10);
+      border-left: 5px solid #00D4FF;
+      border-radius: 16px;
+      font-style: italic;
+      color: #b2ebf2;
+      font-size: 1.13rem;
+      box-shadow: 0 2px 12px rgba(0,212,255,0.10);
+      position: relative;
+    }
+    .about-quote:before {
+      content: "“";
+      font-size: 2.5rem;
+      color: #00D4FF;
+      position: absolute;
+      left: 12px;
+      top: 2px;
+      opacity: 0.3;
+    }
+    .about-quote-author {
+      display: block;
+      margin-top: 12px;
+      color: #00D4FF;
+      font-weight: 700;
+      font-size: 1rem;
+      text-align: right;
+    }
+    @media (max-width: 800px) {
+      .about-container {
+        max-width: 96vw;
+        padding: 24px 8vw 24px 8vw;
+      }
+    }
+    @media (max-width: 500px) {
+      .about-logo {
+        width: 60px;
+        height: 60px;
+      }
+      h1 {
+        font-size: 1.4rem;
+      }
+      .about-section h2, .about-context h2 {
+        font-size: 1.08rem;
+      }
+      .about-quote {
+        font-size: 1rem;
+        padding: 16px 8px;
+      }
+      .about-context {
+        padding: 12px 6px 6px 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="particles-js"></div>
+  <main class="about-container">
+    <img src="img/logo 1.png" alt="Logo GastoSimple" class="about-logo">
+    <h1>Nosotros somos <span style="color:#00D4FF;">GastoSimple</span></h1>
+    <div class="about-buttons">
+      <a href="index.php" class="about-btn"><i class='bx bx-home'></i> Inicio</a>
+      <a href="login.php" class="about-btn"><i class='bx bx-user'></i> Iniciar sesión</a>
+      <a href="register.php" class="about-btn"><i class='bx bx-user-plus'></i> Registrarse</a>
+    </div>
+    <div class="about-section">
+      <h2>Objetivo</h2>
+      <p>
+        Brindar a las personas en Colombia una herramienta digital sencilla, segura y gratuita para registrar, entender y mejorar sus finanzas personales, promoviendo el ahorro y la toma de decisiones inteligentes.
+      </p>
+      <h2>Motivaciones</h2>
+      <p>
+        Nacimos de la necesidad de hacer el control financiero accesible para todos, sin complicaciones ni costos ocultos. Creemos que la educación financiera es clave para el bienestar y el progreso de nuestra sociedad.
+      </p>
+      <h2>Misión</h2>
+      <p>
+        Facilitar la gestión financiera de los colombianos, ofreciendo una plataforma intuitiva, confiable y adaptada a sus necesidades, que fomente el ahorro y el crecimiento personal.
+      </p>
+      <h2>Visión</h2>
+      <p>
+        Ser la aplicación líder en Colombia en educación y control financiero personal, impactando positivamente la vida de millones de usuarios y contribuyendo a una cultura de responsabilidad económica.
+      </p>
+    </div>
+    <div class="about-context">
+      <h2>¿Por qué es importante el control financiero en Colombia?</h2>
+      <ul>
+        <li>
+          <strong>El 70% de los colombianos no lleva un registro de sus gastos</strong> (<a href="https://www.larepublica.co/finanzas-personales/el-70-de-los-colombianos-no-lleva-un-registro-de-sus-gastos-3239647" target="_blank">La República</a>).
+        </li>
+        <li>
+          <strong>El sobreendeudamiento afecta a millones de hogares</strong> (<a href="https://www.eltiempo.com/economia/sectores/colombianos-sobreendeudados-por-que-y-que-hacer-para-salir-de-esa-situacion-771095" target="_blank">El Tiempo</a>).
+        </li>
+        <li>
+          <strong>Solo el 18% de los adultos ahorra de manera formal</strong> (<a href="https://www.dane.gov.co/index.php/estadisticas-por-tema/finanzas-personales" target="_blank">DANE</a>).
+        </li>
+        <li>
+          <strong>La falta de educación financiera limita el progreso social y económico</strong> (<a href="https://www.semana.com/economia/articulo/educacion-financiera-en-colombia-por-que-es-tan-baja-y-como-mejorarla/202100/" target="_blank">Semana</a>).
+        </li>
+      </ul>
+    </div>
+    <div class="about-quote">
+      "Si ustedes los jóvenes no asumen la dirección de su propio país, nadie va a venir a salvárselo. ¡Nadie!"
+      <span class="about-quote-author">— Jaime Garzón</span>
+    </div>
+  </main>
+  <!-- particles.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script>
+    particlesJS("particles-js", {
+        "particles": {
+        "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+        "color": { "value": "#00D4FF" },
+        "shape": { "type": "circle" },
+        "opacity": { "value": 0.5, "anim": { "enable": true, "speed": 1 } },
+        "size": { "value": 3, "random": true, "anim": { "enable": true, "speed": 40 } },
+        "line_linked": { "enable": true, "distance": 150, "color": "#00D4FF", "opacity": 0.4, "width": 1 },
+        "move": { "enable": true, "speed": 1.2, "direction": "none", "random": false, "straight": false, "out_mode": "out" }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": { "enable": false },
+          "onclick": { "enable": false }
+        }
+      },
+      "retina_detect": true
+    });
+  </script>
+</body>
+</html>
