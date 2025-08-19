@@ -56,8 +56,7 @@ try {
         $stmt->execute([$hash, $correo]);
 
         if ($stmt->rowCount() > 0) {
-          // Redirige seguro
-          header("Location: ../login.php");
+          header("Location: ../login.php?mensaje=Contraseña actualizada correctamente");
           exit();
         } else {
           $mensaje = "No se pudo actualizar la contraseña. Verifica tu correo.";
@@ -92,39 +91,52 @@ body, html {
   width: 100%; height: 100%;
   z-index: 0;
 }
-
 .glass-card {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 20px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  background: rgba(255, 255, 255, 0.13);
+  border: 1.5px solid rgba(0,212,255,0.18);
+  border-radius: 22px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 12px 40px rgba(0,212,255,0.13), 0 4px 16px rgba(0,0,0,0.13);
   z-index: 1;
-  transition: all 0.3s ease-in-out;
+  padding: 38px 32px 32px 32px;
+  text-align: center;
+  position: relative;
+  transition: box-shadow 0.2s;
+  max-width: 400px;
+  width: 100%;
 }
-
 .glass-card:hover {
-  transform: scale(1.02);
+  box-shadow: 0 20px 60px rgba(0,212,255,0.18), 0 8px 32px rgba(0,0,0,0.18);
 }
-
+.glass-card .logo-recuperar {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 12px;
+  background: transparent;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,212,255,0.13);
+}
 .glass-card h2 {
-  color: #fff;
+  color: #00D4FF;
   text-align: center;
   margin-bottom: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
-
 .glass-card label {
-  color: #eee;
+  color: #e0f7fa;
+  font-weight: 500;
 }
-
 .glass-card input {
   background: rgba(255, 255, 255, 0.15);
   border: none;
   color: #fff;
+  transition: background 0.2s;
 }
-
 .glass-card input:focus {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
 }
 .glass-card input[disabled] {
   background: rgba(255, 255, 255, 0.05) !important;
@@ -132,15 +144,14 @@ body, html {
   opacity: 1 !important;
   font-weight: 500;
 }
-
 .glass-card a {
   color: #00D4FF;
+  transition: color 0.2s;
 }
-
 .glass-card a:hover {
+  color: #fff;
   text-decoration: underline;
 }
-
 .mensaje {
   background-color: #1E1E2F;
   color: #F8BBD0;
@@ -150,29 +161,52 @@ body, html {
   margin-bottom: 20px;
   animation: fadeIn 0.5s ease-in-out;
 }
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px);}
   to { opacity: 1; transform: translateY(0);}
 }
-
 .btn-custom {
-  background: #00D4FF;
+  background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
   border: none;
-  color: #0C1634;
-  font-weight: bold;
-  transition: all 0.3s ease-in-out;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.08rem;
+  box-shadow: 0 2px 12px rgba(0,212,255,0.10);
+  transition: background 0.18s, color 0.18s, transform 0.18s;
 }
-
 .btn-custom:hover {
-  background: #00a6cc;
+  background: #fff;
+  color: #00D4FF;
+  transform: translateY(-2px) scale(1.04);
 }
-
+.btn-outline-light {
+  color: #00D4FF !important;
+  border-color: #00D4FF !important;
+  background: none !important;
+  font-weight: 500;
+  transition: background 0.18s, color 0.18s;
+}
+.btn-outline-light:hover {
+  background: #00D4FF !important;
+  color: #fff !important;
+}
+.divider {
+  border-bottom: 1.5px solid #00D4FF;
+  opacity: 0.18;
+  margin: 18px 0 18px 0;
+}
+@media (max-width: 600px) {
+  .glass-card {
+    padding: 18px 4vw 18px 4vw;
+    max-width: 98vw;
+  }
+}
 </style>
 
 <div id="particles-js"></div>
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh; position: relative; z-index: 1;">
-  <div class="glass-card p-4 col-md-6 col-lg-4">
+  <div class="glass-card p-4">
+    <img src="../img/logo 1.png" alt="Logo GastoSimple" class="logo-recuperar">
     <h2>Recuperar Contraseña</h2>
     <?php if ($mensaje): ?>
       <div class="mensaje"><?= htmlspecialchars($mensaje) ?></div>
@@ -180,69 +214,72 @@ body, html {
 
     <?php if ($paso == 1): ?>
       <form method="POST" action="recuperar_password.php">
-        <div class="mb-3">
+        <div class="mb-3 text-start">
           <label for="correo" class="form-label">Correo:</label>
           <input type="email" class="form-control" name="correo" id="correo" required>
         </div>
         <button type="submit" class="btn btn-custom w-100 mb-2">Continuar</button>
-        <a href="../login.php" class="btn btn-outline-light w-100 mb-2">Ir al inicio de sesión</a>
-        <a href="../register.php" class="btn btn-outline-light w-100">Ir al Registro</a>
+        <div class="divider"></div>
+        <a href="../login.php" class="btn btn-outline-light w-100 mb-2"><i class="bi bi-box-arrow-in-right"></i> Ir al inicio de sesión</a>
+        <a href="../register.php" class="btn btn-outline-light w-100"><i class="bi bi-person-plus"></i> Ir al Registro</a>
       </form>
 
     <?php elseif ($paso == 2): ?>
       <form method="POST" action="recuperar_password.php">
         <input type="hidden" name="correo" value="<?= htmlspecialchars($correo) ?>">
-        <div class="mb-3">
+        <div class="mb-3 text-start">
           <label class="form-label">Pregunta Secreta:</label>
           <input type="text" class="form-control" value="<?= htmlspecialchars($pregunta) ?>" disabled>
         </div>
-        <div class="mb-3">
+        <div class="mb-3 text-start">
           <label for="respuesta" class="form-label">Tu Respuesta:</label>
           <input type="text" class="form-control" name="respuesta" id="respuesta" required>
         </div>
         <button type="submit" class="btn btn-custom w-100 mb-2">Verificar Respuesta</button>
-        <a href="../login.php" class="btn btn-outline-light w-100 mb-2">Ir al inicio de sesión</a>
-        <a href="../register.php" class="btn btn-outline-light w-100">Ir al Registro</a>
+        <div class="divider"></div>
+        <a href="../login.php" class="btn btn-outline-light w-100 mb-2"><i class="bi bi-box-arrow-in-right"></i> Ir al inicio de sesión</a>
+        <a href="../register.php" class="btn btn-outline-light w-100"><i class="bi bi-person-plus"></i> Ir al Registro</a>
       </form>
 
     <?php elseif ($paso == 3): ?>
       <form method="POST" action="recuperar_password.php">
         <input type="hidden" name="correo" value="<?= htmlspecialchars($correo) ?>">
-        <div class="mb-3">
+        <div class="mb-3 text-start">
           <label for="nueva_contrasena" class="form-label">Nueva Contraseña:</label>
           <input type="password" class="form-control" name="nueva_contrasena" id="nueva_contrasena" required>
         </div>
-        <button type="submit" class="btn btn-success w-100 mb-2">Guardar Nueva Contraseña</button>
+        <button type="submit" class="btn btn-custom w-100 mb-2">Guardar Nueva Contraseña</button>
+        <div class="divider"></div>
+        <a href="../login.php" class="btn btn-outline-light w-100"><i class="bi bi-box-arrow-in-right"></i> Ir al inicio de sesión</a>
       </form>
     <?php endif; ?>
   </div>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <script>
-particlesJS("particles-js", {
-  "particles": {
-    "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
-    "color": { "value": "#ffffff" },
-    "shape": { "type": "circle" },
-    "opacity": { "value": 0.3, "anim": { "enable": true, "speed": 1 } },
-    "size": { "value": 3, "random": true },
-    "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.2, "width": 1 },
-    "move": { "enable": true, "speed": 2 }
-  },
-  "interactivity": {
-    "events": {
-      "onhover": { "enable": true, "mode": "repulse" },
-      "onclick": { "enable": true, "mode": "push" }
+  particlesJS("particles-js", {
+    "particles": {
+      "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+      "color": { "value": "#00D4FF" },
+      "shape": { "type": "circle" },
+      "opacity": { "value": 0.5, "anim": { "enable": true, "speed": 1 } },
+      "size": { "value": 3, "random": true, "anim": { "enable": true, "speed": 40 } },
+      "line_linked": { "enable": true, "distance": 150, "color": "#00D4FF", "opacity": 0.4, "width": 1 },
+      "move": { "enable": true, "speed": 3 }
     },
-    "modes": {
-      "repulse": { "distance": 100, "duration": 0.4 },
-      "push": { "particles_nb": 4 }
-    }
-  },
-  "retina_detect": true
-});
+    "interactivity": {
+      "events": {
+        "onhover": { "enable": true, "mode": "repulse" },
+        "onclick": { "enable": true, "mode": "push" }
+      },
+      "modes": {
+        "repulse": { "distance": 100, "duration": 0.4 },
+        "push": { "particles_nb": 4 }
+      }
+    },
+    "retina_detect": true
+  });
 </script>
 
 <?php include '../includes/footer.php'; ?>
