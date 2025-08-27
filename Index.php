@@ -1453,7 +1453,7 @@ footer {
           <i class='bx bx-lock-alt'></i>
         </div>
         <div class="security-text">
-          <strong>Protección de nivel bancario:</strong> cifrado avanzado, confidencialidad absoluta y control exclusivo de tus datos.<br>
+          <strong>Protección de seguridad:</strong> cifrado avanzado, confidencialidad absoluta y control exclusivo de tus datos.<br>
           <span class="security-note">Nunca solicitamos claves, códigos de seguridad ni información confidencial. Tu tranquilidad está siempre garantizada.</span>
         </div>
       </div>

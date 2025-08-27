@@ -3,7 +3,7 @@ require_once 'includes/db.php';
 
 // Datos del nuevo admin
 $nombre = 'Administrador';
-$correo = 'admin@gastosimple.com';
+$correo = 'admin@gastosime.com';
 $contrasena = 'admin12345';
 
 // Encriptar la contraseña

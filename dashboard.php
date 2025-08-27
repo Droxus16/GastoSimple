@@ -94,17 +94,41 @@ body {
 .sidebar button {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px;
-  font-size: 1rem;
+  gap: 14px;
+  padding: 14px 18px;
+  font-size: 1.08rem;
   border: none;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #00D4FF;
-  font-weight: bold;
+  border-radius: 16px;
+  background: linear-gradient(90deg, rgba(0,212,255,0.13) 0%, rgba(11,20,60,0.92) 100%);
+  color: #e0f7fa;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(6px);
+  transition: 
+    background 0.18s, 
+    color 0.18s, 
+    box-shadow 0.18s, 
+    transform 0.18s;
+  box-shadow: 0 2px 12px rgba(0,212,255,0.08);
+  margin-bottom: 8px;
+  position: relative;
+  outline: none;
+}
+.sidebar button i {
+  font-size: 1.35em;
+  color: #00D4FF;
+  transition: color 0.18s;
+}
+.sidebar button:hover, .sidebar button:focus {
+  background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(0,212,255,0.18);
+  transform: translateY(-2px) scale(1.04);
+}
+.sidebar button:hover i, .sidebar button:focus i {
+  color: #fff;
+}
+.menu-top, .menu-bottom {
+  margin-bottom: 18px;
 }
 
 .sidebar button:hover {
@@ -304,11 +328,16 @@ body {
 
   .sidebar .menu-top,
   .sidebar .menu-bottom {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
+    border-top: 1.5px solid rgba(0,212,255,0.13);
+    padding-top: 18px;
+    margin-top: 18px;
   }
+  #btn-notificaciones {
+  background: linear-gradient(90deg, rgba(0,212,255,0.18) 0%, rgba(11,20,60,0.92) 100%);
+  color: #00D4FF;
+  font-weight: 700;
+  position: relative;
+}
 
   .main-content {
     height: auto;
@@ -316,11 +345,38 @@ body {
     margin-top: 10px;
   }
 }
+#btn-notificaciones:hover, #btn-notificaciones:focus {
+  background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
+  color: #fff;
+}
+#btn-notificaciones i {
+  color: #00D4FF;
+}
+#btn-notificaciones:hover i, #btn-notificaciones:focus i {
+  color: #fff;
+}
+#badge-alerta {
+  background: #FF6B6B;
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  margin-left: 8px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 6px #FF6B6B;
+}
+@media (max-width: 768px) {
+  .sidebar button {
+    font-size: 1rem;
+    padding: 10px 8px;
+    border-radius: 12px;
+    gap: 8px;
+  }
+}
 </style>
 <!-- 🎆 Partículas de fondo -->
 <div id="particles-js"></div>
 <div class="dashboard-container">
-  <!-- 📌 Sidebar -->
   <div class="sidebar">
     <div class="menu-top">
       <button onclick="location.href='registro.php'">
@@ -369,7 +425,7 @@ body {
             </div>
             <canvas id="graficoFinanzas"></canvas>
 
-            <!-- ✅ Mensaje “Sin registros” -->
+            <!--Mensaje -->
             <div id="mensaje-sin-registros" style="
               position: absolute;
               top: 50%; left: 50%;
@@ -384,7 +440,7 @@ body {
             </div>
           </div>
         </div>
-        <!-- ✅ Ingresos -->
+        <!-- Ingresos -->
         <div class="grid-stack-item"
             gs-x="8" gs-y="0" gs-w="2" gs-h="2">
           <div class="grid-stack-item-content">
@@ -392,7 +448,7 @@ body {
             <p id="ingresos">$0.00</p>
           </div>
         </div>
-        <!-- ✅ Gastos -->
+        <!-- Gastos -->
         <div class="grid-stack-item"
             gs-x="10" gs-y="0" gs-w="2" gs-h="2">
           <div class="grid-stack-item-content">
@@ -400,7 +456,7 @@ body {
             <p id="gastos">$0.00</p>
           </div>
         </div>
-        <!-- ✅ Ahorro disponible -->
+        <!--Ahorro disponible -->
         <div class="grid-stack-item"
             id="contenedor-ahorro"
             gs-x="8" gs-y="2" gs-w="4" gs-h="2"
@@ -411,7 +467,7 @@ body {
           </div>
         </div>
 
-      <!-- ✅ Ahorro para metas (se oculta si no aplica) -->
+      <!--Ahorro para metas (se oculta si no aplica) -->
       <div class="grid-stack-item" id="contenedor-aportes" gs-x="8" gs-y="4" gs-w="4" gs-h="1" style="display: none;">
         <div class="grid-stack-item-content">
           <h3>Ahorro invertido</h3>

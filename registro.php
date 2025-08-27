@@ -65,7 +65,6 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0"></script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
 <style>
   /*CONTENEDORES PRINCIPALES */
   .form-container, .tabla-container {
@@ -217,26 +216,89 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
     flex-direction: column;
     gap: 15px;
   }
-  .sidebar button {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px;
-    border: none;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.08);
-    color: #00D4FF;
-    font-weight: bold;
-    cursor: pointer;
-    backdrop-filter: blur(6px);
-    transition: all 0.3s ease;
-  }
+.sidebar button {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  font-size: 1.08rem;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(90deg, rgba(0,212,255,0.13) 0%, rgba(11,20,60,0.92) 100%);
+  color: #e0f7fa;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 
+    background 0.18s, 
+    color 0.18s, 
+    box-shadow 0.18s, 
+    transform 0.18s;
+  box-shadow: 0 2px 12px rgba(0,212,255,0.08);
+  margin-bottom: 8px;
+  position: relative;
+  outline: none;
+}
   .sidebar button:hover {
     background-color: #00D4FF;
     color: #0C1634;
     transform: scale(1.05);
   }
-
+.sidebar button i {
+  font-size: 1.35em;
+  color: #00D4FF;
+  transition: color 0.18s;
+}
+.sidebar button:hover, .sidebar button:focus {
+  background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(0,212,255,0.18);
+  transform: translateY(-2px) scale(1.04);
+}
+.sidebar button:hover i, .sidebar button:focus i {
+  color: #fff;
+}
+.menu-top, .menu-bottom {
+  margin-bottom: 18px;
+}
+.sidebar .menu-bottom {
+  border-top: 1.5px solid rgba(0,212,255,0.13);
+  padding-top: 18px;
+  margin-top: 18px;
+}
+#btn-notificaciones {
+  background: linear-gradient(90deg, rgba(0,212,255,0.18) 0%, rgba(11,20,60,0.92) 100%);
+  color: #00D4FF;
+  font-weight: 700;
+  position: relative;
+}
+#btn-notificaciones:hover, #btn-notificaciones:focus {
+  background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
+  color: #fff;
+}
+#btn-notificaciones i {
+  color: #00D4FF;
+}
+#btn-notificaciones:hover i, #btn-notificaciones:focus i {
+  color: #fff;
+}
+#badge-alerta {
+  background: #FF6B6B;
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  margin-left: 8px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 6px #FF6B6B;
+}
+@media (max-width: 768px) {
+  .sidebar button {
+    font-size: 1rem;
+    padding: 10px 8px;
+    border-radius: 12px;
+    gap: 8px;
+  }
+}
   .main-content {
     flex: 1;
     overflow-y: auto;
@@ -310,7 +372,64 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
   max-height: 500px; /* Ajustable según el contenido */
   opacity: 1;
 }
-
+.glass-card {
+  background: rgba(255, 255, 255, 0.13);
+  border: 1.5px solid rgba(0,212,255,0.18);
+  border-radius: 22px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 12px 40px rgba(0,212,255,0.13), 0 4px 16px rgba(0,0,0,0.13);
+  z-index: 1;
+  padding: 38px 32px 32px 32px;
+  text-align: center;
+  position: relative;
+  transition: box-shadow 0.2s;
+  max-width: 600px;
+  margin: 0 auto 24px auto;
+}
+.glass-card h2 {
+  color: #00D4FF;
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 18px;
+  letter-spacing: 1px;
+}
+.btn-info, .btn-info:focus {
+  background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.08rem;
+  box-shadow: 0 2px 12px rgba(0,212,255,0.10);
+  transition: background 0.18s, color 0.18s, transform 0.18s;
+}
+.btn-info:hover {
+  background: #fff;
+  color: #00D4FF;
+  transform: translateY(-2px) scale(1.04);
+}
+.form-control:focus, .form-select:focus {
+  border-color: #00D4FF;
+  box-shadow: 0 0 0 2px rgba(0,212,255,0.18);
+  background: rgba(255,255,255,0.09);
+  color: #fff;
+}
+.logo-register {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  margin-bottom: 10px;
+  background: transparent;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,212,255,0.13);
+}
+select, select option {
+  color: #222 !important; /* O el color que prefieras para contraste */
+  background: #fff !important; /* Opcional: mejora la visibilidad del desplegable */
+}
+.form-select, .form-select option {
+  color: #222 !important;
+  background: #fff !important;
+}
 </style>
 <div id="particles-js"></div>
 <div class="dashboard-container">
@@ -336,25 +455,29 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
  <!-- Contenido principal -->
 <div class="main-content">
   <!-- Formulario de registro -->
-  <div class="form-container">
-    <h2>Registrar Gasto o Ingreso</h2>
-
-    <form id="form-registro" action="includes/insertar_transaccion.php" method="POST">
-      <label for="tipo">Tipo:</label>
-      <select name="tipo" id="tipo" required onchange="filtrarCategorias()">
+<div class="form-container glass-card">
+  <img src="img/logo 1.png" alt="Logo GastoSimple" class="logo-register" style="width:54px;height:54px;margin-bottom:10px;">
+  <h2>Registrar Gasto o Ingreso</h2>
+  <form id="form-registro" action="includes/insertar_transaccion.php" method="POST">
+    <div class="mb-3 text-start">
+      <label for="tipo" class="form-label">Tipo:</label>
+      <select name="tipo" id="tipo" class="form-select" required onchange="filtrarCategorias()">
         <option value="">-- Selecciona --</option>
         <option value="ingreso">Ingreso</option>
         <option value="gasto">Gasto</option>
       </select>
-
-      <label for="fecha">Fecha:</label>
-      <input type="date" name="fecha" required>
-
-      <label for="monto">Monto:</label>
-      <input type="number" name="monto" step="0.01" required>
-
-      <label for="categoria">Categoría:</label>
-      <select name="categoria" id="categoria" required onchange="mostrarCampoNuevaCategoria(this)">
+    </div>
+    <div class="mb-3 text-start">
+      <label for="fecha" class="form-label">Fecha:</label>
+      <input type="date" name="fecha" class="form-control" required>
+    </div>
+    <div class="mb-3 text-start">
+      <label for="monto" class="form-label">Monto:</label>
+      <input type="number" name="monto" class="form-control" step="0.01" required>
+    </div>
+    <div class="mb-3 text-start">
+      <label for="categoria" class="form-label">Categoría:</label>
+      <select name="categoria" id="categoria" class="form-select" required onchange="mostrarCampoNuevaCategoria(this)">
         <option value="">-- Selecciona categoría --</option>
         <?php foreach ($categorias as $cat): ?>
           <option value="<?= $cat['id'] ?>" data-tipo="<?= $cat['tipo'] ?>">
@@ -363,53 +486,45 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
         <?php endforeach; ?>
         <option value="nueva">+ Agregar nueva categoría</option>
       </select>
-
-      <div id="nueva-categoria-container" style="display:none;">
-        <label for="nueva_categoria">Nueva Categoría:</label>
-        <input type="text" name="nueva_categoria" id="nueva_categoria">
-      </div>
-
-      <label for="descripcion">Descripción:</label>
-      <textarea name="descripcion" rows="2"></textarea>
-
-      <!-- NUEVA SECCIÓN DE CONFIGURACIÓN RECURRENTE -->
-      <!-- Activador de configuración recurrente -->
-      <div class="form-check form-switch my-3">
-        <input class="form-check-input" type="checkbox" role="switch" id="recurrente" name="recurrente">
-        <label class="form-check-label fw-bold text-white" for="recurrente">
-          <i class="bi bi-arrow-repeat me-1"></i> Registrar automáticamente
+    </div>
+    <div id="nueva-categoria-container" style="display:none;">
+      <label for="nueva_categoria" class="form-label">Nueva Categoría:</label>
+      <input type="text" name="nueva_categoria" id="nueva_categoria" class="form-control">
+    </div>
+    <div class="mb-3 text-start">
+      <label for="descripcion" class="form-label">Descripción:</label>
+      <textarea name="descripcion" class="form-control" rows="2"></textarea>
+    </div>
+    <!-- NUEVA SECCIÓN DE CONFIGURACIÓN RECURRENTE -->
+    <div class="form-check form-switch my-3 text-start">
+      <input class="form-check-input" type="checkbox" role="switch" id="recurrente" name="recurrente">
+      <label class="form-check-label fw-bold text-white" for="recurrente">
+        <i class="bi bi-arrow-repeat me-1"></i> Registrar automáticamente
+      </label>
+    </div>
+    <div id="config-recurrente" class="recurrente-config collapse-custom">
+      <label for="frecuencia" class="form-label text-white">
+        <i class="bi bi-calendar2-week-fill me-1"></i> Frecuencia:
+      </label>
+      <select class="form-select mb-3" name="frecuencia" id="frecuencia">
+        <option value="mensual">Mensual</option>
+        <option value="quincenal">Quincenal</option>
+        <option value="semanal">Semanal</option>
+      </select>
+      <label for="dia_fijo" class="form-label text-white">
+        <i class="bi bi-clock-fill me-1"></i> Día de ejecución (1-31):
+      </label>
+      <input type="number" class="form-control mb-3" name="dia_fijo" id="dia_fijo" min="1" max="31">
+      <div class="form-check mt-2">
+        <input class="form-check-input" type="checkbox" id="monto_variable" name="monto_variable">
+        <label class="form-check-label text-white" for="monto_variable">
+          <i class="bi bi-exclamation-circle-fill me-1"></i> Monto variable (pedir confirmación)
         </label>
       </div>
-
-      <!-- Sección de configuración recurrente con animación -->
-      <div id="config-recurrente" class="recurrente-config collapse-custom">
-        <label for="frecuencia" class="form-label text-white">
-          <i class="bi bi-calendar2-week-fill me-1"></i> Frecuencia:
-        </label>
-        <select class="form-select mb-3" name="frecuencia" id="frecuencia">
-          <option value="mensual">Mensual</option>
-          <option value="quincenal">Quincenal</option>
-          <option value="semanal">Semanal</option>
-        </select>
-
-        <label for="dia_fijo" class="form-label text-white">
-          <i class="bi bi-clock-fill me-1"></i> Día de ejecución (1-31):
-        </label>
-        <input type="number" class="form-control mb-3" name="dia_fijo" id="dia_fijo" min="1" max="31">
-
-        <div class="form-check mt-2">
-          <input class="form-check-input" type="checkbox" id="monto_variable" name="monto_variable">
-          <label class="form-check-label text-white" for="monto_variable">
-            <i class="bi bi-exclamation-circle-fill me-1"></i> Monto variable (pedir confirmación)
-          </label>
-        </div>
-      </div>
-
-
-
-      <button type="submit">Guardar Registro</button>
-    </form>
-  </div>
+    </div>
+    <button type="submit" class="btn btn-info w-100 mt-2">Guardar Registro</button>
+  </form>
+</div>
 
     <!-- Tabla de registros -->
     <div class="tabla-container">
