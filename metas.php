@@ -1,4 +1,5 @@
 <?php
+// ya funciona pero, toca cambiar unas cositas....se ve el monto y las graficas y funciona pero las graficas deben estar en la parte inferior del monto no al lado se ven feo y no se ven bien las graficas, entonces toca bajarlos y expandirlo para que sea más visible y legible
 session_start();
 require_once 'includes/db.php';
 require_once 'includes/auth.php';
@@ -76,8 +77,6 @@ if (isset($_SESSION['mensaje'])) {
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Dentro de metas.php -->
-<!-- Agrega jQuery si aún no está -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- Plugin de Sparkline -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-sparklines/2.1.2/jquery.sparkline.min.js"></script>
@@ -576,7 +575,7 @@ if (isset($_SESSION['mensaje'])) {
       justify-content: flex-start;
     }
   }
-  /* Grid de 2 columnas (las 2 tarjetas). En móvil, 1 columna */
+
 .resumen-ahorro-grid {
   display: grid;
   gap: 28px;
@@ -588,45 +587,33 @@ if (isset($_SESSION['mensaje'])) {
   .resumen-ahorro-grid { grid-template-columns: 1fr; }
 }
 
-/* Tarjeta base */
+/* Tarjeta */
 .card-valor {
   background: rgba(255, 255, 255, 0.10);
   border-radius: 16px;
-  padding: 16px;
-}
-
-/* Divide cada tarjeta en: Info | Sparkline */
-.card-valor__split {
+  padding: 18px 20px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
+  gap: 20px; /* espacio entre info y sparkline */
 }
 
-/* Bloque Info (icono + textos) */
+/* Bloque Info */
 .card-valor__info {
   display: flex;
   align-items: center;
   gap: 14px;
-  min-width: 220px;
 }
 
-/* Bloque Sparkline ocupa el espacio restante */
+/* Bloque Sparkline */
 .card-valor__spark {
-  flex: 1;
-  min-width: 140px; /* evita que se achique demasiado */
+  width: 100%;
+  height: 40px; /* hace que el sparkline sea más alto */
 }
 
-/* El contenedor del sparkline debe ocupar el ancho total */
-.card-valor__spark > span {
+.card-valor__spark span {
   display: block;
   width: 100%;
-}
-
-/* En pantallas pequeñas, la gráfica baja debajo del monto */
-@media (max-width: 600px) {
-  .card-valor__split { flex-direction: column; align-items: stretch; }
-  .card-valor__spark { min-width: 100%; }
+  height: 100%;
 }
 
 </style>
@@ -699,44 +686,39 @@ document.getElementById('frase-metas').innerHTML = fraseAleatoria();
 <div class="resumen-ahorro-grid">
   <!-- Ahorro del Mes -->
   <div class="card-valor">
-    <div class="card-valor__split">
-      <!-- 1) Info -->
-      <div class="card-valor__info">
-        <div class="icono-ahorro">
-          <i class="bi bi-calendar2-month"></i>
-        </div>
-        <div>
-          <span class="titulo-ahorro">Ahorro del Mes</span>
-          <span class="monto-ahorro">$<?= number_format($ahorro['total_mes'] ?? 0, 2) ?></span>
-        </div>
+    <div class="card-valor__info">
+      <div class="icono-ahorro">
+        <i class="bi bi-calendar2-month"></i>
       </div>
-      <!-- 2) Sparkline -->
-      <div class="card-valor__spark">
-        <span id="sparkline-mes"></span>
+      <div>
+        <span class="titulo-ahorro">Ahorro del Mes</span>
+        <span class="monto-ahorro">$<?= number_format($ahorro['total_mes'] ?? 0, 2) ?></span>
       </div>
+    </div>
+    <!-- Sparkline abajo -->
+    <div class="card-valor__spark">
+      <span id="sparkline-mes"></span>
     </div>
   </div>
 
   <!-- Ahorro Anual -->
   <div class="card-valor">
-    <div class="card-valor__split">
-      <!-- 1) Info -->
-      <div class="card-valor__info">
-        <div class="icono-ahorro">
-          <i class="bi bi-calendar3"></i>
-        </div>
-        <div>
-          <span class="titulo-ahorro">Ahorro Anual</span>
-          <span class="monto-ahorro">$<?= number_format($ahorro['total_anual'] ?? 0, 2) ?></span>
-        </div>
+    <div class="card-valor__info">
+      <div class="icono-ahorro">
+        <i class="bi bi-calendar3"></i>
       </div>
-      <!-- 2) Sparkline -->
-      <div class="card-valor__spark">
-        <span id="sparkline-anual"></span>
+      <div>
+        <span class="titulo-ahorro">Ahorro Anual</span>
+        <span class="monto-ahorro">$<?= number_format($ahorro['total_anual'] ?? 0, 2) ?></span>
       </div>
+    </div>
+    <!-- Sparkline abajo -->
+    <div class="card-valor__spark">
+      <span id="sparkline-anual"></span>
     </div>
   </div>
 </div>
+
 
 
 
@@ -867,8 +849,8 @@ $(function () {
       type: 'line',
       width: '100%',
       height: '38',
-      lineColor: '#1D2B64',
-      fillColor: 'rgba(29,43,100,0.12)',
+      lineColor: '#00D4FF',
+      fillColor: 'rgba(0,212,255,0.12)',
       spotRadius: 0,
       minSpotColor: false,
       maxSpotColor: false,
