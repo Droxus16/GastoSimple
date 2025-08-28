@@ -191,7 +191,7 @@ body, html {
       </div>
       <button type="submit" class="btn btn-info w-100" id="btnRegistro" disabled>Registrarse</button>
       <div class="divider"></div>
-      <p class="mt-3 text-center">¿Ya tienes cuenta? <a href="login.php"><i class="bi bi-box-arrow-in-right"></i> Inicia sesión</a></p>
+      <p class="mt-3 text-center text-white">¿Ya tienes cuenta? <a href="login.php" class="text-blue-400 hover:text-blue-600 font-semibold"><i class="bi bi-box-arrow-in-right"></i> Inicia sesión</a></p>
     </form>
   </div>
 </div>

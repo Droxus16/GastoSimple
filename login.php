@@ -209,7 +209,7 @@ body, html {
       <p class="mt-2 text-center">
         <a href="controllers/recuperar_password.php"><i class="bi bi-key"></i> ¿Olvidaste tu contraseña?</a>
       </p>
-      <p class="mt-3 text-center">¿No tienes cuenta? <a href="register.php"><i class="bi bi-person-plus"></i> Regístrate</a></p>
+      <p class="mt-3 text-center text-white">¿No tienes cuenta?<a href="register.php" class="text-blue-400 hover:text-blue-600 font-semibold"><i class="bi bi-person-plus"></i> Regístrate</a></p>
     </form>
   </div>
 </div>
