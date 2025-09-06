@@ -7,29 +7,45 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-//Asegurar zona horaria correcta
 date_default_timezone_set('America/Bogota');
-
 $conn = db::conectar();
 $idUsuario = intval($_SESSION['usuario_id']);
-
-//Obtener ajustes del usuario
+// Obtener ingreso mínimo del usuario
 $sqlUsuario = "SELECT ingreso_minimo FROM usuarios WHERE id = ?";
 $stmtUsuario = $conn->prepare($sqlUsuario);
 $stmtUsuario->execute([$idUsuario]);
 $usuario = $stmtUsuario->fetch(PDO::FETCH_ASSOC);
 $ingresoMinimo = floatval($usuario['ingreso_minimo'] ?? 0);
-
-//Obtener todas las transacciones (vista o tabla) para mostrar en la tabla
+// Fechas de filtro
+$fechaInicio = $_GET['fecha_inicio'] ?? null;
+$fechaFin    = $_GET['fecha_fin'] ?? null;
+// Consultar transacciones
 $sqlTodos = "SELECT id_transaccion, tipo, fecha, monto, categoria, descripcion 
              FROM transacciones 
-             WHERE id_usuario = ?
-             ORDER BY fecha DESC";
+             WHERE id_usuario = ?";
+$params = [$idUsuario];
+if ($fechaInicio && $fechaFin) {
+    $sqlTodos .= " AND DATE(fecha) BETWEEN ? AND ?";
+    $params[] = $fechaInicio;
+    $params[] = $fechaFin;
+}
+$sqlTodos .= " ORDER BY fecha DESC";
 $stmtTodos = $conn->prepare($sqlTodos);
-$stmtTodos->execute([$idUsuario]);
+$stmtTodos->execute($params);
 $transacciones = $stmtTodos->fetchAll(PDO::FETCH_ASSOC);
+// Si no hay resultados, recargar todos los registros
+if (!$transacciones && $fechaInicio && $fechaFin) {
+    $sqlTodos = "SELECT id_transaccion, tipo, fecha, monto, categoria, descripcion 
+                 FROM transacciones 
+                 WHERE id_usuario = ?
+                 ORDER BY fecha DESC";
+    $stmtTodos = $conn->prepare($sqlTodos);
+    $stmtTodos->execute([$idUsuario]);
+    $transacciones = $stmtTodos->fetchAll(PDO::FETCH_ASSOC);
 
-// Obtener ingresos del mes actual directamente desde la tabla ingresos
+    $mensajeFiltro = "⚠️ No hay resultados entre $fechaInicio y $fechaFin. Se muestran todos los registros.";
+}
+// Ingresos del mes
 $inicioMes = date('Y-m-01');
 $finMes    = date('Y-m-t');
 $sqlIngresos = "SELECT monto FROM ingresos 
@@ -37,16 +53,15 @@ $sqlIngresos = "SELECT monto FROM ingresos
 $stmtIngresos = $conn->prepare($sqlIngresos);
 $stmtIngresos->execute([$idUsuario, $inicioMes, $finMes]);
 $ingresosMes = $stmtIngresos->fetchAll(PDO::FETCH_ASSOC);
-// Obtener gastos del mes actual directamente desde la tabla gastos
+// Gastos del mes
 $sqlGastos = "SELECT monto FROM gastos 
               WHERE usuario_id = ? AND DATE(fecha) BETWEEN ? AND ?";
 $stmtGastos = $conn->prepare($sqlGastos);
 $stmtGastos->execute([$idUsuario, $inicioMes, $finMes]);
 $gastosMes = $stmtGastos->fetchAll(PDO::FETCH_ASSOC);
-// Calcular totales
 $totalIngresos = array_sum(array_column($ingresosMes, 'monto'));
 $totalGastos   = array_sum(array_column($gastosMes, 'monto'));
-// Obtener categorías
+// Categorías
 $sqlCategorias = "SELECT id, nombre, tipo FROM categorias 
                   WHERE usuario_id = ? OR usuario_id IS NULL 
                   ORDER BY tipo, nombre";
@@ -66,370 +81,487 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <style>
-  /*CONTENEDORES PRINCIPALES */
-  .form-container, .tabla-container {
-    background-color: rgba(255,255,255,0.07);
-    padding: 20px;
-    border-radius: 15px;
-    backdrop-filter: blur(5px);
-    margin-bottom: 20px;
-    color: white;
-    max-width: 900px;
-    margin-left: auto;
-    margin-right: auto;
-    position: relative;
-    z-index: 1;
-  }
-  .form-container h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    font-weight: 700;
-  }
-  .tabla-container {
-    overflow-x: auto;
-    display: block;
-    margin: 20px auto;
-  }
-  .tabla-transacciones {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 600px;
-    margin-top: 10px;
-  }
-  .tabla-transacciones th, .tabla-transacciones td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: center;
-    background-color: rgba(0, 0, 0, 0.3);
-    color: white;
-  }
-  .tabla-transacciones th {
-    background-color: rgba(255, 255, 255, 0.15);
-    font-weight: bold;
-  }
-  @media (max-width: 768px) {
-    .tabla-container::after {
-      content: '← desliza la tabla →';
-      display: block;
-      text-align: center;
-      font-size: 0.8rem;
-      color: #bbb;
-      margin-top: 5px;
+    /*CONTENEDORES PRINCIPALES */
+    .form-container, .tabla-container {
+      background-color: rgba(255,255,255,0.07);
+      padding: 20px;
+      border-radius: 15px;
+      backdrop-filter: blur(5px);
+      margin-bottom: 20px;
+      color: white;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+      position: relative;
+      z-index: 1;
     }
-  }
-  input, select, textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 6px;
-    border: none;
-    font-size: 1rem;
-    box-sizing: border-box;
-  }
-  .acciones {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  button {
-    background-color: #00D4FF;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    color: #0C1634;
-    font-size: 1rem;
-    transition: background-color 0.3s ease;
-  }
-  button:hover {
-    background-color: #00b8e6;
-  }
-  #particles-js {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 0;
-  }
-  /*
-     MODAL CORRECTAMENTE CENTRADO*/
-  .modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: none; /* Oculto por defecto */
-    justify-content: center; /* Centra horizontal */
-    align-items: center;     /* Centra vertical */
-    transition: opacity 0.3s ease;
-    z-index: 1000; /* Encima de todo */
-    opacity: 0;
-  }
-  .modal-overlay.active {
-    display: flex;
-    opacity: 1;
-  }
-  .modal-content {
-    background-color: rgba(0, 0, 0, 0.9);
-    color: white;
-    border-radius: 10px;
-    padding: 30px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 90%;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
-    transform: translateY(-20px); /* Animación entrada */
-    transition: transform 0.3s ease;
-  }
-  .modal-overlay.active .modal-content {
-    transform: translateY(0);
-  }
-  .modal-close {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: white;
-  }
-  /*DASHBOARD OPCIONAL */
-  .dashboard-container {
-    display: flex;
-    height: 100vh;
-    gap: 20px;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow: hidden;
-    position: relative;
-  }
-  .sidebar {
-    width: 220px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .sidebar .menu-top, .sidebar .menu-bottom {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-.sidebar button {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  font-size: 1.08rem;
-  border: none;
-  border-radius: 16px;
-  background: linear-gradient(90deg, rgba(0,212,255,0.13) 0%, rgba(11,20,60,0.92) 100%);
-  color: #e0f7fa;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 
-    background 0.18s, 
-    color 0.18s, 
-    box-shadow 0.18s, 
-    transform 0.18s;
-  box-shadow: 0 2px 12px rgba(0,212,255,0.08);
-  margin-bottom: 8px;
-  position: relative;
-  outline: none;
-}
-  .sidebar button:hover {
-    background-color: #00D4FF;
-    color: #0C1634;
-    transform: scale(1.05);
-  }
-.sidebar button i {
-  font-size: 1.35em;
-  color: #00D4FF;
-  transition: color 0.18s;
-}
-.sidebar button:hover, .sidebar button:focus {
-  background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
-  color: #fff;
-  box-shadow: 0 4px 18px rgba(0,212,255,0.18);
-  transform: translateY(-2px) scale(1.04);
-}
-.sidebar button:hover i, .sidebar button:focus i {
-  color: #fff;
-}
-.menu-top, .menu-bottom {
-  margin-bottom: 18px;
-}
-.sidebar .menu-bottom {
-  border-top: 1.5px solid rgba(0,212,255,0.13);
-  padding-top: 18px;
-  margin-top: 18px;
-}
-#btn-notificaciones {
-  background: linear-gradient(90deg, rgba(0,212,255,0.18) 0%, rgba(11,20,60,0.92) 100%);
-  color: #00D4FF;
-  font-weight: 700;
-  position: relative;
-}
-#btn-notificaciones:hover, #btn-notificaciones:focus {
-  background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
-  color: #fff;
-}
-#btn-notificaciones i {
-  color: #00D4FF;
-}
-#btn-notificaciones:hover i, #btn-notificaciones:focus i {
-  color: #fff;
-}
-#badge-alerta {
-  background: #FF6B6B;
-  border-radius: 50%;
-  width: 12px;
-  height: 12px;
-  display: inline-block;
-  margin-left: 8px;
-  border: 2px solid #fff;
-  box-shadow: 0 0 6px #FF6B6B;
-}
-@media (max-width: 768px) {
+    .form-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+    .tabla-container {
+      overflow-x: auto;
+      display: block;
+      margin: 20px auto;
+    }
+    .tabla-transacciones {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+      margin-top: 10px;
+    }
+    .tabla-transacciones th, .tabla-transacciones td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.3);
+      color: white;
+    }
+    .tabla-transacciones th {
+      background-color: rgba(255, 255, 255, 0.15);
+      font-weight: bold;
+    }
+    @media (max-width: 768px) {
+      .tabla-container::after {
+        content: '← desliza la tabla →';
+        display: block;
+        text-align: center;
+        font-size: 0.8rem;
+        color: #bbb;
+        margin-top: 5px;
+      }
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    .acciones {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    button {
+      background-color: #00D4FF;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #0C1634;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #00b8e6;
+    }
+    #particles-js {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+    /*
+      MODAL CORRECTAMENTE CENTRADO*/
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: none; /* Oculto por defecto */
+      justify-content: center; /* Centra horizontal */
+      align-items: center;     /* Centra vertical */
+      transition: opacity 0.3s ease;
+      z-index: 1000; /* Encima de todo */
+      opacity: 0;
+    }
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+    .modal-content {
+      background-color: rgba(0, 0, 0, 0.9);
+      color: white;
+      border-radius: 10px;
+      padding: 30px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90%;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+      transform: translateY(-20px); /* Animación entrada */
+      transition: transform 0.3s ease;
+    }
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: white;
+    }
+    /*DASHBOARD OPCIONAL */
+    .dashboard-container {
+      display: flex;
+      height: 100vh;
+      gap: 20px;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow: hidden;
+      position: relative;
+    }
+    .sidebar {
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .sidebar .menu-top, .sidebar .menu-bottom {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
   .sidebar button {
-    font-size: 1rem;
-    padding: 10px 8px;
-    border-radius: 12px;
-    gap: 8px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    font-size: 1.08rem;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(90deg, rgba(0,212,255,0.13) 0%, rgba(11,20,60,0.92) 100%);
+    color: #e0f7fa;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 
+      background 0.18s, 
+      color 0.18s, 
+      box-shadow 0.18s, 
+      transform 0.18s;
+    box-shadow: 0 2px 12px rgba(0,212,255,0.08);
+    margin-bottom: 8px;
+    position: relative;
+    outline: none;
   }
-}
-  .main-content {
-    flex: 1;
-    overflow-y: auto;
-    background: rgba(255,255,255,0.05);
-    padding: 25px;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    color: white;
-    box-sizing: border-box;
+    .sidebar button:hover {
+      background-color: #00D4FF;
+      color: #0C1634;
+      transform: scale(1.05);
+    }
+  .sidebar button i {
+    font-size: 1.35em;
+    color: #00D4FF;
+    transition: color 0.18s;
   }
-.notificaciones-dropdown {
-    position: absolute;
-    top: 80px;
-    left: 20px;
-    width: 250px;
-    background: rgba(255, 255, 255, 0.08); /* Mismo fondo translúcido */
-    border-radius: 12px;
-    backdrop-filter: blur(10px); /* Igual que main-content */
-    color: white;
-    display: none;
-    flex-direction: column;
-    padding: 15px 20px;
-    z-index: 999;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25); /* Igual sombra */
+  .sidebar button:hover, .sidebar button:focus {
+    background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(0,212,255,0.18);
+    transform: translateY(-2px) scale(1.04);
   }
-  .notificaciones-dropdown h4 {
-    margin: 0 0 10px;
-    font-size: 1rem;
-    border-bottom: 1px solid #00D4FF;
-    padding-bottom: 5px;
+  .sidebar button:hover i, .sidebar button:focus i {
+    color: #fff;
   }
-  .notificaciones-dropdown ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  .menu-top, .menu-bottom {
+    margin-bottom: 18px;
   }
-  .notificaciones-dropdown li {
-    padding: 5px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 0.9rem;
+  .sidebar .menu-bottom {
+    border-top: 1.5px solid rgba(0,212,255,0.13);
+    padding-top: 18px;
+    margin-top: 18px;
+  }
+  #btn-notificaciones {
+    background: linear-gradient(90deg, rgba(0,212,255,0.18) 0%, rgba(11,20,60,0.92) 100%);
+    color: #00D4FF;
+    font-weight: 700;
+    position: relative;
+  }
+  #btn-notificaciones:hover, #btn-notificaciones:focus {
+    background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
+    color: #fff;
+  }
+  #btn-notificaciones i {
+    color: #00D4FF;
+  }
+  #btn-notificaciones:hover i, #btn-notificaciones:focus i {
+    color: #fff;
   }
   #badge-alerta {
-  background: red;
-  border-radius: 50%;
-  width: 12px;
-  height: 12px;
-  display: inline-block;
-  margin-left: 5px;
+    background: #FF6B6B;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    margin-left: 8px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 6px #FF6B6B;
   }
-  .shake {
-    animation: shake 0.5s;
+  @media (max-width: 768px) {
+    .sidebar button {
+      font-size: 1rem;
+      padding: 10px 8px;
+      border-radius: 12px;
+      gap: 8px;
+    }
   }
-    @keyframes shake {
-    0% { transform: rotate(0deg); }
-    20% { transform: rotate(-15deg); }
-    40% { transform: rotate(15deg); }
-    60% { transform: rotate(-10deg); }
-    80% { transform: rotate(10deg); }
-    100% { transform: rotate(0deg); }
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.05);
+      padding: 25px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      color: white;
+      box-sizing: border-box;
+    }
+    .notificaciones-dropdown {
+      position: absolute;
+      top: 80px;
+      left: 20px;
+      width: 250px;
+      background: rgba(255, 255, 255, 0.08); /* Mismo fondo translúcido */
+      border-radius: 12px;
+      backdrop-filter: blur(10px); /* Igual que main-content */
+      color: white;
+      display: none;
+      flex-direction: column;
+      padding: 15px 20px;
+      z-index: 999;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25); /* Igual sombra */
+    }
+    .notificaciones-dropdown h4 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      border-bottom: 1px solid #00D4FF;
+      padding-bottom: 5px;
+    }
+    .notificaciones-dropdown ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .notificaciones-dropdown li {
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.9rem;
+    }
+    #badge-alerta {
+    background: red;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    margin-left: 5px;
+    }
+    .shake {
+      animation: shake 0.5s;
+    }
+      @keyframes shake {
+      0% { transform: rotate(0deg); }
+      20% { transform: rotate(-15deg); }
+      40% { transform: rotate(15deg); }
+      60% { transform: rotate(-10deg); }
+      80% { transform: rotate(10deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    /* Animación suave personalizada */
+  .collapse-custom {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease, opacity 0.5s ease;
   }
 
-  /* Animación suave personalizada */
-.collapse-custom {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: max-height 0.5s ease, opacity 0.5s ease;
-}
+  .collapse-custom.show {
+    max-height: 500px; /* Ajustable según el contenido */
+    opacity: 1;
+  }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.13);
+    border: 1.5px solid rgba(0,212,255,0.18);
+    border-radius: 22px;
+    backdrop-filter: blur(18px);
+    box-shadow: 0 12px 40px rgba(0,212,255,0.13), 0 4px 16px rgba(0,0,0,0.13);
+    z-index: 1;
+    padding: 38px 32px 32px 32px;
+    text-align: center;
+    position: relative;
+    transition: box-shadow 0.2s;
+    max-width: 600px;
+    margin: 0 auto 24px auto;
+  }
+  .glass-card h2 {
+    color: #00D4FF;
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 18px;
+    letter-spacing: 1px;
+  }
+  .btn-info, .btn-info:focus {
+    background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.08rem;
+    box-shadow: 0 2px 12px rgba(0,212,255,0.10);
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+  }
+  .btn-info:hover {
+    background: #fff;
+    color: #00D4FF;
+    transform: translateY(-2px) scale(1.04);
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: #00D4FF;
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.18);
+    background: rgba(255,255,255,0.09);
+    color: #fff;
+  }
+  .logo-register {
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    background: transparent;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,212,255,0.13);
+  }
+  select, select option {
+    color: #222 !important; /* O el color que prefieras para contraste */
+    background: #fff !important; /* Opcional: mejora la visibilidad del desplegable */
+  }
+  .form-select, .form-select option {
+    color: #222 !important;
+    background: #fff !important;
+  }
+  .filtro-container {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid #fff;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(5px);
+    text-align: center;
+  }
 
-.collapse-custom.show {
-  max-height: 500px; /* Ajustable según el contenido */
-  opacity: 1;
-}
-.glass-card {
-  background: rgba(255, 255, 255, 0.13);
-  border: 1.5px solid rgba(0,212,255,0.18);
-  border-radius: 22px;
-  backdrop-filter: blur(18px);
-  box-shadow: 0 12px 40px rgba(0,212,255,0.13), 0 4px 16px rgba(0,0,0,0.13);
-  z-index: 1;
-  padding: 38px 32px 32px 32px;
-  text-align: center;
-  position: relative;
-  transition: box-shadow 0.2s;
-  max-width: 600px;
-  margin: 0 auto 24px auto;
-}
-.glass-card h2 {
-  color: #00D4FF;
-  text-align: center;
-  font-weight: 700;
-  margin-bottom: 18px;
-  letter-spacing: 1px;
-}
-.btn-info, .btn-info:focus {
-  background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
-  border: none;
-  color: #fff;
-  font-weight: 600;
-  font-size: 1.08rem;
-  box-shadow: 0 2px 12px rgba(0,212,255,0.10);
-  transition: background 0.18s, color 0.18s, transform 0.18s;
-}
-.btn-info:hover {
-  background: #fff;
-  color: #00D4FF;
-  transform: translateY(-2px) scale(1.04);
-}
-.form-control:focus, .form-select:focus {
-  border-color: #00D4FF;
-  box-shadow: 0 0 0 2px rgba(0,212,255,0.18);
-  background: rgba(255,255,255,0.09);
-  color: #fff;
-}
-.logo-register {
-  width: 54px;
-  height: 54px;
-  object-fit: contain;
-  margin-bottom: 10px;
-  background: transparent;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,212,255,0.13);
-}
-select, select option {
-  color: #222 !important; /* O el color que prefieras para contraste */
-  background: #fff !important; /* Opcional: mejora la visibilidad del desplegable */
-}
-.form-select, .form-select option {
-  color: #222 !important;
-  background: #fff !important;
-}
+  .filtro-container h3 {
+    margin-bottom: 10px;
+    color: #fff;
+  }
+
+  .filtro-container form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .filtro-container input,
+  .filtro-container button,
+  .filtro-container .btn-reset {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+  }
+
+  .filtro-container button {
+    background: #4cafef;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .filtro-container .btn-reset {
+    background: #f44336;
+    color: #fff;
+    text-decoration: none;
+  }
+  .filtro-container {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1.5px solid rgba(0,212,255,0.2);
+    border-radius: 18px;
+    padding: 20px 25px;
+    margin: 0 auto 25px auto;
+    max-width: 700px;
+    backdrop-filter: blur(10px);
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0,212,255,0.12), 0 4px 16px rgba(0,0,0,0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .filtro-container:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 48px rgba(0,212,255,0.18);
+  }
+
+  .filtro-container h2 {
+    color: #00D4FF;
+    font-weight: 700;
+    margin-bottom: 18px;
+    letter-spacing: 1px;
+  }
+
+  .filtro-container form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .filtro-container input[type="date"] {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 0.95rem;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  .filtro-container input[type="date"]:focus {
+    outline: none;
+    background: rgba(255,255,255,0.18);
+    box-shadow: 0 0 8px #00D4FF;
+  }
+
+  .filtro-container button,
+  .filtro-container .btn-reset {
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .filtro-container button {
+    background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
+    color: #fff;
+  }
+  .filtro-container button:hover {
+    background: #fff;
+    color: #00D4FF;
+  }
+
+  .filtro-container .btn-reset {
+    background: #f44336;
+    color: #fff;
+    text-decoration: none;
+  }
+  .filtro-container .btn-reset:hover {
+    background: #d32f2f;
+  }
 </style>
 <div id="particles-js"></div>
 <div class="dashboard-container">
@@ -522,10 +654,37 @@ select, select option {
         </label>
       </div>
     </div>
-    <button type="submit" class="btn btn-info w-100 mt-2">Guardar Registro</button>
-  </form>
-</div>
+      <button type="submit" class="btn btn-info w-100 mt-2">Guardar Registro</button>
+    </form>
+  </div>
+  <?php if (!empty($mensajeFiltro)): ?>
+    <div class="alerta-filtro"><?= htmlspecialchars($mensajeFiltro) ?></div>
+  <?php endif; ?>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="filtro-container glass-card">
+      <h2>Filtrar Registros</h2>
+      <form method="GET" action="">
+        <input type="date" 
+              name="fecha_inicio" 
+              id="fecha_inicio" 
+              value="<?= htmlspecialchars($_GET['fecha_inicio'] ?? '') ?>" 
+              class="form-control"/>
 
+        <input type="date" 
+              name="fecha_fin" 
+              id="fecha_fin" 
+              value="<?= htmlspecialchars($_GET['fecha_fin'] ?? '') ?>" 
+              class="form-control"/>
+
+        <button type="submit" class="btn-info">
+          <i class="fas fa-filter"></i> Filtrar
+        </button>
+        <a href="registro.php" class="btn-reset">
+          <i class="fas fa-times"></i> Reinicia
+        </a>
+      </form>
+    </div>
     <!-- Tabla de registros -->
     <div class="tabla-container">
       <h2>Registros</h2>
@@ -533,10 +692,14 @@ select, select option {
         <div class="acciones">
           <form action="controllers/reportes.php" method="POST">
             <input type="hidden" name="exportar_excel" value="1">
+            <input type="hidden" name="fecha_inicio" value="<?= htmlspecialchars($_GET['fecha_inicio'] ?? '') ?>">
+            <input type="hidden" name="fecha_fin" value="<?= htmlspecialchars($_GET['fecha_fin'] ?? '') ?>">
             <button type="submit">Exportar a Excel</button>
           </form>
           <form action="controllers/reportes.php" method="POST">
             <input type="hidden" name="exportar_pdf" value="1">
+            <input type="hidden" name="fecha_inicio" value="<?= htmlspecialchars($_GET['fecha_inicio'] ?? '') ?>">
+            <input type="hidden" name="fecha_fin" value="<?= htmlspecialchars($_GET['fecha_fin'] ?? '') ?>">
             <button type="submit">Exportar a PDF</button>
           </form>
         </div>

@@ -19,15 +19,36 @@ $usuario_id = intval($_SESSION['usuario_id']);
 $stmtNombre = $conn->prepare("SELECT nombre FROM usuarios WHERE id = ?");
 $stmtNombre->execute([$usuario_id]);
 $nombreUsuario = $stmtNombre->fetchColumn() ?: 'Usuario';
-// Crear hoja
+// Obtener fechas si fueron enviadas desde el formulario
+$fecha_inicio = $_POST['fecha_inicio'] ?? null;
+$fecha_fin    = $_POST['fecha_fin'] ?? null;
+// Preparar consulta con o sin fechas
+if ($fecha_inicio && $fecha_fin) {
+    $stmt = $conn->prepare("
+        SELECT tipo, categoria, monto, fecha, descripcion 
+        FROM transacciones 
+        WHERE id_usuario = ? AND DATE(fecha) BETWEEN ? AND ?
+        ORDER BY fecha DESC
+    ");
+    $stmt->execute([$usuario_id, $fecha_inicio, $fecha_fin]);
+} else {
+    $stmt = $conn->prepare("
+        SELECT tipo, categoria, monto, fecha, descripcion 
+        FROM transacciones 
+        WHERE id_usuario = ?
+        ORDER BY fecha DESC
+    ");
+    $stmt->execute([$usuario_id]);
+}
+// Crear hoja de cálculo
 $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 $sheet->setTitle('Transacciones');
-//Logo con ruta absoluta
+// Agregar logo
 $logo = new Drawing();
 $logo->setName('Logo');
 $logo->setDescription('Logo Reporte');
-$logo->setPath(__DIR__ . '/../img/reportes/logo1.png'); // Ruta absoluta para evitar errores
+$logo->setPath(__DIR__ . '/../img/reportes/logo1.png'); // Ruta absoluta
 $logo->setHeight(70);
 $logo->setCoordinates('A1');
 $logo->setOffsetX(10);
@@ -35,7 +56,11 @@ $logo->setWorksheet($sheet);
 $sheet->getRowDimension('1')->setRowHeight(70);
 // Título reporte
 $sheet->mergeCells('B1:E1');
-$sheet->setCellValue('B1', 'Reporte de Transacciones - ' . $nombreUsuario);
+$titulo = 'Reporte de Transacciones - ' . $nombreUsuario;
+if ($fecha_inicio && $fecha_fin) {
+    $titulo .= " ({$fecha_inicio} a {$fecha_fin})";
+}
+$sheet->setCellValue('B1', $titulo);
 $sheet->getStyle('B1')->applyFromArray([
     'font' => ['bold' => true, 'size' => 16],
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -47,32 +72,30 @@ $sheet->getStyle('B2')->applyFromArray([
     'font' => ['italic' => true, 'size' => 10],
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
 ]);
-// Encabezados SIN ID
+// Encabezados
 $filaInicio = 4;
 $encabezados = ['Tipo', 'Categoría', 'Monto', 'Fecha', 'Descripción'];
 $sheet->fromArray($encabezados, NULL, "A$filaInicio");
-// Estilo encabezados
 $sheet->getStyle("A$filaInicio:E$filaInicio")->applyFromArray([
     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '003366']],
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
 ]);
-// Datos
-$stmt = $conn->prepare("SELECT tipo, categoria, monto, fecha, descripcion FROM transacciones WHERE id_usuario = ?");
-$stmt->execute([$usuario_id]);
+// Llenar datos
 $fila = $filaInicio + 1;
 $totalIngresos = 0;
 $totalGastos = 0;
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $sheet->fromArray(array_values($row), NULL, "A$fila");
-    // Colores alternos para filas
+    // Alternar colores de fila
     $colorFondo = ($fila % 2 == 0) ? 'e6f2ff' : 'ffffff';
     $sheet->getStyle("A$fila:E$fila")->applyFromArray([
         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $colorFondo]],
         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
     ]);
+    // Calcular totales
     if (strtolower($row['tipo']) === 'ingreso') {
         $totalIngresos += $row['monto'];
     } elseif (strtolower($row['tipo']) === 'gasto') {
@@ -99,7 +122,6 @@ $sheet->getStyle("A" . ($fila - 2) . ":C$fila")->applyFromArray([
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
 ]);
-// Ajustar ancho columnas
 foreach (range('A', 'E') as $col) {
     $sheet->getColumnDimension($col)->setAutoSize(true);
 }
@@ -121,6 +143,6 @@ if (isset($_POST['exportar_pdf'])) {
     $writer->save('php://output');
     exit;
 }
-// Redirigir
+// Redirigir si no hay exportación
 header('Location: ../registro.php');
 exit;

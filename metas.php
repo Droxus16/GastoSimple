@@ -863,9 +863,6 @@ $(function () {
   function cargarDatos() {
     $.getJSON('get_metas_data.php')
       .done(function (data) {
-        // Ajusta si tu endpoint devuelve arrays distintos:
-        // aquí uso "ahorros" para ambos por simplicidad;
-        // si tienes arrays específicos (mes/anual), pásalos así:
         dibujarSparklines({ mes: data.ahorros, anual: data.ahorros });
       })
       .fail(function (xhr) {

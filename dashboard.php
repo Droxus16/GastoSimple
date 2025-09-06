@@ -3,31 +3,141 @@ session_start();
 require_once 'includes/db.php';
 require_once 'includes/auth.php';
 $conn = DB::conectar();
-$idUsuario = $_SESSION['usuario_id'];
-$stmt = $conn->prepare("SELECT nombre, ingreso_minimo, saldo_minimo FROM usuarios WHERE id = ?");
+$idUsuario = $_SESSION['usuario_id'] ?? null;
+if (!$idUsuario) {
+  header("Location: login.php");
+  exit;
+}
+// === Datos básicos del usuario ===
+$stmt = $conn->prepare("SELECT nombre, ingreso_minimo, saldo_minimo 
+                        FROM usuarios 
+                        WHERE id = ?");
 $stmt->execute([$idUsuario]);
 $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 $nombreUsuario = $usuario ? htmlspecialchars($usuario['nombre']) : "Usuario";
+// === Totales del mes actual ===
 $totales = $conn->prepare("
   SELECT
-    (SELECT COALESCE(SUM(monto),0) FROM ingresos WHERE usuario_id = :usuario_id AND MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())) AS total_ingresos,
-    (SELECT COALESCE(SUM(monto),0) FROM gastos WHERE usuario_id = :usuario_id AND MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())) AS total_gastos,
-    (SELECT COALESCE(SUM(monto),0) FROM aportes_ahorro a JOIN metas_ahorro m ON a.meta_id = m.id WHERE m.usuario_id = :usuario_id AND MONTH(a.fecha) = MONTH(CURDATE()) AND YEAR(a.fecha) = YEAR(CURDATE())) AS total_aportes
+    (SELECT COALESCE(SUM(monto),0) 
+     FROM ingresos 
+     WHERE usuario_id = :usuario_id 
+       AND MONTH(fecha) = MONTH(CURDATE()) 
+       AND YEAR(fecha) = YEAR(CURDATE())) AS total_ingresos,
+
+    (SELECT COALESCE(SUM(monto),0) 
+     FROM gastos 
+     WHERE usuario_id = :usuario_id 
+       AND MONTH(fecha) = MONTH(CURDATE()) 
+       AND YEAR(fecha) = YEAR(CURDATE())) AS total_gastos,
+
+    (SELECT COALESCE(SUM(monto),0) 
+     FROM aportes_ahorro a 
+     JOIN metas_ahorro m ON a.meta_id = m.id 
+     WHERE m.usuario_id = :usuario_id 
+       AND MONTH(a.fecha) = MONTH(CURDATE()) 
+       AND YEAR(a.fecha) = YEAR(CURDATE())) AS total_aportes
 ");
 $totales->execute(['usuario_id' => $idUsuario]);
 $datos = $totales->fetch(PDO::FETCH_ASSOC);
-$totalIngresos = $datos['total_ingresos'];
-$totalGastos = $datos['total_gastos'];
-$totalAportes = $datos['total_aportes'];
-$saldoActual = $totalIngresos - $totalGastos - $totalAportes;
-$stmtMetas = $conn->prepare("SELECT nombre, fecha_limite, monto_objetivo, 
-  (SELECT COALESCE(SUM(monto),0) FROM aportes_ahorro WHERE meta_id = metas_ahorro.id) AS total_aportado 
-  FROM metas_ahorro WHERE usuario_id = ?");
+
+$totalIngresos = $datos['total_ingresos'] ?? 0;
+$totalGastos   = $datos['total_gastos'] ?? 0;
+$totalAportes  = $datos['total_aportes'] ?? 0;
+$saldoActual   = $totalIngresos - $totalGastos - $totalAportes;
+
+// === Metas de ahorro ===
+$stmtMetas = $conn->prepare("
+  SELECT nombre, fecha_limite, monto_objetivo, 
+         (SELECT COALESCE(SUM(monto),0) 
+          FROM aportes_ahorro 
+          WHERE meta_id = metas_ahorro.id) AS total_aportado 
+  FROM metas_ahorro 
+  WHERE usuario_id = ?
+");
 $stmtMetas->execute([$idUsuario]);
 $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
+// Por día (últimos 7 días)
+$stmtDia = $conn->prepare("
+  SELECT DATE(fecha) AS periodo,
+         SUM(CASE WHEN tipo='ingreso' THEN monto ELSE 0 END) AS ingresos,
+         SUM(CASE WHEN tipo='gasto' THEN monto ELSE 0 END) AS gastos
+  FROM (
+    SELECT fecha, monto, 'ingreso' AS tipo FROM ingresos WHERE usuario_id = :id
+    UNION ALL
+    SELECT fecha, monto, 'gasto' AS tipo FROM gastos WHERE usuario_id = :id
+  ) t
+  WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+  GROUP BY periodo
+  ORDER BY periodo
+");
+$stmtDia->execute(['id'=>$idUsuario]);
+$dataDia = $stmtDia->fetchAll(PDO::FETCH_ASSOC);
+// Por semana (últimas 6 semanas)
+$stmtSemana = $conn->prepare("
+  SELECT YEARWEEK(fecha, 1) AS periodo,
+         SUM(CASE WHEN tipo='ingreso' THEN monto ELSE 0 END) AS ingresos,
+         SUM(CASE WHEN tipo='gasto' THEN monto ELSE 0 END) AS gastos
+  FROM (
+    SELECT fecha, monto, 'ingreso' AS tipo FROM ingresos WHERE usuario_id = :id
+    UNION ALL
+    SELECT fecha, monto, 'gasto' AS tipo FROM gastos WHERE usuario_id = :id
+  ) t
+  WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 6 WEEK)
+  GROUP BY periodo
+  ORDER BY periodo
+");
+$stmtSemana->execute(['id'=>$idUsuario]);
+$dataSemana = $stmtSemana->fetchAll(PDO::FETCH_ASSOC);
+//Por mes (últimos 12 meses)
+$stmtMes = $conn->prepare("
+  SELECT DATE_FORMAT(fecha, '%Y-%m') AS periodo,
+         SUM(CASE WHEN tipo='ingreso' THEN monto ELSE 0 END) AS ingresos,
+         SUM(CASE WHEN tipo='gasto' THEN monto ELSE 0 END) AS gastos
+  FROM (
+    SELECT fecha, monto, 'ingreso' AS tipo FROM ingresos WHERE usuario_id = :id
+    UNION ALL
+    SELECT fecha, monto, 'gasto' AS tipo FROM gastos WHERE usuario_id = :id
+  ) t
+  WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+  GROUP BY periodo
+  ORDER BY periodo
+");
+$stmtMes->execute(['id'=>$idUsuario]);
+$dataMes = $stmtMes->fetchAll(PDO::FETCH_ASSOC);
+//Por año (últimos 5 años, incluyendo anteriores)
+$stmtAnio = $conn->prepare("
+  SELECT YEAR(fecha) AS periodo,
+         SUM(CASE WHEN tipo='ingreso' THEN monto ELSE 0 END) AS ingresos,
+         SUM(CASE WHEN tipo='gasto' THEN monto ELSE 0 END) AS gastos
+  FROM (
+    SELECT fecha, monto, 'ingreso' AS tipo FROM ingresos WHERE usuario_id = :id
+    UNION ALL
+    SELECT fecha, monto, 'gasto' AS tipo FROM gastos WHERE usuario_id = :id
+  ) t
+  WHERE fecha BETWEEN DATE_SUB(CURDATE(), INTERVAL 5 YEAR) 
+                  AND DATE_ADD(CURDATE(), INTERVAL 5 YEAR)
+  GROUP BY periodo
+  ORDER BY periodo
+");
+$stmtAnio->execute(['id'=>$idUsuario]);
+$dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
+// === Exportar datos a JS o JSON ===
 ?>
+<script>
+  const nombreUsuario = "<?= $nombreUsuario ?>";
+  const totalesMes = {
+    ingresos: <?= $totalIngresos ?>,
+    gastos: <?= $totalGastos ?>,
+    aportes: <?= $totalAportes ?>,
+    saldo: <?= $saldoActual ?>
+  };
+
+  const dataDia    = <?= json_encode($dataDia) ?>;
+  const dataSemana = <?= json_encode($dataSemana) ?>;
+  const dataMes    = <?= json_encode($dataMes) ?>;
+  const dataAnio   = <?= json_encode($dataAnio) ?>;
+</script>
 <?php include 'includes/header.php'; ?>
-<link rel="stylesheet" href="assets/css/estilos.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@8.2.1/dist/gridstack.min.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -35,6 +145,7 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
 <script src="https://cdn.jsdelivr.net/npm/gridstack@8.2.1/dist/gridstack-all.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 <style>
+    /* ===== Fondo animado ===== */
   body {
     position: relative;
     width: 100%;
@@ -43,8 +154,14 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
     background-size: 300% 300%;
     animation: backgroundAnim 25s ease-in-out infinite;
     z-index: -2;
-    opacity: 0.95;
     overflow: hidden;
+    color: white;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden; /* evita doble scroll */
   }
   @keyframes backgroundAnim {
     0% { background-position: 0% 50%; }
@@ -57,6 +174,8 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
     width: 100%; height: 100%;
     z-index: -1;
   }
+
+  /* ===== Layout ===== */
   .dashboard-container {
     display: flex;
     height: 100vh;
@@ -64,62 +183,192 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
     padding: 20px;
     box-sizing: border-box;
   }
+
+  /* ===== Sidebar ===== */
   .sidebar {
-    width: 220px;
+    width: 240px; /* un poquito más ancho */
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 12px 0;
+    transition: width 0.3s ease-in-out;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
   }
-  .sidebar .menu-top,
-  .sidebar .menu-bottom {
+
+  /* Sidebar colapsada */
+  .sidebar.collapsed {
+    width: 120px;
+  }
+
+  /* Botón hamburguesa */
+  .sidebar .hamburger {
+    align-self: flex-start; /* ahora a la izquierda */
+    margin: 10px 16px;
+    font-size: 2rem; /* más grande */
+    background: transparent;
+    border: none;
+    color: #00D4FF;
+    cursor: pointer;
+    transition: transform 0.3s ease, color 0.3s ease;
+  }
+  .sidebar .hamburger:hover {
+    transform: rotate(90deg);
+    color: #fff;
+  }
+
+  /* Contenedor del menú */
+  .menu-content {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    flex: 1;
+    gap: 12px;
+    padding: 12px;
   }
+
+  /* Botones uniformes */
   .sidebar button {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 14px 18px;
-    font-size: 1.08rem;
+    gap: 16px;
+    padding: 16px 18px; /* más grandes */
+    font-size: 1.1rem;  /* fuente más legible */
     border: none;
-    border-radius: 16px;
-    background: linear-gradient(90deg, rgba(0,212,255,0.13) 0%, rgba(11,20,60,0.92) 100%);
+    border-radius: 14px;
+    background: transparent;
     color: #e0f7fa;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: 
-      background 0.18s, 
-      color 0.18s, 
-      box-shadow 0.18s, 
-      transform 0.18s;
-    box-shadow: 0 2px 12px rgba(0,212,255,0.08);
-    margin-bottom: 8px;
-    position: relative;
-    outline: none;
+      background 0.2s, 
+      color 0.2s, 
+      transform 0.2s;
+    overflow: hidden;
+    text-align: left;
   }
-  .sidebar button i {
-    font-size: 1.35em;
-    color: #00D4FF;
-    transition: color 0.18s;
-  }
-  .sidebar button:hover, .sidebar button:focus {
-    background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
-    color: #fff;
-    box-shadow: 0 4px 18px rgba(0,212,255,0.18);
-    transform: translateY(-2px) scale(1.04);
-  }
-  .sidebar button:hover i, .sidebar button:focus i {
-    color: #fff;
-  }
-  .menu-top, .menu-bottom {
-    margin-bottom: 18px;
-  }
+
+  /* Hover de botones */
   .sidebar button:hover {
-    background-color: #00D4FF;
-    color: #0C1634;
-    transform: scale(1.05);
+    background: rgba(0, 212, 255, 0.2);
+    color: #fff;
+    transform: translateY(-2px);
   }
+
+  /* Íconos */
+  .sidebar button i {
+    font-size: 1.5em; /* más grandes */
+    color: #00D4FF;
+    flex-shrink: 0;
+    transition: color 0.2s;
+  }
+  .sidebar button:hover i {
+    color: #fff;
+  }
+
+  /* Etiquetas de texto */
+  .sidebar button .label {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    white-space: nowrap;
+  }
+  .sidebar.collapsed .label {
+    opacity: 0;
+    transform: translateX(-15px);
+    pointer-events: none;
+  }
+  /* Contenedor del menú inferior */
+  .menu-bottom {
+    margin-top: auto; /* se pega abajo */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 6px;
+  }
+
+  /* Botón Ajustes (azul elegante) */
+  .menu-bottom button.ajustes {
+    background: rgba(0, 212, 255, 0.15);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    color: #fff;
+    font-weight: 600;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.25);
+    transition: all 0.25s ease;
+  }
+  .menu-bottom button.ajustes:hover {
+    background: #00d4ff;
+    color: #111;
+    transform: translateY(-2px);
+    box-shadow: 0 0 12px #00d4ff, 0 0 24px rgba(0, 212, 255, 0.6);
+  }
+  .menu-bottom button.ajustes i {
+    color: #00d4ff;
+    font-size: 1.4em;
+    transition: color 0.25s;
+  }
+  .menu-bottom button.ajustes:hover i {
+    color: #111;
+  }
+
+  /* Botón Salir (rojo crítico) */
+  .menu-bottom button.salir {
+    background: rgba(255, 77, 77, 0.15);
+    border: 1px solid rgba(255, 77, 77, 0.3);
+    color: #fff;
+    font-weight: 600;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    box-shadow: 0 4px 16px rgba(255, 77, 77, 0.25);
+    transition: all 0.25s ease;
+  }
+  .menu-bottom button.salir:hover {
+    background: #ff4d4d;
+    color: #111;
+    transform: translateY(-2px);
+    box-shadow: 0 0 12px #ff4d4d, 0 0 24px rgba(255, 77, 77, 0.6);
+  }
+  .menu-bottom button.salir i {
+    color: #ff4d4d;
+    font-size: 1.4em;
+    transition: color 0.25s;
+  }
+  .menu-bottom button.salir:hover i {
+    color: #111;
+  }
+
+  /* ===== Notificaciones ===== */
+  .notificaciones-dropdown {
+    position: absolute;
+    top: 70px; /* alineado debajo del hamburguesa */
+    left: 250px; /* al lado de la sidebar */
+    width: 280px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    backdrop-filter: blur(14px);
+    color: white;
+    display: none;
+    flex-direction: column;
+    padding: 18px 20px;
+    z-index: 999;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  }
+  .notificaciones-dropdown h4 {
+    margin: 0 0 12px;
+    font-size: 1.2rem; /* más grande */
+    border-bottom: 1px solid #00D4FF;
+    padding-bottom: 6px;
+  }
+  .notificaciones-dropdown li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 1rem;
+  }
+
+
+  /* ===== Contenido principal ===== */
   .main-content {
     flex: 1;
     display: flex;
@@ -129,34 +378,41 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
     border-radius: 20px;
     backdrop-filter: blur(10px);
     overflow: hidden;
-    color: white;
     box-sizing: border-box;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
   }
+  .main-content {
+    height: 100%;
+    overflow-y: auto; /* scroll vertical global */
+    padding: 1rem;
+  }
+
+  /* ===== Gridstack items ===== */
   .grid-stack {
     flex: 1;
-    overflow: auto;
+    overflow-y: auto;   /* 🔹 scroll vertical */
+    max-height: 90vh;
     width: 100%;
     height: 100%;
     box-sizing: border-box;
     padding: 20px;
+    min-height: 100%;
   }
 
   .grid-stack-item {
-    min-height: 150px;
-    margin-bottom: 20px;
+    min-height: 200px;   /* un poco más grande */
   }
-
   .grid-stack-item-content {
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
     padding: 25px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-    color: white;
     text-align: center;
     transition: transform 0.2s ease-in-out;
     overflow: hidden;
@@ -166,11 +422,13 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
   }
   .grid-stack-item-content canvas {
     display: block;
-    width: 100% !important;   /* Ocupar todo horizontal */
+    width: 100% !important;
     height: 100% !important;
     max-height: 300px;
     margin: 0 auto;
   }
+
+  /* ===== Chart filters ===== */
   .chart-filters {
     display: flex;
     justify-content: center;
@@ -191,20 +449,34 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
   .chart-filters button:hover {
     background-color: #ffffff44;
   }
-
   .chart-filters button.activo {
     background-color: #00D4FF;
     color: #0C1634;
     box-shadow: 0 0 8px rgba(0, 212, 255, 0.7);
   }
+  .sin-datos {
+    opacity: 0.4;
+    filter: grayscale(50%);
+  }
+  @keyframes parpadeo {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+  }
+
+  .parpadeo {
+    animation: parpadeo 1s infinite;
+  }
+
+  /* ===== Notificaciones ===== */
   .notificaciones-dropdown {
     position: absolute;
-    top: 80px;
-    left: 20px;
-    width: 250px;
-    background: rgba(255, 255, 255, 0.08);
+    top: 60px; /* alineado con botones */
+    left: 80px; /* para que no se tape con sidebar colapsada */
+    width: 260px;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
     color: white;
     display: none;
     flex-direction: column;
@@ -229,28 +501,20 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
     font-size: 0.9rem;
   }
   #badge-alerta {
-    background: red;
+    background: #FF6B6B;
     border-radius: 50%;
     width: 12px;
     height: 12px;
     display: inline-block;
-    margin-left: 5px;
+    margin-left: auto;
+    border: 2px solid #fff;
+    box-shadow: 0 0 6px #FF6B6B;
   }
-  .shake {
-    animation: shake 0.5s;
-  }
-  @keyframes shake {
-    0% { transform: rotate(0deg); }
-    20% { transform: rotate(-15deg); }
-    40% { transform: rotate(15deg); }
-    60% { transform: rotate(-10deg); }
-    80% { transform: rotate(10deg); }
-    100% { transform: rotate(0deg); }
-  }
-  /*Mensaje “sin registros*/
-  #mensaje-sin-registros {
+
+  /* ===== Mensaje sin registros ===== */
+  .mensaje-vacio {
     position: absolute;
-    top: 50%; left: 60%;
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     max-width: 300px;
     background: rgba(0, 0, 0, 0.6);
@@ -263,160 +527,163 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
     transition: opacity 0.3s ease;
     pointer-events: none;
   }
-
-  #mensaje-sin-registros.visible {
+  .mensaje-vacio.visible {
     opacity: 1;
   }
 
-  /*Responsivo*/
+  /* ===== Responsive ===== */
   @media (max-width: 768px) {
     .dashboard-container {
       flex-direction: column;
       overflow: auto;
     }
     .sidebar {
-      width: 100%;
       flex-direction: row;
-      justify-content: space-around;
-      padding-bottom: 10px;
-    }
-    .sidebar .menu-top,
-    .sidebar .menu-bottom {
-      border-top: 1.5px solid rgba(0,212,255,0.13);
-      padding-top: 18px;
-      margin-top: 18px;
-    }
-    #btn-notificaciones {
-    background: linear-gradient(90deg, rgba(0,212,255,0.18) 0%, rgba(11,20,60,0.92) 100%);
-    color: #00D4FF;
-    font-weight: 700;
-    position: relative;
-  }
-    .main-content {
+      width: 100% !important;
       height: auto;
-      max-height: none;
-      margin-top: 10px;
+    }
+    .hamburger {
+      right: 15px;
     }
   }
-  #btn-notificaciones:hover, #btn-notificaciones:focus {
-    background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
-    color: #fff;
+  /* Widgets sin datos */
+  .grid-stack-item-content.empty {
+    opacity: 0.4;
+    filter: grayscale(60%);
+    pointer-events: none; /* No interactuable */
+    transition: opacity 0.3s ease;
   }
-  #btn-notificaciones i {
-    color: #00D4FF;
+
+  /* Parpadeo para resaltar gráfico principal */
+  @keyframes blink {
+    0% { box-shadow: 0 0 10px rgba(255,255,255,0.6); }
+    50% { box-shadow: 0 0 20px rgba(255,255,255,1); }
+    100% { box-shadow: 0 0 10px rgba(255,255,255,0.6); }
   }
-  #btn-notificaciones:hover i, #btn-notificaciones:focus i {
-    color: #fff;
+  #grafico-item.blink {
+    animation: blink 1.5s infinite;
   }
-  #badge-alerta {
-    background: #FF6B6B;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    display: inline-block;
-    margin-left: 8px;
-    border: 2px solid #fff;
-    box-shadow: 0 0 6px #FF6B6B;
+
+  /* Parpadeo para botones de filtro */
+  @keyframes pulse {
+    0% { background-color: rgba(255, 255, 255, 0.2); }
+    50% { background-color: rgba(255, 255, 255, 0.5); }
+    100% { background-color: rgba(255, 255, 255, 0.2); }
   }
-  @media (max-width: 768px) {
-    .sidebar button {
-      font-size: 1rem;
-      padding: 10px 8px;
-      border-radius: 12px;
-      gap: 8px;
-    }
+  .chart-filters button.blink {
+    animation: pulse 1.2s infinite;
+    border: 1px solid #fff;
   }
+
 </style>
 <div id="particles-js"></div>
 <div class="dashboard-container">
-  <div class="sidebar">
-    <div class="menu-top">
-      <button onclick="location.href='registro.php'">
-        <i class="bi bi-pencil-square"></i> Registro
-      </button>
-      <button onclick="location.href='metas.php'">
-        <i class="bi bi-flag-fill"></i> Metas
-      </button>
-    </div>
-    <!-- Notificaciones -->
-    <button id="btn-notificaciones" onclick="toggleNotificaciones()">
-      <i id="icono-campana" class="bi bi-bell-fill"></i> Notificaciones
-      <span id="badge-alerta"></span>
+  <!-- Sidebar -->
+  <div class="sidebar collapsed" id="sidebar">
+    <!-- Botón hamburguesa -->
+    <button class="hamburger" onclick="toggleSidebar()">
+      <i class="bi bi-list"></i>
     </button>
-    <div id="panel-notificaciones" class="notificaciones-dropdown">
-      <h4>Notificaciones</h4>
-      <ul id="lista-notificaciones"></ul>
-    </div>
 
-    <div class="menu-bottom">
-      <button onclick="location.href='logout.php'">
-        <i class="bi bi-box-arrow-right"></i> Salir
+    <div class="menu-content">
+      <div class="menu-top">
+        <button onclick="location.href='registro.php'">
+          <i class="bi bi-pencil-square"></i> <span class="label">Registro</span>
+        </button>
+        <button onclick="location.href='metas.php'">
+          <i class="bi bi-flag-fill"></i> <span class="label">Metas</span>
+        </button>
+      </div>
+
+      <!-- Notificaciones -->
+      <button id="btn-notificaciones" onclick="toggleNotificaciones()">
+        <i id="icono-campana" class="bi bi-bell-fill"></i> 
+        <span class="label">Notificaciones</span>
+        <span id="badge-alerta"></span>
       </button>
-      <button onclick="location.href='ajustes.php'">
-        <i class="bi bi-gear-fill"></i> Ajustes
-      </button>
+      <div id="panel-notificaciones" class="notificaciones-dropdown">
+        <h4>Notificaciones</h4>
+        <ul id="lista-notificaciones"></ul>
+      </div>
+      <div class="menu-bottom">
+        <button class="ajustes" onclick="location.href='ajustes.php'">
+          <i class="bi bi-gear-fill"></i> <span class="label">Ajustes</span>
+        </button>
+        <button class="salir" onclick="location.href='logout.php'">
+          <i class="bi bi-box-arrow-right"></i> <span class="label">Salir</span>
+        </button>
+      </div>
     </div>
   </div>
+  <script>
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("collapsed");
+  }
+  </script>
+  <!-- Contenido principal -->
   <div class="main-content">
     <h2>Bienvenido, <?php echo htmlspecialchars($nombreUsuario); ?>!</h2>
-        <div class="grid-stack">
-        <!--Gráfica con filtros -->
-        <div class="grid-stack-item" 
-            id="grafico-item" 
-            gs-x="0" gs-y="0" gs-w="7" gs-h="5">
-          <div class="grid-stack-item-content" style="position: relative;">
-            <div class="chart-filters">
-              <button onclick="filtrar('día')">Día</button>
-              <button onclick="filtrar('semana')">Semana</button>
-              <button onclick="filtrar('mes')" class="activo">Mes</button>
-              <button onclick="filtrar('año')">Año</button>
-            </div>
-            <canvas id="graficoFinanzas"></canvas>
-
-            <!--Mensaje-->
-            <div id="mensaje-sin-registros" style="
-                position: absolute;
-                top: 50%; left: 50%;
-                transform: translate(-50%, -50%);
-                background: rgba(0, 0, 0, 0.4);
-                padding: 20px;
-                border-radius: 12px;
-                color: #fff;
-                text-align: center;">
-                No hay registros aún.<br>
-                Ve a <strong>Registro</strong> para comenzar.
-            </div>
+    <div class="grid-stack">
+      <!-- Gráfico -->
+      <div class="grid-stack-item" id="grafico-item" gs-x="6" gs-y="0" gs-w="5" gs-h="4">
+        <div class="grid-stack-item-content" style="position: relative;">
+          <div class="chart-filters">
+            <button onclick="filtrar('día')">Día</button>
+            <button onclick="filtrar('semana')">Semana</button>
+            <button onclick="filtrar('mes')" class="activo">Mes</button>
+            <button onclick="filtrar('año')">Año</button>
+          </div>
+          <canvas id="graficoFinanzas"></canvas>
+          <!-- Mensaje -->
+          <div id="mensaje-sin-registros" class="mensaje-vacio">
+            No hay registros aún.<br>
+            Ve a <strong>Registro</strong> para comenzar.
           </div>
         </div>
-        <!-- Ingresos -->
-        <div class="grid-stack-item"
-            gs-x="8" gs-y="0" gs-w="2" gs-h="2">
-          <div class="grid-stack-item-content">
-            <h3>Ingresos</h3>
-            <p id="ingresos">$0.00</p>
-          </div>
+      </div>
+      <div class="grid-stack-item" gs-x="0" gs-y="0" gs-w="6" gs-h="4">
+        <div class="grid-stack-item-content glass-card">
+          <h3>Ingresos vs Gastos</h3>
+          <canvas id="chartIngresosGastos"></canvas>
         </div>
-        <!-- Gastos -->
-        <div class="grid-stack-item"
-            gs-x="10" gs-y="0" gs-w="2" gs-h="2">
-          <div class="grid-stack-item-content">
-            <h3>Gastos</h3>
-            <p id="gastos">$0.00</p>
-          </div>
+      </div>
+      <!-- Distribución General -->
+      <div class="grid-stack-item" gs-x="7" gs-y="4" gs-w="3" gs-h="4">
+        <div class="grid-stack-item-content glass-card">
+          <h3>Distribución General</h3>
+          <canvas id="chartDistribucion"></canvas>
         </div>
-        <!--Ahorro disponible -->
-        <div class="grid-stack-item"
-            id="contenedor-ahorro"
-            gs-x="8" gs-y="2" gs-w="4" gs-h="2"
-            style="display: none;">
-          <div class="grid-stack-item-content">
-            <h3>Ahorro disponible</h3>
-            <p id="ahorro">$0.00</p>
-          </div>
+      </div>
+      <!-- Evolución del Ahorro -->
+      <div class="grid-stack-item" gs-x="0" gs-y="4" gs-w="6" gs-h="4">
+        <div class="grid-stack-item-content glass-card">
+          <h3>Evolución del Ahorro</h3>
+          <canvas id="chartAhorro"></canvas>
         </div>
-
-      <!--Ahorro para metas (se oculta si no aplica) -->
-      <div class="grid-stack-item" id="contenedor-aportes" gs-x="8" gs-y="4" gs-w="4" gs-h="1" style="display: none;">
+      </div>
+      <!-- Ingresos -->
+      <div class="grid-stack-item" gs-x="6" gs-y="4" gs-h="2" style="display: block;">
+        <div class="grid-stack-item-content">
+          <h3>Ingresos</h3>
+          <p id="ingresos">$0.00</p>
+        </div>
+      </div>
+      <!-- Gastos -->
+      <div class="grid-stack-item" gs-x="10" gs-y="4" gs-h="2" style="display: block;">
+        <div class="grid-stack-item-content">
+          <h3>Gastos</h3>
+          <p id="gastos">$0.00</p>
+        </div>
+      </div>
+      <!-- Ahorro disponible -->
+      <div class="grid-stack-item ui-resizable-autohide" id="contenedor-ahorro" gs-x="10" gs-y="6" style="display: block;" gs-h="2">
+        <div class="grid-stack-item-content">
+          <h3>Ahorro disponible</h3>
+          <p id="ahorro">$0.00</p>
+        </div>
+      </div>
+      <!-- Ahorro invertido -->
+      <div class="grid-stack-item ui-resizable-autohide" id="contenedor-aportes" gs-x="6" gs-y="6" style="display: block;" gs-h="2">
         <div class="grid-stack-item-content">
           <h3>Ahorro invertido</h3>
           <p id="aportes">$0.00</p>
@@ -426,12 +693,39 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
   </div>
 </div>
 <script>
-  // Inicializa GridStack una vez y guarda la instancia
+  const datosGraficos = {
+    ingresos: <?= (int)$totalIngresos ?>,
+    gastos: <?= (int)$totalGastos ?>,
+    ahorroDisponible: <?= (int)$saldoActual ?>,
+    ahorroInvertido: <?= (int)$totalAportes ?>
+  };
+</script>
+<script>
   let grid;
   document.addEventListener('DOMContentLoaded', () => {
-    grid = GridStack.init();
-    filtrar('mes'); //Carga defecto
+    grid = GridStack.init({
+      float: true,             // Widgets libres
+      cellHeight: 120,         // Altura base por fila
+      margin: 10,              // Espacio entre widgets
+      disableOneColumnMode: true
+    });
+
+    // 🔹 Expande dinámicamente las filas
+    grid.on('added removed change', function () {
+      grid.engine.maxRow = grid.engine.getRow();
+    });
+
+    // 🔹 Forzamos scroll vertical
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+      mainContent.style.overflowY = 'auto';
+      mainContent.style.maxHeight = 'calc(100vh - 50px)';
+    }
+
+    filtrar('mes'); // carga inicial
   });
+
+  // Inicialización del gráfico
   const ctx = document.getElementById('graficoFinanzas').getContext('2d');
   const grafico = new Chart(ctx, {
     type: 'bar',
@@ -442,59 +736,54 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
         { label: 'Gastos', data: [], backgroundColor: '#F44336' }
       ]
     },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: true,
-        labels: {
-          color: '#fff', // 🔹 leyenda blanca
-          font: { size: 14 }
-        }
-      }
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: '#fff' //  X
-        },
-        grid: {
-          color: 'rgba(255,255,255,0.2)' // líneas claras
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: '#fff',
+            font: { size: 14 }
+          }
         }
       },
-      y: {
-        beginAtZero: true,
-        ticks: {
-          color: '#fff' // Y
+      scales: {
+        x: {
+          ticks: { color: '#fff' },
+          grid: { color: 'rgba(255,255,255,0.2)' }
         },
-        grid: {
-          color: 'rgba(255,255,255,0.2)' // líneas claras
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#fff' },
+          grid: { color: 'rgba(255,255,255,0.2)' }
         }
       }
     }
-  }
-});
-  // Formatea números con decimales
+  });
+
+  // 🔹 Formatear números
   function formatNumber(num) {
     return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2 }).format(num);
   }
-  //Aplica valor y color según signo
+
+  // 🔹 Actualizar color según positivo/negativo
   function aplicarColor(id, valor) {
     const el = document.getElementById(id);
     el.innerText = `$${formatNumber(valor)}`;
     el.style.color = valor < 0 ? '#FF6B6B' : '#FFFFFF';
   }
-  // Filtrar por periodo dinámico
+
+  // 🔹 Filtrar datos
   function filtrar(periodo) {
     const periodoLower = periodo.toLowerCase();
 
-    // Activa botón correcto
+    // Botón activo
     document.querySelectorAll('.chart-filters button').forEach(btn => {
       btn.classList.toggle('activo', btn.textContent.toLowerCase() === periodoLower);
+      btn.classList.remove('parpadeo'); // limpiamos parpadeo previo
     });
 
-    // Consulta AJAX
     $.post('includes/filtrar_datos.php', { periodo: periodoLower }, function (respuesta) {
       const datos = typeof respuesta === 'string' ? JSON.parse(respuesta) : respuesta;
 
@@ -504,6 +793,7 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
          (datos.gastos && datos.gastos.some(v => v !== 0)));
 
       const mensaje = document.getElementById('mensaje-sin-registros');
+      const graficoItem = document.getElementById('grafico-item');
 
       if (tieneDatos) {
         grafico.data.labels = datos.fechas;
@@ -512,57 +802,184 @@ $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
           { label: 'Gastos', data: datos.gastos, backgroundColor: '#F44336' }
         ];
         mensaje.classList.remove('visible');
+        graficoItem.classList.remove('parpadeo');
       } else {
         grafico.data.labels = [];
         grafico.data.datasets.forEach(ds => ds.data = []);
         mensaje.classList.add('visible');
+        graficoItem.classList.add('parpadeo');
       }
       grafico.update();
 
+      // Totales
       aplicarColor('ingresos', datos.ingresos?.reduce((a, b) => a + b, 0) || 0);
       aplicarColor('gastos', datos.gastos?.reduce((a, b) => a + b, 0) || 0);
       aplicarColor('ahorro', datos.ahorro || 0);
       aplicarColor('aportes', datos.aportes || 0);
-      // Mostrar/ocultar contenedores correctamente
-      const ingresosItem = document.querySelector('.grid-stack-item:has(#ingresos)');
-      const gastosItem = document.querySelector('.grid-stack-item:has(#gastos)');
-      const contenedorAhorro = document.getElementById('contenedor-ahorro');
-      const contenedorAportes = document.getElementById('contenedor-aportes');
 
-      if (tieneDatos) {
-        ingresosItem.style.display = 'block';
-        gastosItem.style.display = 'block';
-        contenedorAhorro.style.display = (datos.ahorro && datos.ahorro !== 0) ? 'block' : 'none';
-        contenedorAportes.style.display = (datos.aportes && datos.aportes !== 0) ? 'block' : 'none';
-      } else {
-        ingresosItem.style.display = 'none';
-        gastosItem.style.display = 'none';
-        contenedorAhorro.style.display = 'none';
-        contenedorAportes.style.display = 'none';
-      }
-      // Posicionar y bloquear gráfica
-      const graficoItem = document.getElementById('grafico-item');
-      if (tieneDatos) {
-        grid.update(graficoItem, {
-          x: 0,
-          y: 0,
-          w: 7,
-          h: 5,
-          locked: false
-        });
-      } else {
-        grid.update(graficoItem, {
-          x: 2, // Centro calculado: (12-8)/2 = 2
-          y: 0,
-          w: 8,
-          h: 6,
-          locked: true
-        });
-      }
+      // 🔹 Widgets: semi-transparente si no hay datos
+      const widgets = [
+        { id: 'ingresos', cont: '.grid-stack-item:has(#ingresos)' },
+        { id: 'gastos', cont: '.grid-stack-item:has(#gastos)' },
+        { id: 'ahorro', cont: '#contenedor-ahorro' },
+        { id: 'aportes', cont: '#contenedor-aportes' }
+      ];
 
-      grid.compact();
+      widgets.forEach(w => {
+        const el = document.querySelector(w.cont);
+        if (!el) return;
+        const valor = document.getElementById(w.id).innerText.replace(/[^\d.-]/g, '');
+        const num = parseFloat(valor) || 0;
+        if (tieneDatos && num > 0) {
+          el.classList.remove('sin-datos');
+        } else {
+          el.classList.add('sin-datos');
+        }
+      });
+
+      // 🔹 Buscar si otro periodo tiene datos (parpadeo)
+      const periodos = ['día', 'semana', 'mes', 'año'];
+      periodos.forEach(p => {
+        if (p !== periodoLower) {
+          $.post('includes/filtrar_datos.php', { periodo: p }, function (resp) {
+            const d = typeof resp === 'string' ? JSON.parse(resp) : resp;
+            const hay = d.fechas && d.fechas.length > 0 &&
+              ((d.ingresos && d.ingresos.some(v => v !== 0)) ||
+               (d.gastos && d.gastos.some(v => v !== 0)));
+            if (hay && !tieneDatos) {
+              document.querySelector(`.chart-filters button:nth-child(${periodos.indexOf(p) + 1})`)
+                .classList.add('parpadeo');
+            }
+          });
+        }
+      });
     });
   }
+</script>
+<script>
+// === Configuración global de colores ===
+const colores = {
+  ingresos: "#00D4FF",
+  gastos: "#FF6B6B",
+  ahorroDisp: "#00FF7F",
+  ahorroInv: "#FFD700"
+};
+// === Función para transformar datos del backend en labels y datasets ===
+function prepararDatos(dataset, tipo = "ingresosGastos") {
+  const labels = dataset.map(d => d.periodo);
+
+  if (tipo === "ingresosGastos") {
+    return {
+      labels,
+      datasets: [
+        { label: "Ingresos", data: dataset.map(d => Number(d.ingresos)), backgroundColor: colores.ingresos },
+        { label: "Gastos", data: dataset.map(d => Number(d.gastos)), backgroundColor: colores.gastos }
+      ]
+    };
+  }
+  if (tipo === "ahorro") {
+    return {
+      labels,
+      datasets: [
+        { 
+          label: "Ahorro Disponible", 
+          data: dataset.map(d => Number(d.ahorro_disponible || 0)), 
+          borderColor: colores.ahorroDisp, 
+          backgroundColor: "rgba(0,255,127,0.2)", 
+          fill: true, 
+          tension: 0.3 
+        },
+        { 
+          label: "Ahorro Invertido", 
+          data: dataset.map(d => Number(d.ahorro_invertido || 0)), 
+          borderColor: colores.ahorroInv, 
+          backgroundColor: "rgba(255,215,0,0.2)", 
+          fill: true, 
+          tension: 0.3 
+        }
+      ]
+    };
+  }
+}
+// === Inicializar gráficos ===
+const ctx1 = document.getElementById("chartIngresosGastos").getContext("2d");
+const ctx2 = document.getElementById("chartDistribucion").getContext("2d");
+const ctx3 = document.getElementById("chartAhorro").getContext("2d");
+// Gráfico Ingresos vs Gastos
+let chartIngresosGastos = new Chart(ctx1, {
+  type: "bar",
+  data: prepararDatos(dataMes, "ingresosGastos"), // por defecto mes
+  options: {
+    responsive: true,
+    plugins: { legend: { labels: { color: "#fff" } } },
+    scales: {
+      x: { ticks: { color: "#fff" } },
+      y: { ticks: { color: "#fff", beginAtZero: true } }
+    }
+  }
+});
+// Distribución general (fijo)
+new Chart(ctx2, {
+  type: "doughnut",
+  data: {
+    labels: ["Ingresos", "Gastos", "Ahorro Disp.", "Ahorro Invertido"],
+    datasets: [{
+      data: [
+        Number(totalesMes.ingresos),
+        Number(totalesMes.gastos),
+        Number(totalesMes.saldo),
+        Number(totalesMes.aportes)
+      ],
+      backgroundColor: [colores.ingresos, colores.gastos, colores.ahorroDisp, colores.ahorroInv],
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { labels: { color: "#fff", font: { size: 14 } } } }
+  }
+});
+// Evolución del Ahorro
+let chartAhorro = new Chart(ctx3, {
+  type: "line",
+  data: prepararDatos(dataMes, "ahorro"), // por defecto mes
+  options: {
+    responsive: true,
+    plugins: { legend: { labels: { color: "#fff" } } },
+    scales: {
+      x: { ticks: { color: "#fff" } },
+      y: { ticks: { color: "#fff", beginAtZero: true } }
+    }
+  }
+});
+// === Función para cambiar rango de tiempo ===
+function cambiarRango(rango) {
+  let dataset;
+  if (rango === "dia") dataset = dataDia;
+  if (rango === "semana") dataset = dataSemana;
+  if (rango === "mes") dataset = dataMes;
+  if (rango === "anio") dataset = dataAnio;
+  // Actualiza Ingresos vs Gastos
+  chartIngresosGastos.data = prepararDatos(dataset, "ingresosGastos");
+  chartIngresosGastos.update();
+  // Actualiza Evolución del Ahorro
+  chartAhorro.data = prepararDatos(dataset, "ahorro");
+  chartAhorro.update();
+}
+// === Aplicar semitransparencia si no hay datos ===
+function aplicarEstadoGrafica(canvasId, valores) {
+  const contenedor = document.getElementById(canvasId).closest('.grid-stack-item');
+  const tieneDatos = valores.some(v => v > 0);
+  if (!tieneDatos) {
+    contenedor.classList.add('sin-datos');
+  } else {
+    contenedor.classList.remove('sin-datos');
+  }
+}
+// Aplica a cada gráfico
+aplicarEstadoGrafica("chartIngresosGastos", [totalesMes.ingresos, totalesMes.gastos]);
+aplicarEstadoGrafica("chartDistribucion", [totalesMes.ingresos, totalesMes.gastos, totalesMes.saldo, totalesMes.aportes]);
+aplicarEstadoGrafica("chartAhorro", [totalesMes.saldo, totalesMes.aportes]);
 </script>
 <script>
 particlesJS('particles-js', {

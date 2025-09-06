@@ -2,44 +2,48 @@
 session_start();
 require_once 'db.php';
 header('Content-Type: application/json');
-
 if (!isset($_SESSION['usuario_id'])) {
     http_response_code(403);
     echo json_encode(['error' => 'No autorizado']);
     exit;
 }
-
 $idUsuario = $_SESSION['usuario_id'];
 $periodo   = $_POST['periodo'] ?? 'mes';
-
 switch (strtolower($periodo)) {
     case 'día':
     case 'dia':
-        $where   = "DATE(fecha) = CURDATE()";
-        $groupBy = "fecha";
+        // Últimos 7 días
+        $where   = "fecha >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+        $groupBy = "DATE(fecha)";
         break;
+
     case 'semana':
-        $where   = "YEARWEEK(fecha, 1) = YEARWEEK(CURDATE(), 1)";
-        $groupBy = "fecha";
+        // Últimas 6 semanas
+        $where   = "fecha >= DATE_SUB(CURDATE(), INTERVAL 6 WEEK)";
+        $groupBy = "YEARWEEK(fecha, 1)";
         break;
+
     case 'mes':
-        $where   = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())";
-        $groupBy = "fecha";
-        break;
-    case 'año':
-    case 'anio':
-        $where   = "YEAR(fecha) = YEAR(CURDATE())";
+        // Últimos 12 meses
+        $where   = "fecha >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)";
         $groupBy = "DATE_FORMAT(fecha, '%Y-%m')";
         break;
+
+    case 'año':
+    case 'anio':
+        // Últimos 5 años
+        $where   = "fecha >= DATE_SUB(CURDATE(), INTERVAL 5 YEAR)";
+        $groupBy = "YEAR(fecha)";
+        break;
+
     default:
-        $where   = "MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())";
-        $groupBy = "fecha";
+        // Mes por defecto
+        $where   = "fecha >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)";
+        $groupBy = "DATE_FORMAT(fecha, '%Y-%m')";
         break;
 }
-
 try {
-    $conn = db::conectar();
-
+    $conn = DB::conectar();
     // Ingresos
     $sqlIngreso = "
         SELECT {$groupBy} AS fecha, SUM(monto) AS total
@@ -51,7 +55,6 @@ try {
     $stmtIngreso = $conn->prepare($sqlIngreso);
     $stmtIngreso->execute([$idUsuario]);
     $ingresosRaw = $stmtIngreso->fetchAll(PDO::FETCH_ASSOC);
-
     // Gastos
     $sqlGasto = "
         SELECT {$groupBy} AS fecha, SUM(monto) AS total
@@ -63,7 +66,6 @@ try {
     $stmtGasto = $conn->prepare($sqlGasto);
     $stmtGasto->execute([$idUsuario]);
     $gastosRaw = $stmtGasto->fetchAll(PDO::FETCH_ASSOC);
-
     // Aportes
     $sqlAportes = "
         SELECT COALESCE(SUM(a.monto),0)
@@ -74,8 +76,7 @@ try {
     $stmtAportes = $conn->prepare($sqlAportes);
     $stmtAportes->execute([$idUsuario]);
     $aporteTotal = $stmtAportes->fetchColumn();
-
-    // Si no hay datos, responde vacío para que el JS muestre el mensaje
+    // Si no hay datos
     if (empty($ingresosRaw) && empty($gastosRaw)) {
         echo json_encode([
             'fechas'   => [],
@@ -86,15 +87,13 @@ try {
         ]);
         exit;
     }
-
-    // Construir rango de fechas solo si hay registros
+    // Construir rango de fechas
     $fechasUnicas = [];
     foreach ($ingresosRaw as $row) $fechasUnicas[$row['fecha']] = true;
     foreach ($gastosRaw as $row) $fechasUnicas[$row['fecha']] = true;
 
     $fechas = array_unique(array_keys($fechasUnicas));
     sort($fechas);
-
     // Mapear ingresos/gastos a fechas
     $ingresos = array_fill_keys($fechas, 0);
     foreach ($ingresosRaw as $row) $ingresos[$row['fecha']] = (float)$row['total'];
