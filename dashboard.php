@@ -3,11 +3,13 @@ session_start();
 require_once 'includes/db.php';
 require_once 'includes/auth.php';
 $conn = DB::conectar();
+
 $idUsuario = $_SESSION['usuario_id'] ?? null;
 if (!$idUsuario) {
   header("Location: login.php");
   exit;
 }
+
 // === Datos básicos del usuario ===
 $stmt = $conn->prepare("SELECT nombre, ingreso_minimo, saldo_minimo 
                         FROM usuarios 
@@ -15,6 +17,7 @@ $stmt = $conn->prepare("SELECT nombre, ingreso_minimo, saldo_minimo
 $stmt->execute([$idUsuario]);
 $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 $nombreUsuario = $usuario ? htmlspecialchars($usuario['nombre']) : "Usuario";
+
 // === Totales del mes actual ===
 $totales = $conn->prepare("
   SELECT
@@ -56,15 +59,22 @@ $stmtMetas = $conn->prepare("
 ");
 $stmtMetas->execute([$idUsuario]);
 $lista_metas = $stmtMetas->fetchAll(PDO::FETCH_ASSOC);
-// Por día (últimos 7 días)
+
+// === Por día (últimos 7 días) ===
 $stmtDia = $conn->prepare("
   SELECT DATE(fecha) AS periodo,
          SUM(CASE WHEN tipo='ingreso' THEN monto ELSE 0 END) AS ingresos,
-         SUM(CASE WHEN tipo='gasto' THEN monto ELSE 0 END) AS gastos
+         SUM(CASE WHEN tipo='gasto' THEN monto ELSE 0 END) AS gastos,
+         SUM(CASE WHEN tipo='ahorro' THEN monto ELSE 0 END) AS ahorro
   FROM (
     SELECT fecha, monto, 'ingreso' AS tipo FROM ingresos WHERE usuario_id = :id
     UNION ALL
     SELECT fecha, monto, 'gasto' AS tipo FROM gastos WHERE usuario_id = :id
+    UNION ALL
+    SELECT a.fecha, a.monto, 'ahorro' AS tipo 
+    FROM aportes_ahorro a 
+    JOIN metas_ahorro m ON a.meta_id = m.id 
+    WHERE m.usuario_id = :id
   ) t
   WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
   GROUP BY periodo
@@ -72,15 +82,22 @@ $stmtDia = $conn->prepare("
 ");
 $stmtDia->execute(['id'=>$idUsuario]);
 $dataDia = $stmtDia->fetchAll(PDO::FETCH_ASSOC);
-// Por semana (últimas 6 semanas)
+
+// === Por semana (últimas 6 semanas) ===
 $stmtSemana = $conn->prepare("
   SELECT YEARWEEK(fecha, 1) AS periodo,
          SUM(CASE WHEN tipo='ingreso' THEN monto ELSE 0 END) AS ingresos,
-         SUM(CASE WHEN tipo='gasto' THEN monto ELSE 0 END) AS gastos
+         SUM(CASE WHEN tipo='gasto' THEN monto ELSE 0 END) AS gastos,
+         SUM(CASE WHEN tipo='ahorro' THEN monto ELSE 0 END) AS ahorro
   FROM (
     SELECT fecha, monto, 'ingreso' AS tipo FROM ingresos WHERE usuario_id = :id
     UNION ALL
     SELECT fecha, monto, 'gasto' AS tipo FROM gastos WHERE usuario_id = :id
+    UNION ALL
+    SELECT a.fecha, a.monto, 'ahorro' AS tipo 
+    FROM aportes_ahorro a 
+    JOIN metas_ahorro m ON a.meta_id = m.id 
+    WHERE m.usuario_id = :id
   ) t
   WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 6 WEEK)
   GROUP BY periodo
@@ -88,15 +105,22 @@ $stmtSemana = $conn->prepare("
 ");
 $stmtSemana->execute(['id'=>$idUsuario]);
 $dataSemana = $stmtSemana->fetchAll(PDO::FETCH_ASSOC);
-//Por mes (últimos 12 meses)
+
+// === Por mes (últimos 12 meses) ===
 $stmtMes = $conn->prepare("
   SELECT DATE_FORMAT(fecha, '%Y-%m') AS periodo,
          SUM(CASE WHEN tipo='ingreso' THEN monto ELSE 0 END) AS ingresos,
-         SUM(CASE WHEN tipo='gasto' THEN monto ELSE 0 END) AS gastos
+         SUM(CASE WHEN tipo='gasto' THEN monto ELSE 0 END) AS gastos,
+         SUM(CASE WHEN tipo='ahorro' THEN monto ELSE 0 END) AS ahorro
   FROM (
     SELECT fecha, monto, 'ingreso' AS tipo FROM ingresos WHERE usuario_id = :id
     UNION ALL
     SELECT fecha, monto, 'gasto' AS tipo FROM gastos WHERE usuario_id = :id
+    UNION ALL
+    SELECT a.fecha, a.monto, 'ahorro' AS tipo 
+    FROM aportes_ahorro a 
+    JOIN metas_ahorro m ON a.meta_id = m.id 
+    WHERE m.usuario_id = :id
   ) t
   WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
   GROUP BY periodo
@@ -104,15 +128,22 @@ $stmtMes = $conn->prepare("
 ");
 $stmtMes->execute(['id'=>$idUsuario]);
 $dataMes = $stmtMes->fetchAll(PDO::FETCH_ASSOC);
-//Por año (últimos 5 años, incluyendo anteriores)
+
+// === Por año (últimos 5 años) ===
 $stmtAnio = $conn->prepare("
   SELECT YEAR(fecha) AS periodo,
          SUM(CASE WHEN tipo='ingreso' THEN monto ELSE 0 END) AS ingresos,
-         SUM(CASE WHEN tipo='gasto' THEN monto ELSE 0 END) AS gastos
+         SUM(CASE WHEN tipo='gasto' THEN monto ELSE 0 END) AS gastos,
+         SUM(CASE WHEN tipo='ahorro' THEN monto ELSE 0 END) AS ahorro
   FROM (
     SELECT fecha, monto, 'ingreso' AS tipo FROM ingresos WHERE usuario_id = :id
     UNION ALL
     SELECT fecha, monto, 'gasto' AS tipo FROM gastos WHERE usuario_id = :id
+    UNION ALL
+    SELECT a.fecha, a.monto, 'ahorro' AS tipo 
+    FROM aportes_ahorro a 
+    JOIN metas_ahorro m ON a.meta_id = m.id 
+    WHERE m.usuario_id = :id
   ) t
   WHERE fecha BETWEEN DATE_SUB(CURDATE(), INTERVAL 5 YEAR) 
                   AND DATE_ADD(CURDATE(), INTERVAL 5 YEAR)
@@ -121,7 +152,8 @@ $stmtAnio = $conn->prepare("
 ");
 $stmtAnio->execute(['id'=>$idUsuario]);
 $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
-// === Exportar datos a JS o JSON ===
+
+// === Exportar datos a JS ===
 ?>
 <script>
   const nombreUsuario = "<?= $nombreUsuario ?>";
@@ -137,6 +169,61 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
   const dataMes    = <?= json_encode($dataMes) ?>;
   const dataAnio   = <?= json_encode($dataAnio) ?>;
 </script>
+<script>
+  // Función genérica para preparar datos según el tipo de gráfico
+function prepararDatos(dataset, tipo) {
+  const labels = dataset.map(d => d.periodo);
+
+  if (tipo === "ingresosGastos") {
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Ingresos",
+          data: dataset.map(d => parseFloat(d.ingresos) || 0),
+          borderColor: "rgba(0, 255, 0, 0.8)",
+          backgroundColor: "rgba(0, 255, 0, 0.3)",
+          fill: true
+        },
+        {
+          label: "Gastos",
+          data: dataset.map(d => parseFloat(d.gastos) || 0),
+          borderColor: "rgba(255, 0, 0, 0.8)",
+          backgroundColor: "rgba(255, 0, 0, 0.3)",
+          fill: true
+        }
+      ]
+    };
+  }
+
+  if (tipo === "ahorro") {
+    // Calcular evolución del ahorro: ingresos - gastos - ahorro
+    let acumulado = 0;
+    const valores = dataset.map(d => {
+      acumulado += (parseFloat(d.ingresos) || 0) - (parseFloat(d.gastos) || 0) - (parseFloat(d.ahorro) || 0);
+      return acumulado;
+    });
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Ahorro acumulado",
+          data: valores,
+          borderColor: "rgba(0, 200, 255, 0.9)",
+          backgroundColor: "rgba(0, 200, 255, 0.3)",
+          tension: 0.3,
+          fill: true,
+          pointBackgroundColor: "#fff"
+        }
+      ]
+    };
+  }
+
+  return { labels: [], datasets: [] };
+}
+</script>
+<?php include 'includes/header.php'; ?>
 <?php include 'includes/header.php'; ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@8.2.1/dist/gridstack.min.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -145,436 +232,435 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
 <script src="https://cdn.jsdelivr.net/npm/gridstack@8.2.1/dist/gridstack-all.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 <style>
-    /* ===== Fondo animado ===== */
-  body {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #0B0B52, #1D2B64, #0C1634, #0B0B52);
-    background-size: 300% 300%;
-    animation: backgroundAnim 25s ease-in-out infinite;
-    z-index: -2;
-    overflow: hidden;
-    color: white;
-    font-family: 'Segoe UI', sans-serif;
-  }
-  html, body {
-    height: 100%;
-    margin: 0;
-    overflow: hidden; /* evita doble scroll */
-  }
-  @keyframes backgroundAnim {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  #particles-js {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: -1;
-  }
+      /* ===== Fondo animado ===== */
+    body {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0B0B52, #1D2B64, #0C1634, #0B0B52);
+      background-size: 300% 300%;
+      animation: backgroundAnim 25s ease-in-out infinite;
+      z-index: -2;
+      overflow: hidden;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden; /* evita doble scroll */
+    }
+    @keyframes backgroundAnim {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    #particles-js {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1;
+    }
 
-  /* ===== Layout ===== */
-  .dashboard-container {
-    display: flex;
-    height: 100vh;
-    gap: 20px;
-    padding: 20px;
-    box-sizing: border-box;
-  }
-
-  /* ===== Sidebar ===== */
-  .sidebar {
-    width: 240px; /* un poquito más ancho */
-    display: flex;
-    flex-direction: column;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
-    padding: 12px 0;
-    transition: width 0.3s ease-in-out;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-  }
-
-  /* Sidebar colapsada */
-  .sidebar.collapsed {
-    width: 120px;
-  }
-
-  /* Botón hamburguesa */
-  .sidebar .hamburger {
-    align-self: flex-start; /* ahora a la izquierda */
-    margin: 10px 16px;
-    font-size: 2rem; /* más grande */
-    background: transparent;
-    border: none;
-    color: #00D4FF;
-    cursor: pointer;
-    transition: transform 0.3s ease, color 0.3s ease;
-  }
-  .sidebar .hamburger:hover {
-    transform: rotate(90deg);
-    color: #fff;
-  }
-
-  /* Contenedor del menú */
-  .menu-content {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    gap: 12px;
-    padding: 12px;
-  }
-
-  /* Botones uniformes */
-  .sidebar button {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px 18px; /* más grandes */
-    font-size: 1.1rem;  /* fuente más legible */
-    border: none;
-    border-radius: 14px;
-    background: transparent;
-    color: #e0f7fa;
-    font-weight: 500;
-    cursor: pointer;
-    transition: 
-      background 0.2s, 
-      color 0.2s, 
-      transform 0.2s;
-    overflow: hidden;
-    text-align: left;
-  }
-
-  /* Hover de botones */
-  .sidebar button:hover {
-    background: rgba(0, 212, 255, 0.2);
-    color: #fff;
-    transform: translateY(-2px);
-  }
-
-  /* Íconos */
-  .sidebar button i {
-    font-size: 1.5em; /* más grandes */
-    color: #00D4FF;
-    flex-shrink: 0;
-    transition: color 0.2s;
-  }
-  .sidebar button:hover i {
-    color: #fff;
-  }
-
-  /* Etiquetas de texto */
-  .sidebar button .label {
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    white-space: nowrap;
-  }
-  .sidebar.collapsed .label {
-    opacity: 0;
-    transform: translateX(-15px);
-    pointer-events: none;
-  }
-  /* Contenedor del menú inferior */
-  .menu-bottom {
-    margin-top: auto; /* se pega abajo */
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 6px;
-  }
-
-  /* Botón Ajustes (azul elegante) */
-  .menu-bottom button.ajustes {
-    background: rgba(0, 212, 255, 0.15);
-    border: 1px solid rgba(0, 212, 255, 0.3);
-    color: #fff;
-    font-weight: 600;
-    padding: 14px 18px;
-    border-radius: 14px;
-    font-size: 1.05rem;
-    box-shadow: 0 4px 16px rgba(0, 212, 255, 0.25);
-    transition: all 0.25s ease;
-  }
-  .menu-bottom button.ajustes:hover {
-    background: #00d4ff;
-    color: #111;
-    transform: translateY(-2px);
-    box-shadow: 0 0 12px #00d4ff, 0 0 24px rgba(0, 212, 255, 0.6);
-  }
-  .menu-bottom button.ajustes i {
-    color: #00d4ff;
-    font-size: 1.4em;
-    transition: color 0.25s;
-  }
-  .menu-bottom button.ajustes:hover i {
-    color: #111;
-  }
-
-  /* Botón Salir (rojo crítico) */
-  .menu-bottom button.salir {
-    background: rgba(255, 77, 77, 0.15);
-    border: 1px solid rgba(255, 77, 77, 0.3);
-    color: #fff;
-    font-weight: 600;
-    padding: 14px 18px;
-    border-radius: 14px;
-    font-size: 1.05rem;
-    box-shadow: 0 4px 16px rgba(255, 77, 77, 0.25);
-    transition: all 0.25s ease;
-  }
-  .menu-bottom button.salir:hover {
-    background: #ff4d4d;
-    color: #111;
-    transform: translateY(-2px);
-    box-shadow: 0 0 12px #ff4d4d, 0 0 24px rgba(255, 77, 77, 0.6);
-  }
-  .menu-bottom button.salir i {
-    color: #ff4d4d;
-    font-size: 1.4em;
-    transition: color 0.25s;
-  }
-  .menu-bottom button.salir:hover i {
-    color: #111;
-  }
-
-  /* ===== Notificaciones ===== */
-  .notificaciones-dropdown {
-    position: absolute;
-    top: 70px; /* alineado debajo del hamburguesa */
-    left: 250px; /* al lado de la sidebar */
-    width: 280px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 14px;
-    backdrop-filter: blur(14px);
-    color: white;
-    display: none;
-    flex-direction: column;
-    padding: 18px 20px;
-    z-index: 999;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-  }
-  .notificaciones-dropdown h4 {
-    margin: 0 0 12px;
-    font-size: 1.2rem; /* más grande */
-    border-bottom: 1px solid #00D4FF;
-    padding-bottom: 6px;
-  }
-  .notificaciones-dropdown li {
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 1rem;
-  }
-
-
-  /* ===== Contenido principal ===== */
-  .main-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 25px;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    overflow: hidden;
-    box-sizing: border-box;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-  }
-  .main-content {
-    height: 100%;
-    overflow-y: auto; /* scroll vertical global */
-    padding: 1rem;
-  }
-
-  /* ===== Gridstack items ===== */
-  .grid-stack {
-    flex: 1;
-    overflow-y: auto;   /* 🔹 scroll vertical */
-    max-height: 90vh;
-    width: 100%;
-    height: 100%;
-    box-sizing: border-box;
-    padding: 20px;
-    min-height: 100%;
-  }
-
-  .grid-stack-item {
-    min-height: 200px;   /* un poco más grande */
-  }
-  .grid-stack-item-content {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
-    border-radius: 12px;
-    padding: 25px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-    text-align: center;
-    transition: transform 0.2s ease-in-out;
-    overflow: hidden;
-  }
-  .grid-stack-item-content:hover {
-    transform: scale(1.01);
-  }
-  .grid-stack-item-content canvas {
-    display: block;
-    width: 100% !important;
-    height: 100% !important;
-    max-height: 300px;
-    margin: 0 auto;
-  }
-
-  /* ===== Chart filters ===== */
-  .chart-filters {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-  }
-  .chart-filters button {
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1px solid #00D4FF;
-    background-color: #ffffff22;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-  .chart-filters button:hover {
-    background-color: #ffffff44;
-  }
-  .chart-filters button.activo {
-    background-color: #00D4FF;
-    color: #0C1634;
-    box-shadow: 0 0 8px rgba(0, 212, 255, 0.7);
-  }
-  .sin-datos {
-    opacity: 0.4;
-    filter: grayscale(50%);
-  }
-  @keyframes parpadeo {
-    0% { opacity: 1; }
-    50% { opacity: 0.3; }
-    100% { opacity: 1; }
-  }
-
-  .parpadeo {
-    animation: parpadeo 1s infinite;
-  }
-
-  /* ===== Notificaciones ===== */
-  .notificaciones-dropdown {
-    position: absolute;
-    top: 60px; /* alineado con botones */
-    left: 80px; /* para que no se tape con sidebar colapsada */
-    width: 260px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    backdrop-filter: blur(12px);
-    color: white;
-    display: none;
-    flex-direction: column;
-    padding: 15px 20px;
-    z-index: 999;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-  }
-  .notificaciones-dropdown h4 {
-    margin: 0 0 10px;
-    font-size: 1rem;
-    border-bottom: 1px solid #00D4FF;
-    padding-bottom: 5px;
-  }
-  .notificaciones-dropdown ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  .notificaciones-dropdown li {
-    padding: 5px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 0.9rem;
-  }
-  #badge-alerta {
-    background: #FF6B6B;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    display: inline-block;
-    margin-left: auto;
-    border: 2px solid #fff;
-    box-shadow: 0 0 6px #FF6B6B;
-  }
-
-  /* ===== Mensaje sin registros ===== */
-  .mensaje-vacio {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    max-width: 300px;
-    background: rgba(0, 0, 0, 0.6);
-    padding: 30px 20px;
-    border-radius: 15px;
-    font-size: 1rem;
-    line-height: 1.4;
-    text-align: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-  .mensaje-vacio.visible {
-    opacity: 1;
-  }
-
-  /* ===== Responsive ===== */
-  @media (max-width: 768px) {
+    /* ===== Layout ===== */
     .dashboard-container {
-      flex-direction: column;
-      overflow: auto;
+      display: flex;
+      height: 100vh;
+      gap: 20px;
+      padding: 20px;
+      box-sizing: border-box;
     }
+
+    /* ===== Sidebar ===== */
     .sidebar {
-      flex-direction: row;
+      width: 240px; /* un poquito más ancho */
+      display: flex;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 12px 0;
+      transition: width 0.3s ease-in-out;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    }
+
+    /* Sidebar colapsada */
+    .sidebar.collapsed {
+      width: 120px;
+    }
+
+    /* Botón hamburguesa */
+    .sidebar .hamburger {
+      align-self: flex-start; /* ahora a la izquierda */
+      margin: 10px 16px;
+      font-size: 2rem; /* más grande */
+      background: transparent;
+      border: none;
+      color: #00D4FF;
+      cursor: pointer;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+    .sidebar .hamburger:hover {
+      transform: rotate(90deg);
+      color: #fff;
+    }
+
+    /* Contenedor del menú */
+    .menu-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    /* Botones uniformes */
+    .sidebar button {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 18px; /* más grandes */
+      font-size: 1.1rem;  /* fuente más legible */
+      border: none;
+      border-radius: 14px;
+      background: transparent;
+      color: #e0f7fa;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 
+        background 0.2s, 
+        color 0.2s, 
+        transform 0.2s;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    /* Hover de botones */
+    .sidebar button:hover {
+      background: rgba(0, 212, 255, 0.2);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    /* Íconos */
+    .sidebar button i {
+      font-size: 1.5em; /* más grandes */
+      color: #00D4FF;
+      flex-shrink: 0;
+      transition: color 0.2s;
+    }
+    .sidebar button:hover i {
+      color: #fff;
+    }
+
+    /* Etiquetas de texto */
+    .sidebar button .label {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      white-space: nowrap;
+    }
+    .sidebar.collapsed .label {
+      opacity: 0;
+      transform: translateX(-15px);
+      pointer-events: none;
+    }
+    /* Contenedor del menú inferior */
+    .menu-bottom {
+      margin-top: auto; /* se pega abajo */
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 6px;
+    }
+
+    /* Botón Ajustes (azul elegante) */
+    .menu-bottom button.ajustes {
+      background: rgba(0, 212, 255, 0.15);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      color: #fff;
+      font-weight: 600;
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      box-shadow: 0 4px 16px rgba(0, 212, 255, 0.25);
+      transition: all 0.25s ease;
+    }
+    .menu-bottom button.ajustes:hover {
+      background: #00d4ff;
+      color: #111;
+      transform: translateY(-2px);
+      box-shadow: 0 0 12px #00d4ff, 0 0 24px rgba(0, 212, 255, 0.6);
+    }
+    .menu-bottom button.ajustes i {
+      color: #00d4ff;
+      font-size: 1.4em;
+      transition: color 0.25s;
+    }
+    .menu-bottom button.ajustes:hover i {
+      color: #111;
+    }
+
+    /* Botón Salir (rojo crítico) */
+    .menu-bottom button.salir {
+      background: rgba(255, 77, 77, 0.15);
+      border: 1px solid rgba(255, 77, 77, 0.3);
+      color: #fff;
+      font-weight: 600;
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      box-shadow: 0 4px 16px rgba(255, 77, 77, 0.25);
+      transition: all 0.25s ease;
+    }
+    .menu-bottom button.salir:hover {
+      background: #ff4d4d;
+      color: #111;
+      transform: translateY(-2px);
+      box-shadow: 0 0 12px #ff4d4d, 0 0 24px rgba(255, 77, 77, 0.6);
+    }
+    .menu-bottom button.salir i {
+      color: #ff4d4d;
+      font-size: 1.4em;
+      transition: color 0.25s;
+    }
+    .menu-bottom button.salir:hover i {
+      color: #111;
+    }
+
+    /* ===== Notificaciones ===== */
+    .notificaciones-dropdown {
+      position: absolute;
+      top: 70px; /* alineado debajo del hamburguesa */
+      left: 250px; /* al lado de la sidebar */
+      width: 280px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      backdrop-filter: blur(14px);
+      color: white;
+      display: none;
+      flex-direction: column;
+      padding: 18px 20px;
+      z-index: 999;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    }
+    .notificaciones-dropdown h4 {
+      margin: 0 0 12px;
+      font-size: 1.2rem; /* más grande */
+      border-bottom: 1px solid #00D4FF;
+      padding-bottom: 6px;
+    }
+    .notificaciones-dropdown li {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 1rem;
+    }
+
+
+    /* ===== Contenido principal ===== */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 25px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+      box-sizing: border-box;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    }
+    .main-content {
+      height: 100%;
+      overflow-y: auto; /* scroll vertical global */
+      padding: 1rem;
+    }
+
+    /* ===== Gridstack items ===== */
+    .grid-stack {
+      flex: 1;
+      overflow-y: auto;   /* 🔹 scroll vertical */
+      max-height: 90vh;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      padding: 20px;
+      min-height: 100%;
+    }
+
+    .grid-stack-item {
+      min-height: 200px;   /* un poco más grande */
+    }
+    .grid-stack-item-content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      transition: transform 0.2s ease-in-out;
+      overflow: hidden;
+    }
+    .grid-stack-item-content:hover {
+      transform: scale(1.01);
+    }
+    .grid-stack-item-content canvas {
+      display: block;
       width: 100% !important;
-      height: auto;
+      height: 100% !important;
+      max-height: 300px;
+      margin: 0 auto;
     }
-    .hamburger {
-      right: 15px;
+
+    /* ===== Chart filters ===== */
+    .chart-filters {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
     }
-  }
-  /* Widgets sin datos */
-  .grid-stack-item-content.empty {
-    opacity: 0.4;
-    filter: grayscale(60%);
-    pointer-events: none; /* No interactuable */
-    transition: opacity 0.3s ease;
-  }
+    .chart-filters button {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid #00D4FF;
+      background-color: #ffffff22;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .chart-filters button:hover {
+      background-color: #ffffff44;
+    }
+    .chart-filters button.activo {
+      background-color: #00D4FF;
+      color: #0C1634;
+      box-shadow: 0 0 8px rgba(0, 212, 255, 0.7);
+    }
+    .sin-datos {
+      opacity: 0.4;
+      filter: grayscale(50%);
+    }
+    @keyframes parpadeo {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
 
-  /* Parpadeo para resaltar gráfico principal */
-  @keyframes blink {
-    0% { box-shadow: 0 0 10px rgba(255,255,255,0.6); }
-    50% { box-shadow: 0 0 20px rgba(255,255,255,1); }
-    100% { box-shadow: 0 0 10px rgba(255,255,255,0.6); }
-  }
-  #grafico-item.blink {
-    animation: blink 1.5s infinite;
-  }
+    .parpadeo {
+      animation: parpadeo 1s infinite;
+    }
 
-  /* Parpadeo para botones de filtro */
-  @keyframes pulse {
-    0% { background-color: rgba(255, 255, 255, 0.2); }
-    50% { background-color: rgba(255, 255, 255, 0.5); }
-    100% { background-color: rgba(255, 255, 255, 0.2); }
-  }
-  .chart-filters button.blink {
-    animation: pulse 1.2s infinite;
-    border: 1px solid #fff;
-  }
+    /* ===== Notificaciones ===== */
+    .notificaciones-dropdown {
+      position: absolute;
+      top: 60px; /* alineado con botones */
+      left: 80px; /* para que no se tape con sidebar colapsada */
+      width: 260px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      backdrop-filter: blur(12px);
+      color: white;
+      display: none;
+      flex-direction: column;
+      padding: 15px 20px;
+      z-index: 999;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    }
+    .notificaciones-dropdown h4 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      border-bottom: 1px solid #00D4FF;
+      padding-bottom: 5px;
+    }
+    .notificaciones-dropdown ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .notificaciones-dropdown li {
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.9rem;
+    }
+    #badge-alerta {
+      background: #FF6B6B;
+      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      display: inline-block;
+      margin-left: auto;
+      border: 2px solid #fff;
+      box-shadow: 0 0 6px #FF6B6B;
+    }
 
+    /* ===== Mensaje sin registros ===== */
+    .mensaje-vacio {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: 300px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 30px 20px;
+      border-radius: 15px;
+      font-size: 1rem;
+      line-height: 1.4;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .mensaje-vacio.visible {
+      opacity: 1;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .dashboard-container {
+        flex-direction: column;
+        overflow: auto;
+      }
+      .sidebar {
+        flex-direction: row;
+        width: 100% !important;
+        height: auto;
+      }
+      .hamburger {
+        right: 15px;
+      }
+    }
+    /* Widgets sin datos */
+    .grid-stack-item-content.empty {
+      opacity: 0.4;
+      filter: grayscale(60%);
+      pointer-events: none; /* No interactuable */
+      transition: opacity 0.3s ease;
+    }
+
+    /* Parpadeo para resaltar gráfico principal */
+    @keyframes blink {
+      0% { box-shadow: 0 0 10px rgba(255,255,255,0.6); }
+      50% { box-shadow: 0 0 20px rgba(255,255,255,1); }
+      100% { box-shadow: 0 0 10px rgba(255,255,255,0.6); }
+    }
+    #grafico-item.blink {
+      animation: blink 1.5s infinite;
+    }
+
+    /* Parpadeo para botones de filtro */
+    @keyframes pulse {
+      0% { background-color: rgba(255, 255, 255, 0.2); }
+      50% { background-color: rgba(255, 255, 255, 0.5); }
+      100% { background-color: rgba(255, 255, 255, 0.2); }
+    }
+    .chart-filters button.blink {
+      animation: pulse 1.2s infinite;
+      border: 1px solid #fff;
+    }
 </style>
 <div id="particles-js"></div>
 <div class="dashboard-container">
@@ -584,7 +670,6 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
     <button class="hamburger" onclick="toggleSidebar()">
       <i class="bi bi-list"></i>
     </button>
-
     <div class="menu-content">
       <div class="menu-top">
         <button onclick="location.href='registro.php'">
@@ -594,7 +679,6 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
           <i class="bi bi-flag-fill"></i> <span class="label">Metas</span>
         </button>
       </div>
-
       <!-- Notificaciones -->
       <button id="btn-notificaciones" onclick="toggleNotificaciones()">
         <i id="icono-campana" class="bi bi-bell-fill"></i> 
@@ -709,22 +793,18 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
       margin: 10,              // Espacio entre widgets
       disableOneColumnMode: true
     });
-
     // 🔹 Expande dinámicamente las filas
     grid.on('added removed change', function () {
       grid.engine.maxRow = grid.engine.getRow();
     });
-
     // 🔹 Forzamos scroll vertical
     const mainContent = document.querySelector('.main-content');
     if (mainContent) {
       mainContent.style.overflowY = 'auto';
       mainContent.style.maxHeight = 'calc(100vh - 50px)';
     }
-
     filtrar('mes'); // carga inicial
   });
-
   // Inicialización del gráfico
   const ctx = document.getElementById('graficoFinanzas').getContext('2d');
   const grafico = new Chart(ctx, {
@@ -761,19 +841,16 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
       }
     }
   });
-
   // 🔹 Formatear números
   function formatNumber(num) {
     return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2 }).format(num);
   }
-
   // 🔹 Actualizar color según positivo/negativo
   function aplicarColor(id, valor) {
     const el = document.getElementById(id);
     el.innerText = `$${formatNumber(valor)}`;
     el.style.color = valor < 0 ? '#FF6B6B' : '#FFFFFF';
   }
-
   // 🔹 Filtrar datos
   function filtrar(periodo) {
     const periodoLower = periodo.toLowerCase();
@@ -783,7 +860,6 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
       btn.classList.toggle('activo', btn.textContent.toLowerCase() === periodoLower);
       btn.classList.remove('parpadeo'); // limpiamos parpadeo previo
     });
-
     $.post('includes/filtrar_datos.php', { periodo: periodoLower }, function (respuesta) {
       const datos = typeof respuesta === 'string' ? JSON.parse(respuesta) : respuesta;
 
@@ -791,10 +867,8 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
         datos.fechas && datos.fechas.length > 0 &&
         ((datos.ingresos && datos.ingresos.some(v => v !== 0)) ||
          (datos.gastos && datos.gastos.some(v => v !== 0)));
-
       const mensaje = document.getElementById('mensaje-sin-registros');
       const graficoItem = document.getElementById('grafico-item');
-
       if (tieneDatos) {
         grafico.data.labels = datos.fechas;
         grafico.data.datasets = [
@@ -810,13 +884,11 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
         graficoItem.classList.add('parpadeo');
       }
       grafico.update();
-
       // Totales
       aplicarColor('ingresos', datos.ingresos?.reduce((a, b) => a + b, 0) || 0);
       aplicarColor('gastos', datos.gastos?.reduce((a, b) => a + b, 0) || 0);
       aplicarColor('ahorro', datos.ahorro || 0);
       aplicarColor('aportes', datos.aportes || 0);
-
       // 🔹 Widgets: semi-transparente si no hay datos
       const widgets = [
         { id: 'ingresos', cont: '.grid-stack-item:has(#ingresos)' },
@@ -824,7 +896,6 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
         { id: 'ahorro', cont: '#contenedor-ahorro' },
         { id: 'aportes', cont: '#contenedor-aportes' }
       ];
-
       widgets.forEach(w => {
         const el = document.querySelector(w.cont);
         if (!el) return;
@@ -836,7 +907,6 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
           el.classList.add('sin-datos');
         }
       });
-
       // 🔹 Buscar si otro periodo tiene datos (parpadeo)
       const periodos = ['día', 'semana', 'mes', 'año'];
       periodos.forEach(p => {
@@ -861,45 +931,43 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
 const colores = {
   ingresos: "#00D4FF",
   gastos: "#FF6B6B",
-  ahorroDisp: "#00FF7F",
-  ahorroInv: "#FFD700"
+  ahorro: "#00FF7F"
 };
 // === Función para transformar datos del backend en labels y datasets ===
 function prepararDatos(dataset, tipo = "ingresosGastos") {
   const labels = dataset.map(d => d.periodo);
-
   if (tipo === "ingresosGastos") {
     return {
       labels,
       datasets: [
-        { label: "Ingresos", data: dataset.map(d => Number(d.ingresos)), backgroundColor: colores.ingresos },
-        { label: "Gastos", data: dataset.map(d => Number(d.gastos)), backgroundColor: colores.gastos }
+        { label: "Ingresos", data: dataset.map(d => Number(d.ingresos) || 0), backgroundColor: colores.ingresos },
+        { label: "Gastos", data: dataset.map(d => Number(d.gastos) || 0), backgroundColor: colores.gastos }
       ]
     };
   }
   if (tipo === "ahorro") {
+    // Evolución acumulada del ahorro = ingresos - gastos
+    let acumulado = 0;
+    const valores = dataset.map(d => {
+      acumulado += (Number(d.ingresos) || 0) - (Number(d.gastos) || 0);
+      return acumulado;
+    });
     return {
       labels,
       datasets: [
         { 
-          label: "Ahorro Disponible", 
-          data: dataset.map(d => Number(d.ahorro_disponible || 0)), 
-          borderColor: colores.ahorroDisp, 
+          label: "Ahorro acumulado", 
+          data: valores,
+          borderColor: colores.ahorro,
           backgroundColor: "rgba(0,255,127,0.2)", 
           fill: true, 
-          tension: 0.3 
-        },
-        { 
-          label: "Ahorro Invertido", 
-          data: dataset.map(d => Number(d.ahorro_invertido || 0)), 
-          borderColor: colores.ahorroInv, 
-          backgroundColor: "rgba(255,215,0,0.2)", 
-          fill: true, 
-          tension: 0.3 
+          tension: 0.3,
+          pointBackgroundColor: "#fff"
         }
       ]
     };
   }
+  return { labels: [], datasets: [] };
 }
 // === Inicializar gráficos ===
 const ctx1 = document.getElementById("chartIngresosGastos").getContext("2d");
@@ -922,15 +990,14 @@ let chartIngresosGastos = new Chart(ctx1, {
 new Chart(ctx2, {
   type: "doughnut",
   data: {
-    labels: ["Ingresos", "Gastos", "Ahorro Disp.", "Ahorro Invertido"],
+    labels: ["Ingresos", "Gastos", "Ahorro"],
     datasets: [{
       data: [
-        Number(totalesMes.ingresos),
-        Number(totalesMes.gastos),
-        Number(totalesMes.saldo),
-        Number(totalesMes.aportes)
+        Number(totalesMes.ingresos) || 0,
+        Number(totalesMes.gastos) || 0,
+        (Number(totalesMes.ingresos) || 0) - (Number(totalesMes.gastos) || 0)
       ],
-      backgroundColor: [colores.ingresos, colores.gastos, colores.ahorroDisp, colores.ahorroInv],
+      backgroundColor: [colores.ingresos, colores.gastos, colores.ahorro],
       borderWidth: 1
     }]
   },
@@ -978,8 +1045,8 @@ function aplicarEstadoGrafica(canvasId, valores) {
 }
 // Aplica a cada gráfico
 aplicarEstadoGrafica("chartIngresosGastos", [totalesMes.ingresos, totalesMes.gastos]);
-aplicarEstadoGrafica("chartDistribucion", [totalesMes.ingresos, totalesMes.gastos, totalesMes.saldo, totalesMes.aportes]);
-aplicarEstadoGrafica("chartAhorro", [totalesMes.saldo, totalesMes.aportes]);
+aplicarEstadoGrafica("chartDistribucion", [totalesMes.ingresos, totalesMes.gastos]);
+aplicarEstadoGrafica("chartAhorro", [(Number(totalesMes.ingresos) || 0) - (Number(totalesMes.gastos) || 0)]);
 </script>
 <script>
 particlesJS('particles-js', {
