@@ -46,6 +46,7 @@
 ?>
 <?php include 'includes/header.php'; ?>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <style>
 body, html {
   height: 100%;
@@ -71,7 +72,7 @@ body, html {
   backdrop-filter: blur(18px);
   box-shadow: 0 12px 40px rgba(0,212,255,0.13), 0 4px 16px rgba(0,0,0,0.13);
   z-index: 1;
-  padding: 38px 32px 32px 32px;
+  padding: 38px 32px;
   text-align: center;
   position: relative;
   transition: box-shadow 0.2s;
@@ -81,13 +82,12 @@ body, html {
 }
 .glass-card h2 {
   color: #00D4FF;
-  text-align: center;
   font-weight: 700;
   margin-bottom: 18px;
   letter-spacing: 1px;
 }
 .glass-card label {
-  color: #e0f7fa;
+  color: #e6f7ff;
   font-weight: 500;
 }
 .glass-card a {
@@ -103,14 +103,23 @@ body, html {
   height: 64px;
   object-fit: contain;
   margin-bottom: 12px;
-  background: transparent;
-  border-radius: 4px;
+}
+.form-control {
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: #fff;
+  padding: 12px;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+.form-control::placeholder {
+  color: rgba(255,255,255,0.65);
 }
 .form-control:focus {
-  border-color: #00D4FF;
-  box-shadow: 0 0 0 2px rgba(0,212,255,0.18);
-  background: rgba(255,255,255,0.09);
-  color: #fff;
+  outline: none;
+  border: 1px solid #00D4FF;
+  box-shadow: 0 0 8px rgba(0,212,255,0.5);
+  background: rgba(255,255,255,0.12);
 }
 .btn-info, .btn-info:focus {
   background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
@@ -119,11 +128,7 @@ body, html {
   font-weight: 600;
   font-size: 1.08rem;
   box-shadow: 0 2px 12px rgba(0,212,255,0.10);
-  transition: background 0.18s, color 0.18s, transform 0.18s;
-}
-.btn-info:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  transition: all 0.18s ease;
 }
 .btn-info:hover:enabled {
   background: #fff;
@@ -131,70 +136,107 @@ body, html {
   transform: translateY(-2px) scale(1.04);
 }
 .mensaje {
-  background-color: #222;
-  color: #ff9999;
+  background-color: rgba(0,0,0,0.7);
+  color: #ff4d4d;
   padding: 10px;
   border-radius: 8px;
-  text-align: center;
   margin-bottom: 15px;
 }
 .divider {
   border-bottom: 1.5px solid #00D4FF;
   opacity: 0.18;
-  margin: 18px 0 18px 0;
+  margin: 18px 0;
 }
 @media (max-width: 600px) {
-  .glass-card {
-    padding: 18px 4vw 18px 4vw;
-    max-width: 98vw;
-  }
+  .glass-card { padding: 18px 4vw; max-width: 98vw; }
 }
+/* Toggle moderno */
+.form-check-input[type="checkbox"] {
+  width: 42px; height: 22px;
+  background: #555; border-radius: 12px; border: none;
+  position: relative; cursor: pointer; transition: background 0.3s;
+}
+.form-check-input:checked { background: #00D4FF; }
+.form-check-input[type="checkbox"]::before {
+  content: ""; position: absolute;
+  width: 18px; height: 18px; background: #fff;
+  border-radius: 50%; top: 2px; left: 2px;
+  transition: 0.3s;
+}
+.form-check-input:checked::before { transform: translateX(20px); }
+/* Botón flotante moderno */
+.btn-fab {
+  width: 55px; height: 55px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00D4FF, #007BFF);
+  color: white; font-size: 22px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 14px rgba(0, 212, 255, 0.4);
+  transition: all 0.3s ease; border: none;
+}
+.btn-fab:hover { transform: scale(1.12); box-shadow: 0 8px 20px rgba(0,212,255,0.7); }
 </style>
+
 <div id="particles-js"></div>
+
+<!-- Botón Inicio -->
+<a href="index.php" class="btn-fab position-absolute top-0 end-0 m-4" title="Volver al inicio">
+  <i class="bi bi-house-door-fill"></i>
+</a>
+
+<!-- Card registro -->
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh; position: relative; z-index: 1;">
-  <div class="glass-card p-4 col-md-6 col-lg-4">
+  <div class="glass-card col-md-6 col-lg-4">
     <img src="img/logo 1.png" alt="Logo GastoSimple" class="logo-register">
-    <h2 class="mb-4">Crear Cuenta</h2>
+    <h2>Crear Cuenta</h2>
+
     <?php if ($mensaje): ?>
       <div class="mensaje"><?= htmlspecialchars($mensaje) ?></div>
     <?php endif; ?>
+
     <form method="POST" action="register.php" novalidate>
       <div class="mb-3 text-start">
         <label for="nombre" class="form-label">Nombre:</label>
-        <input type="text" class="form-control" name="nombre" id="nombre" required>
+        <input type="text" class="form-control" name="nombre" id="nombre" placeholder="Tu nombre completo" required>
       </div>
       <div class="mb-3 text-start">
         <label for="correo" class="form-label">Correo:</label>
-        <input type="email" class="form-control" name="correo" id="correo" required>
+        <input type="email" class="form-control" name="correo" id="correo" placeholder="ejemplo@correo.com" required>
       </div>
       <div class="mb-3 text-start">
         <label for="contrasena" class="form-label">Contraseña:</label>
-        <input type="password" class="form-control" name="contrasena" id="contrasena" required>
+        <input type="password" class="form-control" name="contrasena" id="contrasena" placeholder="Crea una contraseña segura" required>
       </div>
       <div class="mb-3 text-start">
         <label for="pregunta_secreta" class="form-label">Pregunta Secreta:</label>
-        <input type="text" class="form-control" name="pregunta_secreta" id="pregunta_secreta" required>
+        <input type="text" class="form-control" name="pregunta_secreta" id="pregunta_secreta" placeholder="Ej: Nombre de tu primera mascota" required>
       </div>
       <div class="mb-3 text-start">
         <label for="respuesta_secreta" class="form-label">Respuesta Secreta:</label>
-        <input type="text" class="form-control" name="respuesta_secreta" id="respuesta_secreta" required>
+        <input type="text" class="form-control" name="respuesta_secreta" id="respuesta_secreta" placeholder="Tu respuesta secreta" required>
       </div>
-      <div class="form-check mb-2 text-start">
+      <div class="form-check form-switch mb-2 text-start">
         <input type="checkbox" class="form-check-input" id="togglePassword">
-        <label class="form-check-label" for="togglePassword">Mostrar contraseña</label>
+        <label class="form-check-label text-light" for="togglePassword">Mostrar contraseña</label>
       </div>
       <div class="form-check mb-3 text-start">
         <input type="checkbox" class="form-check-input" id="terminos">
-        <label class="form-check-label" for="terminos">
+        <label class="form-check-label text-light" for="terminos">
           Acepto los <a href="terminos.php" target="_blank">términos y condiciones</a>
         </label>
       </div>
       <button type="submit" class="btn btn-info w-100" id="btnRegistro" disabled>Registrarse</button>
+
       <div class="divider"></div>
-      <p class="mt-3 text-center text-white">¿Ya tienes cuenta? <a href="login.php" class="text-blue-400 hover:text-blue-600 font-semibold"><i class="bi bi-box-arrow-in-right"></i> Inicia sesión</a></p>
+      <p class="mt-3 text-white">¿Ya tienes cuenta? 
+        <a href="login.php" class="fw-semibold">
+          <i class="bi bi-box-arrow-in-right"></i> Inicia sesión
+        </a>
+      </p>
     </form>
   </div>
 </div>
+
 <script>
   document.getElementById('togglePassword').addEventListener('change', function () {
     const passwordInput = document.getElementById('contrasena');
