@@ -224,7 +224,6 @@ function prepararDatos(dataset, tipo) {
 }
 </script>
 <?php include 'includes/header.php'; ?>
-<?php include 'includes/header.php'; ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@8.2.1/dist/gridstack.min.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
