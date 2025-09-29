@@ -18,7 +18,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
 $conn = db::conectar();
 $filtro = $_POST['filtro'] ?? '';
 //Consulta
-$sql = "SELECT u.nombre AS usuario, t.tipo, t.categoria, t.monto, t.fecha, t.descripcion 
+$sql = "SELECT u.nombre AS usuario, t.tipo, t.categoria, t.fecha, t.descripcion 
         FROM transacciones t 
         INNER JOIN usuarios u ON t.id_usuario = u.id 
         WHERE u.nombre LIKE ? OR t.categoria LIKE ?
@@ -56,7 +56,7 @@ $sheet->getStyle('B2')->applyFromArray([
 ]);
 //Encabezados
 $filaInicio = 4;
-$encabezados = ['Usuario', 'Tipo', 'Categoría', 'Monto', 'Fecha', 'Descripción'];
+$encabezados = ['Usuario', 'Tipo', 'Categoría', 'Fecha', 'Descripción'];
 $sheet->fromArray($encabezados, NULL, "A$filaInicio");
 $sheet->getStyle("A$filaInicio:F$filaInicio")->applyFromArray([
   'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],

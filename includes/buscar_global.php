@@ -38,7 +38,6 @@ echo '<tr>
 <th style="padding:12px;">Usuario</th>
 <th style="padding:12px;">Tipo</th>
 <th style="padding:12px;">Categoría</th>
-<th style="padding:12px;">Monto</th>
 <th style="padding:12px;">Fecha</th>
 <th style="padding:12px;">Descripción</th>
 </tr></thead><tbody>';
@@ -48,7 +47,6 @@ if ($resultados) {
     echo '<td style="padding:10px;">' . htmlspecialchars($row['usuario']) . '</td>';
     echo '<td style="padding:10px;">' . htmlspecialchars($row['tipo']) . '</td>';
     echo '<td style="padding:10px;">' . htmlspecialchars($row['categoria']) . '</td>';
-    echo '<td style="padding:10px;">$' . number_format($row['monto'], 2) . '</td>';
     echo '<td style="padding:10px;">' . htmlspecialchars($row['fecha']) . '</td>';
     echo '<td style="padding:10px;">' . htmlspecialchars($row['descripcion']) . '</td>';
     echo '</tr>';

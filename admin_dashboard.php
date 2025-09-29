@@ -8,7 +8,6 @@ if ($_SESSION['rol'] !== 'admin') {
   header("Location: dashboard.php");
   exit;
 }
-
 $conn = db::conectar();
 
 // Totales globales
@@ -20,6 +19,7 @@ $stmtReportes = $conn->prepare("
 ");
 $stmtReportes->execute();
 $reportes = $stmtReportes->fetch(PDO::FETCH_ASSOC);
+
 // Mostrar en notación científica
 function formatoCientifico($numero) {
   if ($numero == 0) return '0';
@@ -27,21 +27,36 @@ function formatoCientifico($numero) {
   $coef = round($numero / pow(10, $potencia), 2);
   return "{$coef}e{$potencia}";
 }
-// PQRs
-$stmtPQR = $conn->prepare("
+
+// Filtrado por estado
+$estado = isset($_GET['estado']) ? $_GET['estado'] : '';
+$query = "
   SELECT p.*, u.nombre, u.correo 
   FROM pqrs p 
   JOIN usuarios u ON p.usuario_id = u.id
-  ORDER BY p.fecha_creacion DESC
-");
+";
+
+if ($estado === 'pendiente') {
+  $query .= " WHERE p.estado IS NULL OR p.estado='pendiente'";
+} elseif ($estado === 'respondido') {
+  $query .= " WHERE p.estado='respondido'";
+}
+
+$query .= " ORDER BY p.fecha_creacion DESC";
+$stmtPQR = $conn->prepare($query);
 $stmtPQR->execute();
 $pqrs = $stmtPQR->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <?php include 'includes/header.php'; ?>
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
 <style>
-/* Estilos existentes sin cambios importantes */
+/* ---------------- Global / Layout ---------------- */
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
@@ -49,19 +64,15 @@ body {
   background: linear-gradient(135deg, #0B0B52, #1D2B64, #0C1634);
   background-size: 300% 300%;
   animation: backgroundAnim 25s ease-in-out infinite;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 @keyframes backgroundAnim {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-#particles-js {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  z-index: -1;
-}
+#particles-js { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+
 .dashboard-container {
   display: flex;
   height: 100vh;
@@ -73,62 +84,145 @@ body {
   width: 220px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 }
+
+/* 🔥 Separa los botones del primer bloque */
+.sidebar > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* espacio entre Panel Admin y Reportes Globales */
+}
+
+/* 🔥 Mantiene "Cerrar Sesión" pegado abajo */
+.sidebar > div:last-child {
+  margin-top: auto;
+}
+
 .sidebar button {
-  display: flex; align-items: center; gap: 10px;
-  padding: 12px; font-size: 1rem;
-  border: none; border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #00D4FF; font-weight: bold;
-  cursor: pointer; transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #00D4FF;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.25s ease;
   backdrop-filter: blur(6px);
 }
-.sidebar button:hover, .sidebar button.activo {
+
+.sidebar button:hover,
+.sidebar button.activo {
   background-color: #00D4FF;
   color: #0C1634;
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
+
+/* ---------------- Main area ---------------- */
 .main-content {
   flex: 1;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.04);
   padding: 30px;
   border-radius: 20px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
   overflow-y: auto;
   box-sizing: border-box;
-  max-height: 100%;
   display: flex;
   flex-direction: column;
   gap: 30px;
 }
 h2 { font-size: 2rem; color: #00D4FF; text-align: center; }
+
+/* Cards */
 .cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
 .card-glass {
-  flex: 1; min-width: 200px; background: rgba(255,255,255,0.08);
+  flex: 1; min-width: 200px; background: rgba(255,255,255,0.05);
   backdrop-filter: blur(8px); padding: 30px;
   border-radius: 15px; text-align: center;
-  transition: transform 0.3s ease;
+  transition: transform 0.25s ease;
 }
-.card-glass:hover { transform: translateY(-5px); }
+.card-glass:hover { transform: translateY(-6px); }
 .card-glass h5 { color: #00D4FF; margin-bottom: 10px; }
-.card-glass p { font-size: 1.5rem; font-weight: bold; }
-.table-glass {
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(6px);
-  border-radius: 12px; overflow: auto;
+.card-glass p { font-size: 1.5rem; font-weight: 700; }
+
+
+.table-glass-wrapper {
+  background: rgba(20,20,40,0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+  margin: 0 8px;
+  max-height: calc(100vh - 420px);
+  overflow: auto;
 }
-.table-glass th { color: #00D4FF; }
-.table-glass td { color: white; }
-.table-glass th, .table-glass td { text-align: center; padding: 10px; }
-.table-glass thead { background: rgba(255,255,255,0.1); }
-.table-glass tr:hover { background: rgba(0, 212, 255, 0.1); }
+
+.table-glass-wrapper .table {
+  background: transparent !important;
+  margin-bottom: 0;
+  width: 100%;
+  color: #000000ff !important;
+}
+.table-glass-wrapper .table thead th {
+  background: rgba(0,212,255,0.12) !important;
+  color: #00D4FF !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border: none !important;
+}
+.table-glass-wrapper .table tbody tr {
+  background: transparent !important;
+}
+.table-glass-wrapper .table tbody tr:nth-child(even) {
+  background: rgba(255,255,255,0.02) !important;
+}
+.table-glass-wrapper .table tbody tr:hover {
+  background: rgba(0,212,255,0.10) !important;
+}
+.table-glass-wrapper .table td,
+.table-glass-wrapper .table th {
+  color: #000000ff !important;
+  padding: 12px 16px !important;
+  vertical-align: middle !important;
+  border-top: none !important;
+  white-space: nowrap;
+}
+
+.table-glass-wrapper::-webkit-scrollbar { height: 8px; width: 8px; }
+.table-glass-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 8px; }
+
+.table.table-glass { border-collapse: separate; border-spacing: 0; }
+
+.btn-primary { background-color: #0b67ff; border-color: #0b67ff; }
+.badge.bg-success { background-color: #28a745; color: white; }
+
+.modal-content {
+  background: rgba(20,20,40,0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: white;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+.modal-header h5 { color: #00D4FF; font-weight: 700; }
+
+
+@media (max-width: 1100px) {
+  .table-glass-wrapper { max-height: calc(100vh - 360px); }
+}
 @media (max-width: 768px) {
   .dashboard-container { flex-direction: column; }
   .sidebar { width: 100%; flex-direction: row; justify-content: space-around; }
   .main-content { padding: 20px; }
+  .table-glass-wrapper { max-height: 40vh; }
 }
 </style>
+
 <div id="particles-js"></div>
 <div class="dashboard-container">
   <!-- Sidebar -->
@@ -141,6 +235,7 @@ h2 { font-size: 2rem; color: #00D4FF; text-align: center; }
       <button onclick="location.href='logout.php'"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</button>
     </div>
   </div>
+
   <!-- Main Content -->
   <div class="main-content">
     <h2>Bienvenido, Admin</h2>
@@ -159,41 +254,101 @@ h2 { font-size: 2rem; color: #00D4FF; text-align: center; }
         <p>$<?= formatoCientifico($reportes['total_aportes']) ?></p>
       </div>
     </div>
-    <h2 style="margin-top: 40px;">PQR Recibidos</h2>
+
+    <h2 style="margin-top: 20px;">PQR Recibidos</h2>
+
+    <!-- Filtros -->
+    <div class="mb-3 text-center">
+      <form method="get" class="d-inline-block">
+        <select name="estado" class="form-select" style="width:auto;display:inline-block;" onchange="this.form.submit()">
+          <option value="">-- Todos --</option>
+          <option value="pendiente" <?= ($estado=='pendiente')?'selected':'' ?>>Pendientes</option>
+          <option value="respondido" <?= ($estado=='respondido')?'selected':'' ?>>Respondidos</option>
+        </select>
+      </form>
+    </div>
+
+    <!-- TABLE: put the glass panel wrapper around the table -->
     <div class="table-responsive">
-      <table class="table table-glass">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Usuario</th>
-            <th>Correo</th>
-            <th>Tipo</th>
-            <th>Asunto</th>
-            <th>Descripción</th>
-            <th>Fecha</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if ($pqrs): ?>
-            <?php foreach ($pqrs as $pqr): ?>
-              <tr>
-                <td><?= htmlspecialchars($pqr['id']) ?></td>
-                <td><?= htmlspecialchars($pqr['nombre']) ?></td>
-                <td><?= htmlspecialchars($pqr['correo']) ?></td>
-                <td><?= htmlspecialchars($pqr['tipo']) ?></td>
-                <td><?= htmlspecialchars($pqr['asunto']) ?></td>
-                <td><?= htmlspecialchars($pqr['descripcion']) ?></td>
-                <td><?= htmlspecialchars($pqr['fecha_creacion']) ?></td>
-              </tr>
-            <?php endforeach; ?>
-          <?php else: ?>
-            <tr><td colspan="7">No hay PQRs registrados.</td></tr>
-          <?php endif; ?>
-        </tbody>
-      </table>
+      <div class="table-glass-wrapper">
+        <table class="table table-glass">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Usuario</th>
+              <th>Correo</th>
+              <th>Tipo</th>
+              <th>Asunto</th>
+              <th>Descripción</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if ($pqrs): ?>
+              <?php foreach ($pqrs as $pqr): ?>
+                <tr>
+                  <td><?= htmlspecialchars($pqr['id']) ?></td>
+                  <td><?= htmlspecialchars($pqr['nombre']) ?></td>
+                  <td><?= htmlspecialchars($pqr['correo']) ?></td>
+                  <td><?= htmlspecialchars($pqr['tipo']) ?></td>
+                  <td><?= htmlspecialchars($pqr['asunto']) ?></td>
+                  <td><?= htmlspecialchars($pqr['descripcion']) ?></td>
+                  <td><?= htmlspecialchars($pqr['fecha_creacion']) ?></td>
+                  <td><?= htmlspecialchars($pqr['estado'] ?: 'Pendiente') ?></td>
+                  <td>
+                    <?php if ($pqr['estado'] !== 'respondido'): ?>
+                      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalRespuesta<?= $pqr['id'] ?>">Responder</button>
+                    <?php else: ?>
+                      <span class="badge bg-success">Ya respondido</span>
+                    <?php endif; ?>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <tr><td colspan="9">No hay PQRs registrados.</td></tr>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- ==================== MODALES ==================== -->
+<?php if ($pqrs): ?>
+  <?php foreach ($pqrs as $pqr): ?>
+    <div class="modal fade" id="modalRespuesta<?= $pqr['id'] ?>" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <form method="post" action="responder_pqr.php">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Responder PQR #<?= $pqr['id'] ?></h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <p><strong>Usuario:</strong> <?= htmlspecialchars($pqr['nombre']) ?></p>
+              <p><strong>Correo:</strong> <?= htmlspecialchars($pqr['correo']) ?></p>
+              <p><strong>Asunto:</strong> <?= htmlspecialchars($pqr['asunto']) ?></p>
+              <p><strong>Descripción:</strong> <?= htmlspecialchars($pqr['descripcion']) ?></p>
+              <hr>
+              <input type="hidden" name="pqr_id" value="<?= $pqr['id'] ?>">
+              <div class="mb-3">
+                <label class="form-label">Respuesta:</label>
+                <textarea class="form-control" name="respuesta" required></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-success">Enviar</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  <?php endforeach; ?>
+<?php endif; ?>
+
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 <script>
   particlesJS("particles-js", {
@@ -206,14 +361,12 @@ h2 { font-size: 2rem; color: #00D4FF; text-align: center; }
       "line_linked": { "enable": true, "distance": 150, "color": "#00D4FF", "opacity": 0.4, "width": 1 },
       "move": { "enable": true, "speed": 3 }
     },
-      "interactivity": {
-        "detect_on": "canvas",
-        "events": {
-          "onhover": { "enable": false },
-          "onclick": { "enable": false }
-        }
-      },
-      "retina_detect": true
+    "interactivity": {
+      "detect_on": "canvas",
+      "events": { "onhover": { "enable": false }, "onclick": { "enable": false } }
+    },
+    "retina_detect": true
   });
 </script>
+
 <?php include 'includes/footer.php'; ?>

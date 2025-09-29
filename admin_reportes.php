@@ -46,35 +46,46 @@ $conn = db::conectar();
     box-sizing: border-box;
   }
 
-  .sidebar {
-    width: 220px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
+.sidebar {
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+}
 
-  .sidebar button {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.08);
-    color: #00D4FF;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(6px);
-  }
+/* 🔥 Separa los botones del primer bloque */
+.sidebar > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* espacio entre Panel Admin y Reportes Globales */
+}
 
-  .sidebar button:hover,
-  .sidebar button.activo {
-    background-color: #00D4FF;
-    color: #0C1634;
-    transform: scale(1.05);
-  }
+/* 🔥 Mantiene "Cerrar Sesión" pegado abajo */
+.sidebar > div:last-child {
+  margin-top: auto;
+}
+
+.sidebar button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #00D4FF;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(6px);
+}
+
+.sidebar button:hover,
+.sidebar button.activo {
+  background-color: #00D4FF;
+  color: #0C1634;
+  transform: scale(1.03);
+}
 
   .main-content {
     flex: 1;

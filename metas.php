@@ -398,47 +398,198 @@ if (isset($_SESSION['mensaje'])) {
   .badge-activa { background: #00D4FF; color: #0C1634; }
   .badge-lograda { background: #4CAF50; color: #fff; }
   .badge-vencida { background: #FF6B6B; color: #fff; }
-  /*MODAL EDICIÓN */
-  .modal-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    transition: opacity 0.3s ease;
-    z-index: 1000;
-    opacity: 0;
-  }
-  .modal-overlay.active {
-    display: flex;
-    opacity: 1;
-  }
-  .modal-content {
-    background-color: rgba(0, 0, 0, 0.85);
-    color: white;
-    border-radius: 10px;
-    padding: 30px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 90%;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-    transform: translateY(20px);
-    transition: transform 0.3s ease;
-  }
-  .modal-overlay.active .modal-content {
-    transform: translateY(0);
-  }
-  .modal-close {
-    position: absolute;
-    top: 10px; right: 15px;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: white;
-  }
+
+/*MODAL CORRECTAMENTE CENTRADO*/
+/* Fondo del modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+
+/* Contenedor del modal */
+.modal-content {
+  background: linear-gradient(145deg, rgba(25, 25, 50, 0.95), rgba(15, 15, 30, 0.95));
+  backdrop-filter: blur(18px);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  color: #fff;
+  padding: 30px;
+  width: 90%;
+  max-width: 550px;
+  max-height: 90%;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+
+  transform: translateY(-20px);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Botón cerrar */
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: #bbb;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.modal-close:hover {
+  color: #00D4FF;
+  transform: rotate(90deg);
+}
+
+/* Encabezado */
+.modal-content h2 {
+  color: #00D4FF;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Formularios */
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modal-content label {
+  font-size: 0.9rem;
+  color: #aaa;
+  margin-bottom: 4px;
+}
+
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+  background: rgba(20, 20, 40, 0.9);  /* 👈 más oscuro y uniforme */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 10px;
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border 0.2s ease, background 0.2s ease;
+
+  /* Fix para selects */
+  appearance: none;        /* elimina estilo nativo */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.modal-content input:focus,
+.modal-content select:focus,
+.modal-content textarea:focus {
+  border-color: #00D4FF;
+  background: rgba(0, 212, 255, 0.1);  /* efecto al enfocar */
+}
+
+
+/* Botones */
+.modal-content button {
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.modal-content button[type="submit"] {
+  background: #00D4FF;
+  color: #111;
+}
+
+.modal-content button[type="submit"]:hover {
+  background: #00AACC;
+  transform: translateY(-2px);
+}
+
+.modal-content #eliminar-transaccion {
+  background: #ff4b4b;
+  color: white;
+}
+
+.modal-content #eliminar-transaccion:hover {
+  background: #cc0000;
+  transform: translateY(-2px);
+}
+
+/* Estilo general de select */
+.modal-content select {
+  background: rgba(20, 20, 40, 0.9) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 10px !important;
+  padding: 10px 40px 10px 12px !important; /* espacio para la flecha */
+  font-size: 0.95rem;
+  cursor: pointer;
+  outline: none;
+  position: relative;
+  
+  /* Quitar estilos nativos */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  transition: border 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.modal-content select option {
+  background-color: #141428 !important;
+  color: #fff !important;
+  padding: 10px;
+}
+
+
+/* Hover y Focus */
+.modal-content select:hover {
+  border-color: #00D4FF;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
+}
+
+.modal-content select:focus {
+  border-color: #00D4FF;
+  background: rgba(0, 212, 255, 0.1);
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.6);
+}
+
+/* Flecha personalizada en azul neón */
+.modal-content select {
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%2300D4FF' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 16px;
+}
+
+/* Opciones desplegadas */
+.modal-content select option {
+  background: #141428;   /* Fondo más oscuro */
+  color: #fff;
+  padding: 10px;
+}
+
   button#eliminar-meta-btn {
     background: #FF6B6B;
     color: #fff;
