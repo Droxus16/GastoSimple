@@ -10,6 +10,10 @@ $conn = db::conectar();
 <div id="particles-js"></div>
 <?php include 'includes/header.php'; ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 <style>
   body {
     margin: 0;
@@ -50,20 +54,11 @@ $conn = db::conectar();
   width: 220px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  background: rgba(20,20,40,0.95);
+  border-radius: 12px;
+  padding: 15px;
 }
-
-/* 🔥 Separa los botones del primer bloque */
-.sidebar > div:first-child {
-  display: flex;
-  flex-direction: column;
-  gap: 12px; /* espacio entre Panel Admin y Reportes Globales */
-}
-
-/* 🔥 Mantiene "Cerrar Sesión" pegado abajo */
-.sidebar > div:last-child {
-  margin-top: auto;
-}
-
 .sidebar button {
   display: flex;
   align-items: center;
@@ -72,19 +67,15 @@ $conn = db::conectar();
   font-size: 1rem;
   border: none;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
+  background: transparent;
   color: #00D4FF;
-  font-weight: bold;
   cursor: pointer;
   transition: all 0.25s ease;
-  backdrop-filter: blur(6px);
 }
-
 .sidebar button:hover,
 .sidebar button.activo {
-  background-color: #00D4FF;
+  background: #00D4FF;
   color: #0C1634;
-  transform: scale(1.03);
 }
 
   .main-content {
@@ -246,15 +237,17 @@ $conn = db::conectar();
 
 </style>
   <div class="dashboard-container">
-    <div class="sidebar">
-      <div>
-        <button onclick="location.href='admin_dashboard.php'"><i class="bi bi-speedometer2"></i> Panel Admin</button>
-        <button onclick="location.href='admin_reportes.php'" class="activo"><i class="bi bi-bar-chart-fill"></i> Reportes Globales</button>
-      </div>
-       <div>
+  <div class="sidebar">
+    <div>
+      <button onclick="location.href='admin_dashboard.php'" class="activo"><i class="bi bi-speedometer2"></i> Panel Admin</button>
+      <button onclick="location.href='admin_reportes.php'"><i class="bi bi-bar-chart-fill"></i> Reportes Globales</button>
+      <button onclick="location.href='admin_masivo.php'"><i class="bi bi-envelope-fill"></i> Correos Masivos</button>
+    </div>
+    <div>
       <button onclick="location.href='logout.php'"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</button>
     </div>
   </div>
+  
 <!-- dentro de .dashboard-container -->
 <div class="main-content">
   <h2>Reportes Globales</h2>

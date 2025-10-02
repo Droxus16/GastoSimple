@@ -84,20 +84,11 @@ body {
   width: 220px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  background: rgba(20,20,40,0.95);
+  border-radius: 12px;
+  padding: 15px;
 }
-
-/* 🔥 Separa los botones del primer bloque */
-.sidebar > div:first-child {
-  display: flex;
-  flex-direction: column;
-  gap: 12px; /* espacio entre Panel Admin y Reportes Globales */
-}
-
-/* 🔥 Mantiene "Cerrar Sesión" pegado abajo */
-.sidebar > div:last-child {
-  margin-top: auto;
-}
-
 .sidebar button {
   display: flex;
   align-items: center;
@@ -106,21 +97,16 @@ body {
   font-size: 1rem;
   border: none;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
+  background: transparent;
   color: #00D4FF;
-  font-weight: bold;
   cursor: pointer;
   transition: all 0.25s ease;
-  backdrop-filter: blur(6px);
 }
-
 .sidebar button:hover,
 .sidebar button.activo {
-  background-color: #00D4FF;
+  background: #00D4FF;
   color: #0C1634;
-  transform: scale(1.03);
 }
-
 /* ---------------- Main area ---------------- */
 .main-content {
   flex: 1;
@@ -230,11 +216,13 @@ h2 { font-size: 2rem; color: #00D4FF; text-align: center; }
     <div>
       <button onclick="location.href='admin_dashboard.php'" class="activo"><i class="bi bi-speedometer2"></i> Panel Admin</button>
       <button onclick="location.href='admin_reportes.php'"><i class="bi bi-bar-chart-fill"></i> Reportes Globales</button>
+      <button onclick="location.href='admin_masivo.php'"><i class="bi bi-envelope-fill"></i> Correos Masivos</button>
     </div>
     <div>
       <button onclick="location.href='logout.php'"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</button>
     </div>
   </div>
+
 
   <!-- Main Content -->
   <div class="main-content">

@@ -1,50 +1,115 @@
 <?php
-  session_start();
-  require_once 'includes/db.php';
+session_start();
+require_once 'includes/db.php';
 
-  $mensaje = "";
+// --- PHPMailer ---
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+require_once __DIR__ . '/vendor/autoload.php';
 
-  if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nombre = trim($_POST["nombre"]);
-    $correo = trim($_POST["correo"]);
+// Configuración de credenciales SMTP (solo localhost con putenv)
+putenv('SMTP_USER=gastosimpleservice@gmail.com');
+putenv('SMTP_PASSWORD=iokwsgdexwwvorcu'); // tu App Password real
+
+$mensaje = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $nombre     = trim($_POST["nombre"]);
+    $correo     = trim($_POST["correo"]);
     $contrasena = $_POST["contrasena"];
-    $pregunta = trim($_POST["pregunta_secreta"]);
-    $respuesta = trim($_POST["respuesta_secreta"]);
-    $rol = "estandar";
+    $pregunta   = trim($_POST["pregunta_secreta"]);
+    $respuesta  = trim($_POST["respuesta_secreta"]);
+    $rol        = "estandar";
 
     if (!empty($nombre) && !empty($correo) && !empty($contrasena) && !empty($pregunta) && !empty($respuesta)) {
-      if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-        $mensaje = "Correo inválido.";
-      } else {
-        try {
-          $db = db::conectar();
-          $stmt = $db->prepare("SELECT id FROM usuarios WHERE correo = ?");
-          $stmt->execute([$correo]);
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            $mensaje = "Correo inválido.";
+        } else {
+            try {
+                $db = db::conectar();
+                $stmt = $db->prepare("SELECT id FROM usuarios WHERE correo = ?");
+                $stmt->execute([$correo]);
 
-          if ($stmt->rowCount() > 0) {
-            $mensaje = "Este correo ya está registrado.";
-          } else {
-            $hash = password_hash($contrasena, PASSWORD_DEFAULT);
-            $stmt = $db->prepare("INSERT INTO usuarios (nombre, correo, clave, rol, pregunta_secreta, respuesta_secreta) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$nombre, $correo, $hash, $rol, $pregunta, $respuesta]);
+                if ($stmt->rowCount() > 0) {
+                    $mensaje = "Este correo ya está registrado.";
+                } else {
+                    // Guardar usuario en BD
+                    $hash = password_hash($contrasena, PASSWORD_DEFAULT);
+                    $stmt = $db->prepare("INSERT INTO usuarios (nombre, correo, clave, rol, pregunta_secreta, respuesta_secreta) VALUES (?, ?, ?, ?, ?, ?)");
+                    $stmt->execute([$nombre, $correo, $hash, $rol, $pregunta, $respuesta]);
 
-            $_SESSION['usuario_id'] = $db->lastInsertId();
-            $_SESSION['nombre'] = $nombre;
-            $_SESSION['rol'] = $rol;
+                    $_SESSION['usuario_id'] = $db->lastInsertId();
+                    $_SESSION['nombre'] = $nombre;
+                    $_SESSION['rol'] = $rol;
 
-            header("Location: dashboard.php");
-            exit();
-          }
-        } catch (PDOException $e) {
-          $mensaje = "Error: " . $e->getMessage();
+                    // --------------------------
+                    // Envío de correo con PHPMailer
+                    // --------------------------
+                    $smtpUser = getenv('SMTP_USER');
+                    $smtpPass = getenv('SMTP_PASSWORD');
+
+                    $mail = new PHPMailer(true);
+                    try {
+                        $mail->isSMTP();
+                        $mail->Host       = 'smtp.gmail.com';
+                        $mail->SMTPAuth   = true;
+                        $mail->Username   = $smtpUser;
+                        $mail->Password   = $smtpPass;
+                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                        $mail->Port       = 587;
+
+                        $mail->setFrom($smtpUser, 'GastoSimple');
+                        $mail->addAddress($correo, $nombre);
+
+                        $mail->isHTML(true);
+                        $mail->Subject = 'Gracias por registrarte en GastoSimple';
+                        $mail->Body    = "
+                          <html><body>
+                          <h2>¡Bienvenido a GastoSimple, $nombre!</h2>
+                          <p>Tu cuenta ha sido creada con éxito.</p>
+                          <p><strong>Detalles de tu cuenta:</strong></p>
+                          <ul>
+                            <li><strong>Correo:</strong> $correo</li>
+                            <li><strong>Contraseña:</strong> $contrasena</li>
+                            <li><strong>Pregunta secreta:</strong> $pregunta</li>
+                            <li><strong>Respuesta secreta:</strong> $respuesta</li>
+                          </ul>
+                          <hr>
+                          <p>Ya puedes ingresar y empezar a gestionar tus ingresos, gastos y metas de ahorro.</p>
+                          <p><em>Por seguridad, te recomendamos cambiar tu contraseña después del primer inicio de sesión.</em></p>
+                          <br>
+                          <p><strong>Equipo de GastoSimple</strong></p>
+                          </body></html>";
+
+                        $mail->AltBody = "Bienvenido a GastoSimple, $nombre!\n\n"
+                                       . "Tu cuenta ha sido creada con éxito.\n\n"
+                                       . "Detalles de tu cuenta:\n"
+                                       . "Correo: $correo\n"
+                                       . "Contraseña: $contrasena\n"
+                                       . "Pregunta secreta: $pregunta\n"
+                                       . "Respuesta secreta: $respuesta\n\n"
+                                       . "Equipo de GastoSimple";
+
+                        $mail->send();
+                    } catch (Exception $e) {
+    die("Error al enviar el correo: {$mail->ErrorInfo}");
+}
+
+                    // Redirigir al dashboard
+                    header("Location: dashboard.php");
+                    exit();
+                }
+            } catch (PDOException $e) {
+                $mensaje = "Error en la base de datos: " . $e->getMessage();
+            }
         }
-      }
     } else {
-      $mensaje = "Completa todos los campos.";
+        $mensaje = "Completa todos los campos.";
     }
-  }
+}
 ?>
 <?php include 'includes/header.php'; ?>
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <style>
