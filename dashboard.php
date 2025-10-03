@@ -660,6 +660,78 @@ function prepararDatos(dataset, tipo) {
       animation: pulse 1.2s infinite;
       border: 1px solid #fff;
     }
+.clima-titulo {
+  text-align: center;
+  color: #00D4FF;
+  margin-bottom: 20px;
+}
+
+/* GRID GENERAL */
+.weather-grid {
+  display: grid;
+  gap: 20px;
+}
+
+/* Tarjetas */
+.weather-card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  padding: 15px;
+  text-align: center;
+  color: white;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.weather-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.weather-card h4 {
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  color: #00E0FF;
+}
+
+.weather-info {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.weather-info .temp {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.weather-info .condicion {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.recomendacion {
+  font-size: 0.85rem;
+  color: #ddd;
+  margin-top: 8px;
+}
+
+/* 📱 MOBILE → 1 tarjeta por fila */
+@media (max-width: 768px) {
+  .weather-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 💻 PC → siempre 4 columnas */
+@media (min-width: 769px) {
+  .weather-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 </style>
 <div id="particles-js"></div>
 <div class="dashboard-container">
@@ -772,9 +844,205 @@ function prepararDatos(dataset, tipo) {
           <p id="aportes">$0.00</p>
         </div>
       </div>
+      <!-- ================== CLIMA Y RECOMENDACIONES ================== -->
+      <div class="grid-stack-item" gs-x="0" gs-y="8" gs-w="12" gs-h="3" style="display:block;">
+        <div class="grid-stack-item-content glass-card" style="overflow-y:auto; max-height:350px;">
+          <h3 class="clima-titulo">🌤️ Clima y Recomendaciones Financieras</h3>
+          <div class="weather-grid">
+            <!-- Bogotá -->
+            <div class="weather-card">
+              <h4>Bogotá</h4>
+              <div class="weather-info">
+                <span class="temp" id="weather-bogota">-- °C</span>
+                <span class="condicion" id="cond-bogota">---</span>
+              </div>
+              <p class="recomendacion" id="rec-bogota"></p>
+            </div>
+
+            <!-- Medellín -->
+            <div class="weather-card">
+              <h4>Medellín</h4>
+              <div class="weather-info">
+                <span class="temp" id="weather-medellin">-- °C</span>
+                <span class="condicion" id="cond-medellin">---</span>
+              </div>
+              <p class="recomendacion" id="rec-medellin"></p>
+            </div>
+
+            <!-- Cali -->
+            <div class="weather-card">
+              <h4>Cali</h4>
+              <div class="weather-info">
+                <span class="temp" id="weather-cali">-- °C</span>
+                <span class="condicion" id="cond-cali">---</span>
+              </div>
+              <p class="recomendacion" id="rec-cali"></p>
+            </div>
+
+            <!-- Barranquilla -->
+            <div class="weather-card">
+              <h4>Barranquilla</h4>
+              <div class="weather-info">
+                <span class="temp" id="weather-barranquilla">-- °C</span>
+                <span class="condicion" id="cond-barranquilla">---</span>
+              </div>
+              <p class="recomendacion" id="rec-barranquilla"></p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+
 </div>
+<!-- ================== CLIMA Y RECOMENDACIONES ================== -->
+<script>
+const API_KEY = "8f4b8ff0c2ff6c63d4545c7f274e6d7a";
+
+const cities = {
+  bogota: { id: 3688689, name: "Bogotá" },
+  medellin: { id: 3674962, name: "Medellín" },
+  cali: { id: 3687925, name: "Cali" },
+  barranquilla: { id: 3689147, name: "Barranquilla" }
+};
+
+function getRecommendation(condition, temp) {
+  condition = condition.toLowerCase();
+  let consejos = [];
+
+  // --- Por temperatura ---
+  if (temp < 10) {
+    consejos = [
+      "❄️ Ajusta tu presupuesto para ropa de invierno sin endeudarte.",
+      "🔥 Evita gastos altos en calefacción optimizando el aislamiento de tu hogar.",
+      "🏠 Sal menos y ahorra en ocio externo.",
+      "☕ Prepara bebidas calientes en casa en lugar de cafeterías.",
+      "💊 Reserva un fondo para medicamentos contra resfriados."
+    ];
+  } else if (temp >= 10 && temp <= 18) {
+    consejos = [
+      "🚶 Camina más y ahorra en transporte.",
+      "💡 Reduce calefacción, tu factura bajará naturalmente.",
+      "🎯 Planea actividades económicas al aire libre.",
+      "👕 Aprovecha para comprar ropa fuera de temporada.",
+      "📉 Ajusta tu presupuesto de ocio, menos gasto en energía."
+    ];
+  } else if (temp >= 19 && temp <= 25) {
+    consejos = [
+      "📊 Momento ideal para organizar tus finanzas.",
+      "💡 Aprovecha que no gastas en calefacción ni aire.",
+      "📚 Dedica tiempo a educación financiera online.",
+      "🎯 Planifica gastos grandes a mediano plazo.",
+      "🛒 Haz compras planificadas y evita lo urgente."
+    ];
+  } else if (temp >= 26 && temp <= 32) {
+    consejos = [
+      "💨 Controla tu gasto en aire acondicionado, pon un límite mensual.",
+      "💧 Cambia bebidas compradas por agua en casa.",
+      "🥗 Cocina en casa y evita restaurantes caros.",
+      "🚲 Usa bicicleta o transporte público, ahorra en gasolina.",
+      "🏖️ Guarda dinero extra para tu fondo de verano."
+    ];
+  } else if (temp > 33) {
+    consejos = [
+      "⚠️ Anticipa aumento en factura eléctrica, crea presupuesto fijo.",
+      "☀️ Considera invertir en eficiencia energética.",
+      "🛑 Evita compras impulsivas de aires acondicionados o electrodomésticos.",
+      "💊 Ten un fondo para emergencias médicas relacionadas con calor.",
+      "🏠 Trabaja desde casa para ahorrar transporte."
+    ];
+  }
+
+  // --- Por condición climática ---
+  if (condition.includes("lluvia")) {
+    consejos = consejos.concat([
+      "🌧️ Prevé gastos extra en transporte, el costo puede subir.",
+      "🚖 Guarda dinero en efectivo, apps de transporte suben precio.",
+      "📦 Haz compras grandes y evita salidas frecuentes."
+    ]);
+  }
+
+  if (condition.includes("nube")) {
+    consejos = consejos.concat([
+      "☁️ Buen día para revisar tu presupuesto de ahorro.",
+      "📝 Planifica tus finanzas sin distracciones."
+    ]);
+  }
+
+  if (condition.includes("tormenta")) {
+    consejos = consejos.concat([
+      "⛈️ Refuerza tu fondo de emergencias.",
+      "💡 Considera invertir en respaldo eléctrico."
+    ]);
+  }
+
+  if (condition.includes("sol")) {
+    consejos = consejos.concat([
+      "☀️ Aprovecha la luz natural para reducir tu factura eléctrica.",
+      "👟 Camina más y ahorra transporte."
+    ]);
+  }
+
+  // --- Consejo por defecto si no entra en ninguna condición ---
+  if (consejos.length === 0) {
+    consejos = ["📊 Mantén tus finanzas organizadas sin importar el clima."];
+  }
+
+  // --- Seleccionar entre 3 y 5 consejos (o menos si no hay suficientes) ---
+  const cantidad = Math.min(5, Math.max(1, consejos.length));
+  const seleccionados = [];
+
+  // Copiamos el array y lo desordenamos (shuffle)
+  const barajados = [...consejos].sort(() => 0.5 - Math.random());
+  for (let i = 0; i < cantidad; i++) {
+    seleccionados.push(barajados[i]);
+  }
+
+  // --- Usar localStorage para mostrar uno distinto en cada refresh ---
+  if (!localStorage.getItem("indiceConsejo")) {
+    localStorage.setItem("indiceConsejo", "0");
+  }
+
+  let indice = parseInt(localStorage.getItem("indiceConsejo"), 10);
+  const consejoFinal = seleccionados[indice % seleccionados.length];
+
+  // Actualizar índice para la próxima recarga
+  localStorage.setItem("indiceConsejo", (indice + 1).toString());
+
+  return consejoFinal;
+}
+
+
+
+async function getWeather(cityKey, tempId, condId, recId) {
+  const city = cities[cityKey];
+  const url = `https://api.openweathermap.org/data/2.5/weather?id=${city.id}&appid=${API_KEY}&units=metric&lang=es`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const temp = Math.round(data.main.temp);
+    const condition = data.weather[0].description;
+
+    document.getElementById(tempId).textContent = `${temp}°C`;
+    document.getElementById(condId).textContent = condition;
+    document.getElementById(recId).textContent = getRecommendation(condition);
+
+  } catch (error) {
+    document.getElementById(tempId).textContent = "❌";
+    document.getElementById(condId).textContent = "Error";
+  }
+}
+
+// Ejecutar
+getWeather("bogota", "weather-bogota", "cond-bogota", "rec-bogota");
+getWeather("medellin", "weather-medellin", "cond-medellin", "rec-medellin");
+getWeather("cali", "weather-cali", "cond-cali", "rec-cali");
+getWeather("barranquilla", "weather-barranquilla", "cond-barranquilla", "rec-barranquilla");
+
+</script>
+
+
 <script>
   const datosGraficos = {
     ingresos: <?= (int)$totalIngresos ?>,
