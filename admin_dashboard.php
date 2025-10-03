@@ -29,7 +29,7 @@ function formatoCientifico($numero) {
 }
 
 // Filtrado por estado
-$estado = isset($_GET['estado']) ? $_GET['estado'] : '';
+$estado = isset($_GET['estado']) ? trim($_GET['estado']) : '';
 $query = "
   SELECT p.*, u.nombre, u.correo 
   FROM pqrs p 
@@ -37,12 +37,16 @@ $query = "
 ";
 
 if ($estado === 'pendiente') {
-  $query .= " WHERE p.estado IS NULL OR p.estado='pendiente'";
-} elseif ($estado === 'respondido') {
-  $query .= " WHERE p.estado='respondido'";
+  // Filtra pendientes (si estado es NULL o 'pendiente')
+  $query .= " WHERE COALESCE(p.estado, 'pendiente') = 'pendiente'";
+} elseif ($estado === 'atendido') {
+  // Filtra atendidos
+  $query .= " WHERE p.estado = 'atendido'";
 }
 
+// Ordenar resultados
 $query .= " ORDER BY p.fecha_creacion DESC";
+
 $stmtPQR = $conn->prepare($query);
 $stmtPQR->execute();
 $pqrs = $stmtPQR->fetchAll(PDO::FETCH_ASSOC);
@@ -249,12 +253,13 @@ h2 { font-size: 2rem; color: #00D4FF; text-align: center; }
     <div class="mb-3 text-center">
       <form method="get" class="d-inline-block">
         <select name="estado" class="form-select" style="width:auto;display:inline-block;" onchange="this.form.submit()">
-          <option value="">-- Todos --</option>
+          <option value="" <?= ($estado=='')?'selected':'' ?>>-- Todos --</option>
           <option value="pendiente" <?= ($estado=='pendiente')?'selected':'' ?>>Pendientes</option>
-          <option value="respondido" <?= ($estado=='respondido')?'selected':'' ?>>Respondidos</option>
+          <option value="atendido" <?= ($estado=='atendido')?'selected':'' ?>>Atendidos</option>
         </select>
       </form>
     </div>
+
 
     <!-- TABLE: put the glass panel wrapper around the table -->
     <div class="table-responsive">
