@@ -336,6 +336,35 @@ h2 { font-size: 2rem; color: #00D4FF; text-align: center; }
     </div>
   <?php endforeach; ?>
 <?php endif; ?>
+<?php if (isset($_GET['msg']) && $_GET['msg'] === 'respuesta_ok'): ?>
+<!-- Modal de confirmación -->
+<div class="modal fade" id="modalConfirmacion" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:15px;">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">¡Respuesta enviada!</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <i class="bi bi-check-circle-fill text-success" style="font-size:3rem;"></i>
+        <p class="mt-3">La respuesta fue enviada correctamente al usuario.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Mostrar modal automáticamente al cargar la página
+  document.addEventListener("DOMContentLoaded", function() {
+    var modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+    modal.show();
+  });
+</script>
+<?php endif; ?>
+
 
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 <script>

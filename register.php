@@ -7,9 +7,9 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 require_once __DIR__ . '/vendor/autoload.php';
 
-// Configuración de credenciales SMTP (solo localhost con putenv)
+// Configuración de credenciales SMTP
 putenv('SMTP_USER=gastosimpleservice@gmail.com');
-putenv('SMTP_PASSWORD=iokwsgdexwwvorcu'); // tu App Password real
+putenv('SMTP_PASSWORD=iokwsgdexwwvorcu'); // App Password real
 
 $mensaje = "";
 
@@ -62,24 +62,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $mail->addAddress($correo, $nombre);
 
                         $mail->isHTML(true);
-                        $mail->Subject = 'Gracias por registrarte en GastoSimple';
-                        $mail->Body    = "
-                          <html><body>
-                          <h2>¡Bienvenido a GastoSimple, $nombre!</h2>
-                          <p>Tu cuenta ha sido creada con éxito.</p>
-                          <p><strong>Detalles de tu cuenta:</strong></p>
-                          <ul>
-                            <li><strong>Correo:</strong> $correo</li>
-                            <li><strong>Contraseña:</strong> $contrasena</li>
-                            <li><strong>Pregunta secreta:</strong> $pregunta</li>
-                            <li><strong>Respuesta secreta:</strong> $respuesta</li>
-                          </ul>
-                          <hr>
-                          <p>Ya puedes ingresar y empezar a gestionar tus ingresos, gastos y metas de ahorro.</p>
-                          <p><em>Por seguridad, te recomendamos cambiar tu contraseña después del primer inicio de sesión.</em></p>
-                          <br>
-                          <p><strong>Equipo de GastoSimple</strong></p>
-                          </body></html>";
+                        $mail->Subject = '¡Bienvenido a GastoSimple!';
+
+                        // Logo en GitHub
+                        $logoUrl = "https://raw.githubusercontent.com/Droxus16/GastoSimple/refs/heads/main/img/logo%201.png";
+
+                        $mail->Body = "
+                        <html>
+                        <body style='font-family: Arial, sans-serif; background-color: #f8f9fa; margin:0; padding:0;'>
+                          <div style='max-width:600px; margin:auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,.1);'>
+                            <!-- ENCABEZADO -->
+                            <div style='background:#1E3A8A; padding:20px; text-align:center;'>
+                              <img src='$logoUrl' alt='GastoSimple' style='max-width:150px; margin-bottom:10px;'>
+                              <h1 style='color:#fff; margin:0;'>¡Bienvenido, $nombre!</h1>
+                            </div>
+
+                            <!-- CUERPO -->
+                            <div style='padding:20px; color:#333; font-size:15px; line-height:1.6;'>
+                              <p>Nos alegra que hayas decidido unirte a <strong>GastoSimple</strong>. Tu cuenta ha sido creada con éxito y ahora puedes empezar a organizar tus finanzas personales.</p>
+                              
+                              <h3 style='color:#1E3A8A; margin-top:20px;'>Detalles de tu cuenta:</h3>
+                              <ul style='list-style:none; padding:0;'>
+                                <li><span style='font-weight:bold; color:#1E3A8A; font-size:16px;'>Correo:</span> <span style='font-size:16px;'>$correo</span></li>
+                                <li><span style='font-weight:bold; color:#1E3A8A; font-size:16px;'>Contraseña:</span> <span style='font-size:16px;'>$contrasena</span></li>
+                                <li><span style='font-weight:bold; color:#1E3A8A; font-size:16px;'>Pregunta secreta:</span> <span style='font-size:16px;'>$pregunta</span></li>
+                                <li><span style='font-weight:bold; color:#1E3A8A; font-size:16px;'>Respuesta secreta:</span> <span style='font-size:16px;'>$respuesta</span></li>
+                              </ul>
+
+                              <p style='margin-top:20px;'>🔒 Por seguridad, te recomendamos cambiar tu contraseña después del primer inicio de sesión.</p>
+                              <p>Puedes ingresar en cualquier momento a tu cuenta y empezar a registrar ingresos, gastos y metas de ahorro.</p>
+                              <p style='margin-top:20px;'>Gracias por confiar en nosotros.<br><strong>Equipo de GastoSimple</strong></p>
+                            </div>
+
+                            <!-- PIE -->
+                            <div style='background:#f1f1f1; text-align:center; padding:10px; font-size:12px; color:#777;'>
+                              © ".date("Y")." GastoSimple - Todos los derechos reservados
+                            </div>
+                          </div>
+                        </body>
+                        </html>";
+
 
                         $mail->AltBody = "Bienvenido a GastoSimple, $nombre!\n\n"
                                        . "Tu cuenta ha sido creada con éxito.\n\n"
@@ -92,8 +114,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         $mail->send();
                     } catch (Exception $e) {
-    die("Error al enviar el correo: {$mail->ErrorInfo}");
-}
+                        die("Error al enviar el correo: {$mail->ErrorInfo}");
+                    }
 
                     // Redirigir al dashboard
                     header("Location: dashboard.php");
@@ -108,6 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
+
 <?php include 'includes/header.php'; ?>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
