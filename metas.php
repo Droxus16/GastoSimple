@@ -1,5 +1,4 @@
 <?php
-// ya funciona pero, toca cambiar unas cositas....se ve el monto y las graficas y funciona pero las graficas deben estar en la parte inferior del monto no al lado se ven feo y no se ven bien las graficas, entonces toca bajarlos y expandirlo para que sea más visible y legible
 session_start();
 require_once 'includes/db.php';
 require_once 'includes/auth.php';
@@ -12,7 +11,7 @@ if (!isset($_SESSION['usuario_id'])) {
 $conn = db::conectar();
 $usuario_id = $_SESSION['usuario_id'];
 
-// Consulta de metas con total aportado
+// Consulta metas con total aportado
 $metas = $conn->prepare("
     SELECT m.*, 
         (SELECT COALESCE(SUM(a.monto), 0) FROM aportes_ahorro a WHERE a.meta_id = m.id) AS total_aportado
@@ -23,7 +22,7 @@ $metas = $conn->prepare("
 $metas->execute([$usuario_id]);
 $lista_metas = $metas->fetchAll(PDO::FETCH_ASSOC);
 
-// Cálculo del ahorro total mensual y anual
+// Totales mensual y anual
 $totales = $conn->prepare("
     SELECT
         (
@@ -63,7 +62,15 @@ $totales = $conn->prepare("
 $totales->execute(['usuario_id' => $usuario_id]);
 $ahorro = $totales->fetch(PDO::FETCH_ASSOC);
 
-// Notificación (si existe)
+// Datos del usuario para mínimos
+$usuario = $conn->prepare("SELECT ingreso_minimo, saldo_minimo FROM usuarios WHERE id = ?");
+$usuario->execute([$usuario_id]);
+$usuario = $usuario->fetch(PDO::FETCH_ASSOC);
+
+$saldoActual = $ahorro['total_mes'] ?? 0;
+$totalIngresos = $ahorro['total_anual'] ?? 0;
+
+// Notificación temporal (opcional)
 $mensaje = '';
 if (isset($_SESSION['mensaje'])) {
     $mensaje = $_SESSION['mensaje'];
@@ -72,14 +79,17 @@ if (isset($_SESSION['mensaje'])) {
 ?>
 
 <?php include 'includes/header.php'; ?>
-<link rel="stylesheet" href="assets/css/estilos.css">
+<head>
+  <link rel="stylesheet" href="sidebar.css">
+  <script src="sidebar.js" defer></script>
+</head>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
-<!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Plugin de Sparkline -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-sparklines/2.1.2/jquery.sparkline.min.js"></script>
+
 <script>
   $(document).ready(function(){
       function cargarSparklines() {
@@ -144,119 +154,6 @@ if (isset($_SESSION['mensaje'])) {
     width: 100%; height: 100%;
     z-index: -1;
   }
-
-  /*LAYOUT PRINCIPAL*/
-  .dashboard-container {
-    display: flex;
-    height: 100vh;
-    gap: 20px;
-    padding: 20px;
-    box-sizing: border-box;
-    position: relative;
-  }
-
-  .sidebar {
-    width: 220px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .sidebar button {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 18px;
-    font-size: 1.08rem;
-    border: none;
-    border-radius: 16px;
-    background: linear-gradient(90deg, rgba(0,212,255,0.13) 0%, rgba(11,20,60,0.92) 100%);
-    color: #e0f7fa;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 
-      background 0.18s, 
-      color 0.18s, 
-      box-shadow 0.18s, 
-      transform 0.18s;
-    box-shadow: 0 2px 12px rgba(0,212,255,0.08);
-    margin-bottom: 8px;
-    position: relative;
-    outline: none;
-  }
-  .sidebar button i {
-    font-size: 1.35em;
-    color: #00D4FF;
-    transition: color 0.18s;
-  }
-  .sidebar button:hover, .sidebar button:focus {
-    background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
-    color: #fff;
-    box-shadow: 0 4px 18px rgba(0,212,255,0.18);
-    transform: translateY(-2px) scale(1.04);
-  }
-  .sidebar button:hover i, .sidebar button:focus i {
-    color: #fff;
-  }
-  .menu-top, .menu-bottom {
-    margin-bottom: 18px;
-  }
-  .sidebar .menu-bottom {
-    border-top: 1.5px solid rgba(0,212,255,0.13);
-    padding-top: 18px;
-    margin-top: 18px;
-  }
-  #btn-notificaciones {
-    background: linear-gradient(90deg, rgba(0,212,255,0.18) 0%, rgba(11,20,60,0.92) 100%);
-    color: #00D4FF;
-    font-weight: 700;
-    position: relative;
-  }
-  #btn-notificaciones:hover, #btn-notificaciones:focus {
-    background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
-    color: #fff;
-  }
-  #btn-notificaciones i {
-    color: #00D4FF;
-  }
-  #btn-notificaciones:hover i, #btn-notificaciones:focus i {
-    color: #fff;
-  }
-  #badge-alerta {
-    background: #FF6B6B;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    display: inline-block;
-    margin-left: 8px;
-    border: 2px solid #fff;
-    box-shadow: 0 0 6px #FF6B6B;
-  }
-  @media (max-width: 768px) {
-    .sidebar button {
-      font-size: 1rem;
-      padding: 10px 8px;
-      border-radius: 12px;
-      gap: 8px;
-    }
-  }
-  .sidebar button:hover {
-    background-color: #00D4FF;
-    color: #0C1634;
-    transform: scale(1.05);
-  }
-
-  .main-content {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 25px;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    color: white;
-    overflow-y: auto;
-    box-sizing: border-box;
-  }
-
   /*RESUMEN AHORRO Y FORMULARIO*/
   .card-valor {
     flex: 1;
@@ -345,7 +242,6 @@ if (isset($_SESSION['mensaje'])) {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(8px);
     border-radius: 15px;
-    overflow: hidden;
     margin-bottom: 20px;
   }
 
@@ -766,29 +662,32 @@ if (isset($_SESSION['mensaje'])) {
   width: 100%;
   height: 100%;
 }
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 25px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  box-sizing: border-box;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+
+  /* 🔹 nuevo */
+  margin-left: 240px; 
+  transition: margin-left 0.4s ease-in-out;
+}
+
+/* Cuando el sidebar esté colapsado */
+.sidebar.collapsed ~ .main-content {
+  margin-left: 80px;
+}
 
 </style>
 <div id="particles-js"></div>
 <div class="dashboard-container">
-  <div class="sidebar">
-    <div class="menu-top">
-      <button onclick="location.href='dashboard.php'">
-        <i class="bi bi-pie-chart-fill"></i> Panel
-      <button onclick="location.href='registro.php'"><i class="bi bi-pencil-square"></i> Registro</button>
-    </div>
-    <button id="btn-notificaciones" onclick="toggleNotificaciones()">
-      <i id="icono-campana" class="bi bi-bell-fill"></i> Notificaciones
-      <span id="badge-alerta" style="display:none; background:red; border-radius:50%; width:12px; height:12px; display:inline-block; margin-left:5px;"></span>
-    </button>
-    <div id="panel-notificaciones" class="notificaciones-dropdown">
-      <h4>Notificaciones</h4>
-      <ul id="lista-notificaciones"></ul>
-    </div>
-    <div class="menu-bottom">
-      <button onclick="location.href='logout.php'"><i class="bi bi-box-arrow-right"></i> Salir</button>
-      <button onclick="location.href='ajustes.php'"><i class="bi bi-gear-fill"></i> Ajustes</button>
-    </div>
-  </div>
+ <?php include 'sidebar.php'; ?>
   <!-- MAIN CONTENT -->
   <div class="main-content">
 <div class="metas-header glass-card" style="margin-bottom: 24px; display: flex; align-items: center; gap: 18px; justify-content: center;">

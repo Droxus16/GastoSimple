@@ -3,36 +3,46 @@ session_start();
 require_once 'includes/db.php';
 require_once 'includes/auth.php';
 require 'vendor/autoload.php';
+
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+
 date_default_timezone_set('America/Bogota');
 $conn = db::conectar();
 $idUsuario = intval($_SESSION['usuario_id']);
-// Obtener ingreso mínimo del usuario
-$sqlUsuario = "SELECT ingreso_minimo FROM usuarios WHERE id = ?";
+
+// Obtener ingreso mínimo y saldo mínimo del usuario
+$sqlUsuario = "SELECT ingreso_minimo, saldo_minimo FROM usuarios WHERE id = ?";
 $stmtUsuario = $conn->prepare($sqlUsuario);
 $stmtUsuario->execute([$idUsuario]);
 $usuario = $stmtUsuario->fetch(PDO::FETCH_ASSOC);
+
 $ingresoMinimo = floatval($usuario['ingreso_minimo'] ?? 0);
+$saldoMinimo   = floatval($usuario['saldo_minimo'] ?? 0);
+
 // Fechas de filtro
 $fechaInicio = $_GET['fecha_inicio'] ?? null;
 $fechaFin    = $_GET['fecha_fin'] ?? null;
+
 // Consultar transacciones
 $sqlTodos = "SELECT id_transaccion, tipo, fecha, monto, categoria, descripcion 
              FROM transacciones 
              WHERE id_usuario = ?";
 $params = [$idUsuario];
+
 if ($fechaInicio && $fechaFin) {
     $sqlTodos .= " AND DATE(fecha) BETWEEN ? AND ?";
     $params[] = $fechaInicio;
     $params[] = $fechaFin;
 }
+
 $sqlTodos .= " ORDER BY fecha DESC";
 $stmtTodos = $conn->prepare($sqlTodos);
 $stmtTodos->execute($params);
 $transacciones = $stmtTodos->fetchAll(PDO::FETCH_ASSOC);
+
 // Si no hay resultados, recargar todos los registros
 if (!$transacciones && $fechaInicio && $fechaFin) {
     $sqlTodos = "SELECT id_transaccion, tipo, fecha, monto, categoria, descripcion 
@@ -45,22 +55,30 @@ if (!$transacciones && $fechaInicio && $fechaFin) {
 
     $mensajeFiltro = "⚠️ No hay resultados entre $fechaInicio y $fechaFin. Se muestran todos los registros.";
 }
+
 // Ingresos del mes
 $inicioMes = date('Y-m-01');
 $finMes    = date('Y-m-t');
+
 $sqlIngresos = "SELECT monto FROM ingresos 
                 WHERE usuario_id = ? AND DATE(fecha) BETWEEN ? AND ?";
 $stmtIngresos = $conn->prepare($sqlIngresos);
 $stmtIngresos->execute([$idUsuario, $inicioMes, $finMes]);
 $ingresosMes = $stmtIngresos->fetchAll(PDO::FETCH_ASSOC);
+
 // Gastos del mes
 $sqlGastos = "SELECT monto FROM gastos 
               WHERE usuario_id = ? AND DATE(fecha) BETWEEN ? AND ?";
 $stmtGastos = $conn->prepare($sqlGastos);
 $stmtGastos->execute([$idUsuario, $inicioMes, $finMes]);
 $gastosMes = $stmtGastos->fetchAll(PDO::FETCH_ASSOC);
+
 $totalIngresos = array_sum(array_column($ingresosMes, 'monto'));
 $totalGastos   = array_sum(array_column($gastosMes, 'monto'));
+
+// Calcular saldo actual
+$saldoActual = $totalIngresos - $totalGastos;
+
 // Categorías
 $sqlCategorias = "SELECT id, nombre, tipo FROM categorias 
                   WHERE usuario_id = ? OR usuario_id IS NULL 
@@ -69,17 +87,66 @@ $stmtCategorias = $conn->prepare($sqlCategorias);
 $stmtCategorias->execute([$idUsuario]);
 $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
 ?>
-<script src="js/notificaciones.js" defer></script>
 <?php include 'includes/header.php'; ?>
+<head>
+  <link rel="stylesheet" href="sidebar.css">
+  <script src="sidebar.js" defer></script>
+</head>
 <body 
   data-total-ingresos="<?= $totalIngresos ?>" 
   data-total-gastos="<?= $totalGastos ?>" 
-  data-ingreso-minimo="<?= $ingresoMinimo ?>">
+  data-ingreso-minimo="<?= $ingresoMinimo ?>" 
+  data-saldo-minimo="<?= $saldoMinimo ?>" 
+  data-saldo-actual="<?= $saldoActual ?>">
+
 <link rel="stylesheet" href="assets/css/estilos.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0"></script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<script>
+// ✅ Script de notificaciones dinámicas unificado
+document.addEventListener("DOMContentLoaded", () => {
+  const body = document.body;
+
+  const saldoActual = Number(body.dataset.saldoActual) || 0;
+  const ingresosTotales = Number(body.dataset.totalIngresos) || 0;
+  const ingresoMinimo = Number(body.dataset.ingresoMinimo) || 0;
+  const saldoMinimo = Number(body.dataset.saldoMinimo) || 0;
+
+  console.log("Debug registro.php:", { saldoActual, ingresosTotales, ingresoMinimo, saldoMinimo });
+
+  const lista = document.getElementById("lista-notificaciones");
+  const badge = document.getElementById("badge-alerta");
+  const campana = document.getElementById("icono-campana");
+
+  const notificaciones = [];
+
+  if (saldoActual <= saldoMinimo) 
+    notificaciones.push(`⚠️ Saldo bajo: $${saldoActual.toFixed(2)}`);
+  if (ingresosTotales <= ingresoMinimo) 
+    notificaciones.push(`⚠️ Ingresos bajos: $${ingresosTotales.toFixed(2)}`);
+  if (saldoActual <= 0) 
+    notificaciones.push(`⚠️ No generas ahorro este mes.`);
+
+  // Renderizar
+  lista.innerHTML = "";
+  if (notificaciones.length > 0) {
+    notificaciones.forEach(msg => {
+      const li = document.createElement("li");
+      li.textContent = msg;
+      lista.appendChild(li);
+    });
+    badge.textContent = notificaciones.length;
+    badge.style.display = "inline-block";
+    campana.classList.add("shake");
+  } else {
+    lista.innerHTML = "<li>✅ Sin notificaciones.</li>";
+  }
+});
+</script>
+
 <style>
     /*CONTENEDORES PRINCIPALES */
     .form-container, .tabla-container {
@@ -358,170 +425,28 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
   padding: 10px;
 }
 
-    /*DASHBOARD OPCIONAL */
-    .dashboard-container {
-      display: flex;
-      height: 100vh;
-      gap: 20px;
-      padding: 20px;
-      box-sizing: border-box;
-      overflow: hidden;
-      position: relative;
-    }
-    .sidebar {
-      width: 220px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .sidebar .menu-top, .sidebar .menu-bottom {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-  .sidebar button {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 18px;
-    font-size: 1.08rem;
-    border: none;
-    border-radius: 16px;
-    background: linear-gradient(90deg, rgba(0,212,255,0.13) 0%, rgba(11,20,60,0.92) 100%);
-    color: #e0f7fa;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 
-      background 0.18s, 
-      color 0.18s, 
-      box-shadow 0.18s, 
-      transform 0.18s;
-    box-shadow: 0 2px 12px rgba(0,212,255,0.08);
-    margin-bottom: 8px;
-    position: relative;
-    outline: none;
-  }
-    .sidebar button:hover {
-      background-color: #00D4FF;
-      color: #0C1634;
-      transform: scale(1.05);
-    }
-  .sidebar button i {
-    font-size: 1.35em;
-    color: #00D4FF;
-    transition: color 0.18s;
-  }
-  .sidebar button:hover, .sidebar button:focus {
-    background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
-    color: #fff;
-    box-shadow: 0 4px 18px rgba(0,212,255,0.18);
-    transform: translateY(-2px) scale(1.04);
-  }
-  .sidebar button:hover i, .sidebar button:focus i {
-    color: #fff;
-  }
-  .menu-top, .menu-bottom {
-    margin-bottom: 18px;
-  }
-  .sidebar .menu-bottom {
-    border-top: 1.5px solid rgba(0,212,255,0.13);
-    padding-top: 18px;
-    margin-top: 18px;
-  }
-  #btn-notificaciones {
-    background: linear-gradient(90deg, rgba(0,212,255,0.18) 0%, rgba(11,20,60,0.92) 100%);
-    color: #00D4FF;
-    font-weight: 700;
-    position: relative;
-  }
-  #btn-notificaciones:hover, #btn-notificaciones:focus {
-    background: linear-gradient(90deg, #00D4FF 0%, #1D2B64 100%);
-    color: #fff;
-  }
-  #btn-notificaciones i {
-    color: #00D4FF;
-  }
-  #btn-notificaciones:hover i, #btn-notificaciones:focus i {
-    color: #fff;
-  }
-  #badge-alerta {
-    background: #FF6B6B;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    display: inline-block;
-    margin-left: 8px;
-    border: 2px solid #fff;
-    box-shadow: 0 0 6px #FF6B6B;
-  }
-  @media (max-width: 768px) {
-    .sidebar button {
-      font-size: 1rem;
-      padding: 10px 8px;
-      border-radius: 12px;
-      gap: 8px;
-    }
-  }
-    .main-content {
-      flex: 1;
-      overflow-y: auto;
-      background: rgba(255,255,255,0.05);
-      padding: 25px;
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-      color: white;
-      box-sizing: border-box;
-    }
-    .notificaciones-dropdown {
-      position: absolute;
-      top: 80px;
-      left: 20px;
-      width: 250px;
-      background: rgba(255, 255, 255, 0.08); /* Mismo fondo translúcido */
-      border-radius: 12px;
-      backdrop-filter: blur(10px); /* Igual que main-content */
-      color: white;
-      display: none;
-      flex-direction: column;
-      padding: 15px 20px;
-      z-index: 999;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25); /* Igual sombra */
-    }
-    .notificaciones-dropdown h4 {
-      margin: 0 0 10px;
-      font-size: 1rem;
-      border-bottom: 1px solid #00D4FF;
-      padding-bottom: 5px;
-    }
-    .notificaciones-dropdown ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .notificaciones-dropdown li {
-      padding: 5px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      font-size: 0.9rem;
-    }
-    #badge-alerta {
-    background: red;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    display: inline-block;
-    margin-left: 5px;
-    }
-    .shake {
-      animation: shake 0.5s;
-    }
-      @keyframes shake {
-      0% { transform: rotate(0deg); }
-      20% { transform: rotate(-15deg); }
-      40% { transform: rotate(15deg); }
-      60% { transform: rotate(-10deg); }
-      80% { transform: rotate(10deg); }
-      100% { transform: rotate(0deg); }
-    }
+/* Ajustar el contenido para que no quede debajo del sidebar */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 25px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  box-sizing: border-box;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+
+  /* 🔹 nuevo */
+  margin-left: 240px; 
+  transition: margin-left 0.4s ease-in-out;
+}
+
+/* Cuando el sidebar esté colapsado */
+.sidebar.collapsed ~ .main-content {
+  margin-left: 80px;
+}
 
     /* Animación suave personalizada */
   .collapse-custom {
@@ -713,25 +638,7 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
 </style>
 <div id="particles-js"></div>
 <div class="dashboard-container">
-  <div class="sidebar">
-    <div class="menu-top">
-      <button onclick="location.href='dashboard.php'">
-        <i class="bi bi-pie-chart-fill"></i> Panel
-      <button onclick="location.href='metas.php'"><i class="bi bi-flag-fill"></i> Metas</button>
-    </div>
-    <button id="btn-notificaciones" onclick="toggleNotificaciones()">
-      <i id="icono-campana" class="bi bi-bell-fill"></i> Notificaciones
-    <span id="badge-alerta" style="display: none;"></span>
-    </button>
-    <div id="panel-notificaciones" class="notificaciones-dropdown">
-      <h4>Notificaciones</h4>
-      <ul id="lista-notificaciones"></ul>
-    </div>
-    <div class="menu-bottom">
-      <button onclick="location.href='logout.php'"><i class="bi bi-box-arrow-right"></i> Salir</button>
-      <button onclick="location.href='ajustes.php'"><i class="bi bi-gear-fill"></i> Ajustes</button>
-    </div>
-  </div>
+<?php include 'sidebar.php'; ?>
  <!-- Contenido principal -->
 <div class="main-content">
   <!-- Formulario de registro -->

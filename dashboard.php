@@ -156,6 +156,14 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
 // === Exportar datos a JS ===
 ?>
 <script>
+  // ✅ Variables para notificaciones
+  window.saldoActual     = <?= json_encode($saldoActual) ?>;
+  window.ingresosTotales = <?= json_encode($totalIngresos) ?>;
+  window.ingresoMinimo   = <?= json_encode($usuario['ingreso_minimo'] ?? 0) ?>;
+  window.saldoMinimo     = <?= json_encode($usuario['saldo_minimo'] ?? 0) ?>;
+  window.lista_metas     = <?= json_encode($lista_metas) ?>;
+
+  // ✅ Variables para gráficos
   const nombreUsuario = "<?= $nombreUsuario ?>";
   const totalesMes = {
     ingresos: <?= $totalIngresos ?>,
@@ -169,61 +177,67 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
   const dataMes    = <?= json_encode($dataMes) ?>;
   const dataAnio   = <?= json_encode($dataAnio) ?>;
 </script>
+
 <script>
   // Función genérica para preparar datos según el tipo de gráfico
-function prepararDatos(dataset, tipo) {
-  const labels = dataset.map(d => d.periodo);
+  function prepararDatos(dataset, tipo) {
+    const labels = dataset.map(d => d.periodo);
 
-  if (tipo === "ingresosGastos") {
-    return {
-      labels,
-      datasets: [
-        {
-          label: "Ingresos",
-          data: dataset.map(d => parseFloat(d.ingresos) || 0),
-          borderColor: "rgba(0, 255, 0, 0.8)",
-          backgroundColor: "rgba(0, 255, 0, 0.3)",
-          fill: true
-        },
-        {
-          label: "Gastos",
-          data: dataset.map(d => parseFloat(d.gastos) || 0),
-          borderColor: "rgba(255, 0, 0, 0.8)",
-          backgroundColor: "rgba(255, 0, 0, 0.3)",
-          fill: true
-        }
-      ]
-    };
+    if (tipo === "ingresosGastos") {
+      return {
+        labels,
+        datasets: [
+          {
+            label: "Ingresos",
+            data: dataset.map(d => parseFloat(d.ingresos) || 0),
+            borderColor: "rgba(0, 255, 0, 0.8)",
+            backgroundColor: "rgba(0, 255, 0, 0.3)",
+            fill: true
+          },
+          {
+            label: "Gastos",
+            data: dataset.map(d => parseFloat(d.gastos) || 0),
+            borderColor: "rgba(255, 0, 0, 0.8)",
+            backgroundColor: "rgba(255, 0, 0, 0.3)",
+            fill: true
+          }
+        ]
+      };
+    }
+
+    if (tipo === "ahorro") {
+      let acumulado = 0;
+      const valores = dataset.map(d => {
+        acumulado += (parseFloat(d.ingresos) || 0) - (parseFloat(d.gastos) || 0) - (parseFloat(d.ahorro) || 0);
+        return acumulado;
+      });
+
+      return {
+        labels,
+        datasets: [
+          {
+            label: "Ahorro acumulado",
+            data: valores,
+            borderColor: "rgba(0, 200, 255, 0.9)",
+            backgroundColor: "rgba(0, 200, 255, 0.3)",
+            tension: 0.3,
+            fill: true,
+            pointBackgroundColor: "#fff"
+          }
+        ]
+      };
+    }
+
+    return { labels: [], datasets: [] };
   }
-
-  if (tipo === "ahorro") {
-    // Calcular evolución del ahorro: ingresos - gastos - ahorro
-    let acumulado = 0;
-    const valores = dataset.map(d => {
-      acumulado += (parseFloat(d.ingresos) || 0) - (parseFloat(d.gastos) || 0) - (parseFloat(d.ahorro) || 0);
-      return acumulado;
-    });
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: "Ahorro acumulado",
-          data: valores,
-          borderColor: "rgba(0, 200, 255, 0.9)",
-          backgroundColor: "rgba(0, 200, 255, 0.3)",
-          tension: 0.3,
-          fill: true,
-          pointBackgroundColor: "#fff"
-        }
-      ]
-    };
-  }
-
-  return { labels: [], datasets: [] };
-}
 </script>
+
 <?php include 'includes/header.php'; ?>
+<head>
+  <link rel="stylesheet" href="sidebar.css">
+  <script src="main.js" defer></script> <!-- 👈 Ahora todo va en main.js -->
+</head>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@8.2.1/dist/gridstack.min.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -269,192 +283,8 @@ function prepararDatos(dataset, tipo) {
       padding: 20px;
       box-sizing: border-box;
     }
-
-    /* ===== Sidebar ===== */
-    .sidebar {
-      width: 240px; /* un poquito más ancho */
-      display: flex;
-      flex-direction: column;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 20px;
-      padding: 12px 0;
-      transition: width 0.3s ease-in-out;
-      overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    }
-
-    /* Sidebar colapsada */
-    .sidebar.collapsed {
-      width: 120px;
-    }
-
-    /* Botón hamburguesa */
-    .sidebar .hamburger {
-      align-self: flex-start; /* ahora a la izquierda */
-      margin: 10px 16px;
-      font-size: 2rem; /* más grande */
-      background: transparent;
-      border: none;
-      color: #00D4FF;
-      cursor: pointer;
-      transition: transform 0.3s ease, color 0.3s ease;
-    }
-    .sidebar .hamburger:hover {
-      transform: rotate(90deg);
-      color: #fff;
-    }
-
-    /* Contenedor del menú */
-    .menu-content {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      gap: 12px;
-      padding: 12px;
-    }
-
-    /* Botones uniformes */
-    .sidebar button {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 16px 18px; /* más grandes */
-      font-size: 1.1rem;  /* fuente más legible */
-      border: none;
-      border-radius: 14px;
-      background: transparent;
-      color: #e0f7fa;
-      font-weight: 500;
-      cursor: pointer;
-      transition: 
-        background 0.2s, 
-        color 0.2s, 
-        transform 0.2s;
-      overflow: hidden;
-      text-align: left;
-    }
-
-    /* Hover de botones */
-    .sidebar button:hover {
-      background: rgba(0, 212, 255, 0.2);
-      color: #fff;
-      transform: translateY(-2px);
-    }
-
-    /* Íconos */
-    .sidebar button i {
-      font-size: 1.5em; /* más grandes */
-      color: #00D4FF;
-      flex-shrink: 0;
-      transition: color 0.2s;
-    }
-    .sidebar button:hover i {
-      color: #fff;
-    }
-
-    /* Etiquetas de texto */
-    .sidebar button .label {
-      transition: opacity 0.3s ease, transform 0.3s ease;
-      white-space: nowrap;
-    }
-    .sidebar.collapsed .label {
-      opacity: 0;
-      transform: translateX(-15px);
-      pointer-events: none;
-    }
-    /* Contenedor del menú inferior */
-    .menu-bottom {
-      margin-top: auto; /* se pega abajo */
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 6px;
-    }
-
-    /* Botón Ajustes (azul elegante) */
-    .menu-bottom button.ajustes {
-      background: rgba(0, 212, 255, 0.15);
-      border: 1px solid rgba(0, 212, 255, 0.3);
-      color: #fff;
-      font-weight: 600;
-      padding: 14px 18px;
-      border-radius: 14px;
-      font-size: 1.05rem;
-      box-shadow: 0 4px 16px rgba(0, 212, 255, 0.25);
-      transition: all 0.25s ease;
-    }
-    .menu-bottom button.ajustes:hover {
-      background: #00d4ff;
-      color: #111;
-      transform: translateY(-2px);
-      box-shadow: 0 0 12px #00d4ff, 0 0 24px rgba(0, 212, 255, 0.6);
-    }
-    .menu-bottom button.ajustes i {
-      color: #00d4ff;
-      font-size: 1.4em;
-      transition: color 0.25s;
-    }
-    .menu-bottom button.ajustes:hover i {
-      color: #111;
-    }
-
-    /* Botón Salir (rojo crítico) */
-    .menu-bottom button.salir {
-      background: rgba(255, 77, 77, 0.15);
-      border: 1px solid rgba(255, 77, 77, 0.3);
-      color: #fff;
-      font-weight: 600;
-      padding: 14px 18px;
-      border-radius: 14px;
-      font-size: 1.05rem;
-      box-shadow: 0 4px 16px rgba(255, 77, 77, 0.25);
-      transition: all 0.25s ease;
-    }
-    .menu-bottom button.salir:hover {
-      background: #ff4d4d;
-      color: #111;
-      transform: translateY(-2px);
-      box-shadow: 0 0 12px #ff4d4d, 0 0 24px rgba(255, 77, 77, 0.6);
-    }
-    .menu-bottom button.salir i {
-      color: #ff4d4d;
-      font-size: 1.4em;
-      transition: color 0.25s;
-    }
-    .menu-bottom button.salir:hover i {
-      color: #111;
-    }
-
-    /* ===== Notificaciones ===== */
-    .notificaciones-dropdown {
-      position: absolute;
-      top: 70px; /* alineado debajo del hamburguesa */
-      left: 250px; /* al lado de la sidebar */
-      width: 280px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 14px;
-      backdrop-filter: blur(14px);
-      color: white;
-      display: none;
-      flex-direction: column;
-      padding: 18px 20px;
-      z-index: 999;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-    }
-    .notificaciones-dropdown h4 {
-      margin: 0 0 12px;
-      font-size: 1.2rem; /* más grande */
-      border-bottom: 1px solid #00D4FF;
-      padding-bottom: 6px;
-    }
-    .notificaciones-dropdown li {
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      font-size: 1rem;
-    }
-
-
     /* ===== Contenido principal ===== */
+/* Ajustar el contenido para que no quede debajo del sidebar */
     .main-content {
       flex: 1;
       display: flex;
@@ -466,13 +296,16 @@ function prepararDatos(dataset, tipo) {
       overflow: hidden;
       box-sizing: border-box;
       box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    }
-    .main-content {
-      height: 100%;
-      overflow-y: auto; /* scroll vertical global */
-      padding: 1rem;
+
+      /* 🔹 nuevo */
+      margin-left: 240px; 
+      transition: margin-left 0.4s ease-in-out;
     }
 
+    /* Cuando el sidebar esté colapsado */
+    .sidebar.collapsed ~ .main-content {
+      margin-left: 80px;
+    }
     /* ===== Gridstack items ===== */
     .grid-stack {
       flex: 1;
@@ -552,85 +385,6 @@ function prepararDatos(dataset, tipo) {
 
     .parpadeo {
       animation: parpadeo 1s infinite;
-    }
-
-    /* ===== Notificaciones ===== */
-    .notificaciones-dropdown {
-      position: absolute;
-      top: 60px; /* alineado con botones */
-      left: 80px; /* para que no se tape con sidebar colapsada */
-      width: 260px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      backdrop-filter: blur(12px);
-      color: white;
-      display: none;
-      flex-direction: column;
-      padding: 15px 20px;
-      z-index: 999;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-    }
-    .notificaciones-dropdown h4 {
-      margin: 0 0 10px;
-      font-size: 1rem;
-      border-bottom: 1px solid #00D4FF;
-      padding-bottom: 5px;
-    }
-    .notificaciones-dropdown ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .notificaciones-dropdown li {
-      padding: 5px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      font-size: 0.9rem;
-    }
-    #badge-alerta {
-      background: #FF6B6B;
-      border-radius: 50%;
-      width: 12px;
-      height: 12px;
-      display: inline-block;
-      margin-left: auto;
-      border: 2px solid #fff;
-      box-shadow: 0 0 6px #FF6B6B;
-    }
-
-    /* ===== Mensaje sin registros ===== */
-    .mensaje-vacio {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      max-width: 300px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 30px 20px;
-      border-radius: 15px;
-      font-size: 1rem;
-      line-height: 1.4;
-      text-align: center;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
-    }
-    .mensaje-vacio.visible {
-      opacity: 1;
-    }
-
-    /* ===== Responsive ===== */
-    @media (max-width: 768px) {
-      .dashboard-container {
-        flex-direction: column;
-        overflow: auto;
-      }
-      .sidebar {
-        flex-direction: row;
-        width: 100% !important;
-        height: auto;
-      }
-      .hamburger {
-        right: 15px;
-      }
     }
     /* Widgets sin datos */
     .grid-stack-item-content.empty {
@@ -735,46 +489,7 @@ function prepararDatos(dataset, tipo) {
 </style>
 <div id="particles-js"></div>
 <div class="dashboard-container">
-  <!-- Sidebar -->
-  <div class="sidebar collapsed" id="sidebar">
-    <!-- Botón hamburguesa -->
-    <button class="hamburger" onclick="toggleSidebar()">
-      <i class="bi bi-list"></i>
-    </button>
-    <div class="menu-content">
-      <div class="menu-top">
-        <button onclick="location.href='registro.php'">
-          <i class="bi bi-pencil-square"></i> <span class="label">Registro</span>
-        </button>
-        <button onclick="location.href='metas.php'">
-          <i class="bi bi-flag-fill"></i> <span class="label">Metas</span>
-        </button>
-      </div>
-      <!-- Notificaciones -->
-      <button id="btn-notificaciones" onclick="toggleNotificaciones()">
-        <i id="icono-campana" class="bi bi-bell-fill"></i> 
-        <span class="label">Notificaciones</span>
-        <span id="badge-alerta"></span>
-      </button>
-      <div id="panel-notificaciones" class="notificaciones-dropdown">
-        <h4>Notificaciones</h4>
-        <ul id="lista-notificaciones"></ul>
-      </div>
-      <div class="menu-bottom">
-        <button class="ajustes" onclick="location.href='ajustes.php'">
-          <i class="bi bi-gear-fill"></i> <span class="label">Ajustes</span>
-        </button>
-        <button class="salir" onclick="location.href='logout.php'">
-          <i class="bi bi-box-arrow-right"></i> <span class="label">Salir</span>
-        </button>
-      </div>
-    </div>
-  </div>
-  <script>
-  function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("collapsed");
-  }
-  </script>
+ <?php include 'sidebar.php'; ?>
   <!-- Contenido principal -->
   <div class="main-content">
     <h2>Bienvenido, <?php echo htmlspecialchars($nombreUsuario); ?>!</h2>
