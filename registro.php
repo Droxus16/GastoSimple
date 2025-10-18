@@ -104,9 +104,12 @@ $categorias = $stmtCategorias->fetchAll(PDO::FETCH_ASSOC);
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0"></script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
+<!-- Librerías necesarias -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-// ✅ Script de notificaciones dinámicas unificado
+// Script de notificaciones dinámicas unificado
 document.addEventListener("DOMContentLoaded", () => {
   const body = document.body;
 
@@ -146,7 +149,60 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+async function exportarReporte(tipo) {
+  const status = document.getElementById('exportStatus');
+  status.style.display = 'inline';
 
+  try {
+    const dashboard = document.querySelector('#graficas-dashboard');
+
+    if (!dashboard) {
+      alert("No se encontró el dashboard (id='graficas-dashboard') para capturar.");
+      status.style.display = 'none';
+      return;
+    }
+
+    // 🖼️ Ajuste de tamaño y resolución
+    dashboard.style.width = "1200px"; // fuerza ancho para buena proporción
+    const canvas = await html2canvas(dashboard, {
+      scale: 3, // más resolución
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      logging: false,
+      windowWidth: 1200, // asegura buena escala
+    });
+
+    const dataURL = canvas.toDataURL('image/png', 1.0);
+
+    // 📨 Enviar captura al backend
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'controllers/reportes.php';
+
+    const inputImg = document.createElement('input');
+    inputImg.type = 'hidden';
+    inputImg.name = 'pantallazoDashboard';
+    inputImg.value = dataURL;
+    form.appendChild(inputImg);
+
+    const tipoInput = document.createElement('input');
+    tipoInput.type = 'hidden';
+    tipoInput.name = (tipo === 'pdf') ? 'exportar_pdf' : 'exportar_excel';
+    tipoInput.value = '1';
+    form.appendChild(tipoInput);
+
+    document.body.appendChild(form);
+    form.submit();
+
+  } catch (error) {
+    console.error("Error exportando el reporte:", error);
+    alert("Ocurrió un error al generar el reporte. Revisa la consola.");
+    status.style.display = 'none';
+  }
+}
+</script>
 <style>
     /*CONTENEDORES PRINCIPALES */
     .form-container, .tabla-container {
@@ -740,62 +796,68 @@ document.addEventListener("DOMContentLoaded", () => {
         </a>
       </form>
     </div>
-    <!-- Tabla de registros -->
+
     <div class="tabla-container">
-      <h2>Registros</h2>
-      <?php if (count($transacciones) > 0): ?>
-        <div class="acciones">
-          <form action="controllers/reportes.php" method="POST">
-            <input type="hidden" name="exportar_excel" value="1">
-            <input type="hidden" name="fecha_inicio" value="<?= htmlspecialchars($_GET['fecha_inicio'] ?? '') ?>">
-            <input type="hidden" name="fecha_fin" value="<?= htmlspecialchars($_GET['fecha_fin'] ?? '') ?>">
-            <button type="submit">Exportar a Excel</button>
-          </form>
-          <form action="controllers/reportes.php" method="POST">
-            <input type="hidden" name="exportar_pdf" value="1">
-            <input type="hidden" name="fecha_inicio" value="<?= htmlspecialchars($_GET['fecha_inicio'] ?? '') ?>">
-            <input type="hidden" name="fecha_fin" value="<?= htmlspecialchars($_GET['fecha_fin'] ?? '') ?>">
-            <button type="submit">Exportar a PDF</button>
-          </form>
-        </div>
-        <table class="tabla-transacciones">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Fecha</th>
-              <th>Monto</th>
-              <th>Categoría</th>
-              <th>Descripción</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($transacciones as $fila): ?>
-              <tr>
-                <td><?= ucfirst($fila['tipo']) ?></td>
-                <td><?= htmlspecialchars($fila['fecha']) ?></td>
-                <td>$<?= number_format($fila['monto'], 2) ?></td>
-                <td><?= htmlspecialchars($fila['categoria']) ?></td>
-                <td><?= htmlspecialchars($fila['descripcion']) ?></td>
-                <td>
-                  <button type="button" class="editar-btn"
-                    data-id="<?= htmlspecialchars($fila['id_transaccion']) ?>"
-                    data-tipo="<?= htmlspecialchars($fila['tipo']) ?>"
-                    data-fecha="<?= htmlspecialchars($fila['fecha']) ?>"
-                    data-monto="<?= htmlspecialchars($fila['monto']) ?>"
-                    data-categoria="<?= htmlspecialchars($fila['categoria']) ?>"
-                    data-descripcion="<?= htmlspecialchars($fila['descripcion']) ?>"
-                  >Editar</button>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      <?php else: ?>
-        <p>No hay datos registrados aún.</p>
-      <?php endif; ?>
+  <h2>Registros</h2>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <?php if (count($transacciones) > 0): ?>
+    <div class="acciones">
+      <form id="formExportar" method="POST">
+        <button type="button" onclick="exportarReporte('excel')" class="btn btn-success">Exportar a Excel</button>
+        <button type="button" onclick="exportarReporte('pdf')" class="btn btn-danger">Exportar a PDF</button>
+        <span id="exportStatus" style="margin-left:10px;display:none;">Preparando exportación…</span>
+      </form>
     </div>
-  </div>
+  <?php else: ?>
+    <p style="text-align:center; color:#666; margin-top:20px;">No hay registros disponibles para exportar.</p>
+  <?php endif; ?>
+</div>
+
+
+<div class="tabla-container">
+  <h2>Registros</h2>
+
+  <?php if (!empty($transacciones)): ?>
+    <div>
+      <table class="tabla-transacciones">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Fecha</th>
+            <th>Monto</th>
+            <th>Categoría</th>
+            <th>Descripción</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($transacciones as $fila): ?>
+            <tr>
+              <td><?= ucfirst($fila['tipo']) ?></td>
+              <td><?= htmlspecialchars($fila['fecha']) ?></td>
+              <td>$<?= number_format($fila['monto'], 2) ?></td>
+              <td><?= htmlspecialchars($fila['categoria']) ?></td>
+              <td><?= htmlspecialchars($fila['descripcion']) ?></td>
+              <td>
+                <button 
+                  type="button" 
+                  class="editar-btn"
+                  data-id="<?= htmlspecialchars($fila['id_transaccion']) ?>"
+                  data-tipo="<?= htmlspecialchars($fila['tipo']) ?>"
+                  data-fecha="<?= htmlspecialchars($fila['fecha']) ?>"
+                  data-monto="<?= htmlspecialchars($fila['monto']) ?>"
+                  data-categoria="<?= htmlspecialchars($fila['categoria']) ?>"
+                  data-descripcion="<?= htmlspecialchars($fila['descripcion']) ?>"
+                >Editar</button>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+  <?php else: ?>
+    <p>No hay datos registrados aún.</p>
+  <?php endif; ?>
 </div>
 <!-- Modal Editar global-->
 <div id="modal-editar" class="modal-overlay">
@@ -917,4 +979,5 @@ document.getElementById('eliminar-transaccion').addEventListener('click', functi
   }
 });
 </script>
+
 <?php include 'includes/footer.php'; ?>

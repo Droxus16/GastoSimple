@@ -244,6 +244,38 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gridstack@8.2.1/dist/gridstack-all.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const modoCaptura = urlParams.get('capturar'); // ?capturar=1
+
+  if (modoCaptura === '1') {
+    const dashboard = document.querySelector('#graficas-dashboard');
+    if (!dashboard) {
+      alert('No se encontró el contenedor de gráficas.');
+      return;
+    }
+
+    // Espera un poco para que carguen las gráficas
+    await new Promise(r => setTimeout(r, 1500));
+
+    const canvas = await html2canvas(dashboard, {
+      scale: 3,
+      backgroundColor: '#ffffff',
+      useCORS: true
+    });
+
+    const dataURL = canvas.toDataURL('image/png', 1.0);
+
+    // Enviar la imagen de vuelta a la pestaña que la solicitó
+    window.opener.postMessage({ tipo: "pantallazoDashboard", imagen: dataURL }, "*");
+
+    // Cierra la pestaña automáticamente después
+    setTimeout(() => window.close(), 1000);
+  }
+});
+</script>
 <style>
       /* ===== Fondo animado ===== */
     body {
@@ -485,14 +517,67 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
     grid-template-columns: repeat(4, 1fr);
   }
 }
+/* Fondo temporal oscuro al capturar */
+/* Modo de exportación: fondo claro y textos oscuros */
+.modo-exportacion, .modo-exportacion * {
+  background: transparent !important;
+  color: #0b0b0b !important;
+  -webkit-text-fill-color: #0b0b0b !important;
+}
+
+/* Ajustes específicos para dashboard: fondo blanco y quitar blur/transparencias */
+.modo-exportacion body,
+.modo-exportacion #graficas-dashboard,
+.modo-exportacion .captura-contenedor {
+  background: #ffffff !important;
+  color: #0b0b0b !important;
+}
+
+/* Forzar que elementos semitransparentes queden opacos */
+.modo-exportacion [style*="opacity"],
+.modo-exportacion [style*="rgba("] {
+  opacity: 1 !important;
+  background-color: #ffffff !important;
+}
+
+/* Mantén tu estilo de overlay y contenedor para la captura */
+.captura-fondo {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+.captura-contenedor {
+  background: #ffffff;
+  padding: 50px;
+  border-radius: 20px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.2);
+  max-width: 1600px; /* Aumentamos el ancho máximo */
+  width: 100%;       /* Aprovecha todo el ancho disponible */
+  transform: scale(1.25); /* Aumenta tamaño visual antes de capturar */
+  transform-origin: top center;
+}
+@media print {
+  body {
+    zoom: 1.25; /* aumenta escala de impresión */
+  }
+  .captura-contenedor {
+    margin: 0 auto;
+    transform: none !important;
+  }
+}
 
 </style>
 <div id="particles-js"></div>
 <div class="dashboard-container">
  <?php include 'sidebar.php'; ?>
   <!-- Contenido principal -->
-  <div class="main-content">
+  <div class="main-content"> 
     <h2>Bienvenido, <?php echo htmlspecialchars($nombreUsuario); ?>!</h2>
+    <div id="graficas-dashboard">
     <div class="grid-stack">
       <!-- Gráfico -->
       <div class="grid-stack-item" id="grafico-item" gs-x="6" gs-y="0" gs-w="5" gs-h="4">
@@ -559,6 +644,7 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
           <p id="aportes">$0.00</p>
         </div>
       </div>
+      </div>
       <!-- ================== CLIMA Y RECOMENDACIONES ================== -->
       <div class="grid-stack-item" gs-x="0" gs-y="8" gs-w="12" gs-h="3" style="display:block;">
         <div class="grid-stack-item-content glass-card" style="overflow-y:auto; max-height:350px;">
@@ -607,8 +693,218 @@ $dataAnio = $stmtAnio->fetchAll(PDO::FETCH_ASSOC);
         </div>
       </div>
     </div>
-  </div>
+        <!-- 🔽 Botones de exportar 🔽 -->
+    <div class="exportar-container" style="margin-top:20px; text-align:center;">
+      <form id="formExportar" method="POST">
+        <button type="button" onclick="exportarReporte('excel')" class="btn btn-success">Exportar a Excel</button>
+        <button type="button" onclick="exportarReporte('pdf')" class="btn btn-danger">Exportar a PDF</button>
+        <span id="exportStatus" style="margin-left:10px;display:none;">Preparando exportación…</span>
+      </form>
+    </div>
 
+    <!-- 🔽 Librería y script de exportación 🔽 -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script>
+      async function exportarReporte(tipo) {
+    const status = document.getElementById('exportStatus');
+    status.style.display = 'inline';
+    status.textContent = 'Preparando exportación…';
+
+    try {
+      const dashboard = document.querySelector('#graficas-dashboard');
+      if (!dashboard) {
+        alert("No se encontró el dashboard (id='graficas-dashboard') para capturar.");
+        status.style.display = 'none';
+        return;
+      }
+
+      // -------------------------------
+      // 1) Preparar modo exportación
+      // -------------------------------
+      // Paleta de alto contraste para exportar (puedes ajustarla)
+      const exportPalette = {
+        ingresos: '#0B74DE', // azul fuerte
+        gastos:   '#E74C3C', // rojo fuerte
+        ahorro:   '#28C76F', // verde
+        borde:    '#0A3871',
+        legendColor: '#0b0b0b'
+      };
+
+      // Guardar backups de Chart.js y aplicar colores de exportación
+      const chartsBackup = [];
+      if (window.Chart && Object.values) {
+        const chartInstances = Object.values(Chart.instances || {});
+        chartInstances.forEach(chart => {
+          // Backup: datasets + options que vamos a cambiar
+          const backup = {
+            chart: chart,
+            datasets: chart.data.datasets.map(ds => ({
+              backgroundColor: ds.backgroundColor,
+              borderColor: ds.borderColor,
+              borderWidth: ds.borderWidth
+            })),
+            optionsLegendColor: (chart.options && chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels && chart.options.plugins.legend.labels.color) || null,
+            optionsTitleColor: (chart.options && chart.options.plugins && chart.options.plugins.title && chart.options.plugins.title.color) || null
+          };
+          chartsBackup.push(backup);
+
+          // Apagar animaciones y aplicar paleta sencilla
+          chart.options.animation = false;
+          chart.data.datasets.forEach(ds => {
+            // Si dataset tiene label, elegir color por palabra (opcional)
+            const label = (ds.label || '').toLowerCase();
+            if (label.includes('ingres')) {
+              ds.backgroundColor = exportPalette.ingresos;
+              ds.borderColor = exportPalette.borde;
+            } else if (label.includes('gast')) {
+              ds.backgroundColor = exportPalette.gastos;
+              ds.borderColor = exportPalette.borde;
+            } else if (label.includes('ahor')) {
+              ds.backgroundColor = exportPalette.ahorro;
+              ds.borderColor = exportPalette.borde;
+            } else {
+              // color por defecto si no detecta
+              ds.backgroundColor = exportPalette.ingresos;
+              ds.borderColor = exportPalette.borde;
+            }
+            // si es doughnut/pie, puede aceptar array; simplificamos a 1 color si es string
+          });
+
+          // Legend / Title color
+          if (chart.options && chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+            chart.options.plugins.legend.labels.color = exportPalette.legendColor;
+          }
+          if (chart.options && chart.options.plugins && chart.options.plugins.title) {
+            chart.options.plugins.title.color = exportPalette.legendColor;
+          }
+
+          // Forzar actualización sin animación
+          try { chart.update('none'); } catch(e) { console.warn(e); }
+        });
+      }
+
+      // --------------- apply CSS mode ----------------
+      document.documentElement.classList.add('modo-exportacion');
+
+      // Esperar un poco a que los charts se re-rendericen con los nuevos colores
+      await new Promise(r => setTimeout(r, 400));
+
+      // -------------------------------
+      // 2) Clonar y reemplazar canvases por imágenes
+      // -------------------------------
+      const overlay = document.createElement('div');
+      overlay.className = 'captura-fondo';
+
+      const contenedor = document.createElement('div');
+      contenedor.className = 'captura-contenedor';
+
+      // Clonamos el dashboard (deep clone)
+      const dashboardClonado = dashboard.cloneNode(true);
+
+      // Reemplazamos canvases en el clon con imágenes generadas a partir de los originales actualizados
+      const originalCanvases = dashboard.querySelectorAll('canvas');
+      const clonedCanvases = dashboardClonado.querySelectorAll('canvas');
+
+      originalCanvases.forEach((origCanvas, i) => {
+        // asegurar que el canvas tenga render actualizado
+        try {
+          const dataUrl = origCanvas.toDataURL('image/png', 1.0);
+          const img = document.createElement('img');
+          img.src = dataUrl;
+          // Mantener caja del canvas para que el layout no cambie
+          img.style.width = clonedCanvases[i] ? clonedCanvases[i].style.width || '100%' : '100%';
+          img.style.height = clonedCanvases[i] ? clonedCanvases[i].style.height || 'auto' : 'auto';
+          if (clonedCanvases[i]) clonedCanvases[i].replaceWith(img);
+        } catch (err) {
+          console.warn('Error al convertir canvas a imagen:', err);
+        }
+      });
+
+      contenedor.appendChild(dashboardClonado);
+      overlay.appendChild(contenedor);
+      document.body.appendChild(overlay);
+
+      // Dejamos un breve tiempo para que las imágenes carguen/layout se estabilice
+      await new Promise(r => setTimeout(r, 600));
+      // -------------------------------
+      const exportedCanvas = await html2canvas(contenedor, {
+        scale: window.devicePixelRatio * 2, // escala dinámica según pantalla
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        logging: false,
+        width: contenedor.scrollWidth * 1.2, // más ancho
+        height: contenedor.scrollHeight * 1.2 // más alto
+      });
+
+
+      const dataURL = exportedCanvas.toDataURL('image/png', 1.0);
+
+      // Limpiar overlay visible
+      overlay.remove();
+
+      // -------------------------------
+      // 4) Restaurar charts y estilos originales
+      // -------------------------------
+      document.documentElement.classList.remove('modo-exportacion');
+
+      // Restaurar Chart.js
+      chartsBackup.forEach(backup => {
+        const chart = backup.chart;
+        // restaurar datasets
+        chart.data.datasets.forEach((ds, idx) => {
+          const orig = backup.datasets[idx];
+          if (orig) {
+            ds.backgroundColor = orig.backgroundColor;
+            ds.borderColor = orig.borderColor;
+            ds.borderWidth = orig.borderWidth;
+          }
+        });
+        // Restaurar colors de legend/title si aplicó
+        if (chart.options && chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+          chart.options.plugins.legend.labels.color = backup.optionsLegendColor;
+        }
+        if (chart.options && chart.options.plugins && chart.options.plugins.title) {
+          chart.options.plugins.title.color = backup.optionsTitleColor;
+        }
+        // Reactivar animación por si antes existía (dejamos como estaba: false)
+        try { chart.update('none'); } catch(e) { console.warn(e); }
+      });
+
+      // -------------------------------
+      // 5) Enviar al backend
+      // -------------------------------
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'controllers/reportes.php';
+
+      const inputImg = document.createElement('input');
+      inputImg.type = 'hidden';
+      inputImg.name = 'pantallazoDashboard';
+      inputImg.value = dataURL;
+      form.appendChild(inputImg);
+
+      const tipoInput = document.createElement('input');
+      tipoInput.type = 'hidden';
+      tipoInput.name = (tipo === 'pdf') ? 'exportar_pdf' : 'exportar_excel';
+      tipoInput.value = '1';
+      form.appendChild(tipoInput);
+
+      document.body.appendChild(form);
+      form.submit();
+
+      status.textContent = 'Exportación completada ✅';
+      setTimeout(() => status.style.display = 'none', 2000);
+
+    } catch (error) {
+      console.error("Error exportando el reporte:", error);
+      alert("Ocurrió un error al generar el reporte. Revisa la consola.");
+      // asegurar que removemos la clase si algo falla
+      document.documentElement.classList.remove('modo-exportacion');
+      status.style.display = 'none';
+    }
+  }
+    </script>
+  </div>
 </div>
 <!-- ================== CLIMA Y RECOMENDACIONES ================== -->
 <script>

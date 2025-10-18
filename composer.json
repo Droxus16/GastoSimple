@@ -12,9 +12,12 @@
         }
     ],
     "require": {
-        "phpoffice/phpspreadsheet": "^4.3",
+        "phpoffice/phpspreadsheet": "^5.1",
         "mpdf/mpdf": "^8.2",
         "dompdf/dompdf": "^3.1",
-        "phpmailer/phpmailer": "^6.11"
+        "phpmailer/phpmailer": "^6.11",
+        "tecnickcom/tcpdf": "^6.10",
+        "amenadiel/jpgraph": "^4.1",
+        "jpgraph/jpgraph": "^4.0"
     }
 }

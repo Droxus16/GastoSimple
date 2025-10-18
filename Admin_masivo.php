@@ -20,7 +20,6 @@ if (empty($_SESSION['mass_token'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
   header('Content-Type: application/json; charset=utf-8');
 
-  // Validar token
   $token = $_POST['token'] ?? '';
   if (!hash_equals($_SESSION['mass_token'], $token)) {
     echo json_encode(['status' => 'error', 'message' => 'Token inválido']);
@@ -30,10 +29,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
   $action = $_POST['action'];
 
   if ($action === 'start_campaign') {
-    // Recoger datos
     $subject = trim($_POST['subject'] ?? '');
     $body = trim($_POST['body'] ?? '');
     $batch_size = max(1, intval($_POST['batch_size'] ?? 20));
+    $selected = $_POST['selected_users'] ?? [];
 
     if (empty($subject) || empty($body)) {
       echo json_encode(['status' => 'error', 'message' => 'Asunto y mensaje son obligatorios.']);
@@ -42,10 +41,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     try {
       $db = db::conectar();
-      $stmt = $db->query("SELECT nombre, correo FROM usuarios WHERE correo <> ''");
+
+      if (!empty($selected)) {
+        // Solo los seleccionados
+        $placeholders = implode(',', array_fill(0, count($selected), '?'));
+        $stmt = $db->prepare("SELECT nombre, correo FROM usuarios WHERE id IN ($placeholders)");
+        $stmt->execute($selected);
+      } else {
+        // Todos los usuarios
+        $stmt = $db->query("SELECT nombre, correo FROM usuarios WHERE correo <> ''");
+      }
+
       $recipients = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-      // Guardar en sesión (para procesamiento por lotes)
       $_SESSION['mass_recipients'] = $recipients;
       $_SESSION['mass_subject'] = $subject;
       $_SESSION['mass_body'] = $body;
@@ -73,7 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     $slice = array_slice($recipients, $offset, $batch_size);
 
-    // Config SMTP
     $smtpUser = getenv('SMTP_USER') ?: 'gastosimpleservice@gmail.com';
     $smtpPass = getenv('SMTP_PASSWORD') ?: 'iokwsgdexwwvorcu';
 
@@ -132,13 +139,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
   echo json_encode(['status' => 'error', 'message' => 'Acción desconocida']);
   exit();
 }
-// ---------- HTML (interfaz admin) ----------
 ?>
-<?php include 'includes/header.php'; ?>
 
+<?php include 'includes/header.php'; ?>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<!-- Bootstrap 5 -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 <style>
@@ -186,23 +190,13 @@ body {
   background: #00D4FF;
   color: #0C1634;
 }
-.main-content {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.04);
-  padding: 30px;
-  border-radius: 20px;
-  backdrop-filter: blur(8px);
-  overflow-y: auto;
-}
-.modal-content {
-  background: rgba(20,20,40,0.95);
-  backdrop-filter: blur(12px);
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.08);
-  color: white;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-}
-.modal-header h5 { color: #00D4FF; font-weight: 700; }
+
+.main-content { flex: 1; background: rgba(255, 255, 255, 0.04);
+ padding: 30px; border-radius: 20px; backdrop-filter: blur(8px); overflow-y: auto; }
+
+.modal-content { background: rgba(20,20,40,0.95); backdrop-filter: blur(12px);
+border-radius: 14px; border: 1px solid rgba(255,255,255,0.08);
+color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
 .glass-input {
   background: rgba(255,255,255,0.05) !important;
   border: 1px solid rgba(255,255,255,0.15) !important;
@@ -214,10 +208,28 @@ body {
   border-color: #00D4FF !important;
   box-shadow: 0 0 8px rgba(0,212,255,0.5) !important;
 }
+.user-list {
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(0,0,0,0.25);
+  border-radius: 8px;
+  padding: 10px;
+}
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 4px 0;
+}
+.user-item label {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #eee;
+}
 </style>
 
 <div class="dashboard-container">
-  <!-- Sidebar -->
   <div class="sidebar">
     <div>
       <button onclick="location.href='admin_dashboard.php'"><i class="bi bi-speedometer2"></i> Panel Admin</button>
@@ -229,7 +241,6 @@ body {
     </div>
   </div>
 
-  <!-- Main Content -->
   <div class="main-content">
     <div class="modal-content p-4">
       <div class="modal-header border-0">
@@ -246,10 +257,27 @@ body {
 
           <div class="mb-3">
             <label class="form-label">Mensaje</label>
-            <textarea class="form-control glass-input" name="body" rows="8" required placeholder="Puedes usar {{name}} y {{email}}"></textarea>
+            <textarea class="form-control glass-input" name="body" rows="6" required placeholder="Puedes usar {{name}} y {{email}}"></textarea>
           </div>
 
-          <div class="row g-2">
+          <div class="mb-3">
+            <label class="form-label">Buscar usuario</label>
+            <input type="text" id="searchUser" class="form-control glass-input" placeholder="Buscar por nombre o correo">
+          </div>
+
+          <div class="user-list" id="userList">
+            <?php
+            $db = db::conectar();
+            $users = $db->query("SELECT id, nombre, correo FROM usuarios WHERE correo <> '' ORDER BY nombre ASC")->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($users as $u): ?>
+              <div class="user-item">
+                <label><?= htmlspecialchars($u['nombre']) ?> — <?= htmlspecialchars($u['correo']) ?></label>
+                <input type="checkbox" name="selected_users[]" value="<?= $u['id'] ?>">
+              </div>
+            <?php endforeach; ?>
+          </div>
+
+          <div class="row g-2 mt-3">
             <div class="col-md-4 mb-3">
               <label class="form-label">Tamaño lote (batch)</label>
               <input class="form-control glass-input" type="number" name="batch_size" value="20" min="1">
@@ -261,6 +289,7 @@ body {
           </div>
         </form>
       </div>
+
       <div class="modal-footer flex-column align-items-start">
         <h6 style="color:#00D4FF;">Progreso</h6>
         <div class="progress w-100 mb-2">
@@ -278,6 +307,14 @@ const progressBar = document.getElementById('progressBar');
 const logArea = document.getElementById('logArea');
 const btnCancel = document.getElementById('btnCancel');
 let cancelled = false;
+
+document.getElementById('searchUser').addEventListener('input', function() {
+  const term = this.value.toLowerCase();
+  document.querySelectorAll('.user-item').forEach(item => {
+    const text = item.textContent.toLowerCase();
+    item.style.display = text.includes(term) ? '' : 'none';
+  });
+});
 
 form.addEventListener('submit', async function(e){
   e.preventDefault();
@@ -324,9 +361,7 @@ form.addEventListener('submit', async function(e){
     if (batchJson.status === 'done') break;
 
     logArea.textContent += `Lote enviado: +${batchJson.sent} (fallos: ${batchJson.failed})\n`;
-    if (batchJson.errors?.length) {
-      batchJson.errors.forEach(err => logArea.textContent += err + '\n');
-    }
+    if (batchJson.errors?.length) batchJson.errors.forEach(err => logArea.textContent += err + '\n');
 
     offset = batchJson.offset;
     const percent = Math.round((offset / total) * 100);

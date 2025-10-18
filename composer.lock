@@ -4,8 +4,80 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "056d425dcb43d1d62660ae6f08db2a4c",
+    "content-hash": "a058cb04091efa0908197a676680fcea",
     "packages": [
+        {
+            "name": "amenadiel/jpgraph",
+            "version": "v4.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/HuasoFoundries/jpgraph.git",
+                "reference": "e196d51a520a4182cc26240b4a0744495706f11a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/HuasoFoundries/jpgraph/zipball/e196d51a520a4182cc26240b4a0744495706f11a",
+                "reference": "e196d51a520a4182cc26240b4a0744495706f11a",
+                "shasum": ""
+            },
+            "require": {
+                "ext-gd": "*",
+                "php": ">=7.2.0"
+            },
+            "require-dev": {
+                "codeception/codeception": "^4.0",
+                "codeception/module-asserts": "^1.1",
+                "ergebnis/composer-normalize": "^2.13",
+                "ergebnis/php-cs-fixer-config": "^2.13",
+                "kint-php/kint": "^3.3",
+                "monolog/monolog": "^2.0",
+                "overtrue/phplint": "^2.3",
+                "squizlabs/php_codesniffer": "^3.6",
+                "symfony/dotenv": "^4.0 || ^5.0",
+                "symfony/event-dispatcher": "^4.0 || ^5.0",
+                "symfony/yaml": "^4.0 || ^5.0"
+            },
+            "type": "library",
+            "extra": {
+                "version": "4.1.1",
+                "composer-normalize": {
+                    "indent-size": 4,
+                    "indent-style": "space"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Amenadiel\\JpGraph\\": "src/",
+                    "Amenadiel\\JpGraph\\Plot\\": "src/plot",
+                    "Amenadiel\\JpGraph\\Text\\": "src/text",
+                    "Amenadiel\\JpGraph\\Util\\": "src/util",
+                    "Amenadiel\\JpGraph\\Graph\\": "src/graph",
+                    "Amenadiel\\JpGraph\\Image\\": "src/image",
+                    "Amenadiel\\JpGraph\\Themes\\": "src/themes",
+                    "Amenadiel\\JpGraph\\Graph\\Axis\\": "src/graph/axis",
+                    "Amenadiel\\JpGraph\\Graph\\Tick\\": "src/graph/tick",
+                    "Amenadiel\\JpGraph\\Graph\\Scale\\": "src/graph/scale"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "QPL-1.0"
+            ],
+            "description": "Composer Friendly, full refactor of JpGraph, library to make graphs and charts",
+            "homepage": "http://jpgraph.net/",
+            "keywords": [
+                "chart",
+                "data",
+                "graph",
+                "jpgraph",
+                "pie"
+            ],
+            "support": {
+                "issues": "https://github.com/huasofoundries/jpgraph/issues",
+                "source": "https://github.com/HuasoFoundries/jpgraph/tree/v4.1.1"
+            },
+            "time": "2021-04-27T19:09:11+00:00"
+        },
         {
             "name": "composer/pcre",
             "version": "3.3.2",
@@ -239,6 +311,51 @@
                 "source": "https://github.com/dompdf/php-svg-lib/tree/1.0.0"
             },
             "time": "2024-04-29T13:26:35+00:00"
+        },
+        {
+            "name": "jpgraph/jpgraph",
+            "version": "4.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ztec/JpGraph.git",
+                "reference": "e82db7da6a546d3926c24c9a346226da7aa49094"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ztec/JpGraph/zipball/e82db7da6a546d3926c24c9a346226da7aa49094",
+                "reference": "e82db7da6a546d3926c24c9a346226da7aa49094",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "lib/JpGraph.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "QPL 1.0"
+            ],
+            "authors": [
+                {
+                    "name": "JpGraph team"
+                }
+            ],
+            "description": "jpGraph, library to make graphs and charts",
+            "homepage": "http://jpgraph.net/",
+            "keywords": [
+                "chart",
+                "data",
+                "graph",
+                "jpgraph",
+                "pie"
+            ],
+            "support": {
+                "issues": "https://github.com/ztec/JpGraph/issues",
+                "source": "https://github.com/ztec/JpGraph/tree/4.x"
+            },
+            "abandoned": true,
+            "time": "2017-02-23T09:44:15+00:00"
         },
         {
             "name": "maennchen/zipstream-php",
@@ -859,16 +976,16 @@
         },
         {
             "name": "phpoffice/phpspreadsheet",
-            "version": "4.3.1",
+            "version": "5.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-                "reference": "d0ac70d610fb62ccad38c2696569ae1ad42acc70"
+                "reference": "fd26e45a814e94ae2aad0df757d9d1739c4bf2e0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/d0ac70d610fb62ccad38c2696569ae1ad42acc70",
-                "reference": "d0ac70d610fb62ccad38c2696569ae1ad42acc70",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/fd26e45a814e94ae2aad0df757d9d1739c4bf2e0",
+                "reference": "fd26e45a814e94ae2aad0df757d9d1739c4bf2e0",
                 "shasum": ""
             },
             "require": {
@@ -959,9 +1076,9 @@
             ],
             "support": {
                 "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues",
-                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/4.3.1"
+                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/5.1.0"
             },
-            "time": "2025-05-26T18:51:08+00:00"
+            "time": "2025-09-04T05:34:49+00:00"
         },
         {
             "name": "psr/http-client",
@@ -1360,6 +1477,77 @@
                 }
             ],
             "time": "2025-02-05T13:22:35+00:00"
+        },
+        {
+            "name": "tecnickcom/tcpdf",
+            "version": "6.10.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tecnickcom/TCPDF.git",
+                "reference": "ca5b6de294512145db96bcbc94e61696599c391d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/ca5b6de294512145db96bcbc94e61696599c391d",
+                "reference": "ca5b6de294512145db96bcbc94e61696599c391d",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "php": ">=7.1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "config",
+                    "include",
+                    "tcpdf.php",
+                    "tcpdf_barcodes_1d.php",
+                    "tcpdf_barcodes_2d.php",
+                    "include/tcpdf_colors.php",
+                    "include/tcpdf_filters.php",
+                    "include/tcpdf_font_data.php",
+                    "include/tcpdf_fonts.php",
+                    "include/tcpdf_images.php",
+                    "include/tcpdf_static.php",
+                    "include/barcodes/datamatrix.php",
+                    "include/barcodes/pdf417.php",
+                    "include/barcodes/qrcode.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Nicola Asuni",
+                    "email": "info@tecnick.com",
+                    "role": "lead"
+                }
+            ],
+            "description": "TCPDF is a PHP class for generating PDF documents and barcodes.",
+            "homepage": "http://www.tcpdf.org/",
+            "keywords": [
+                "PDFD32000-2008",
+                "TCPDF",
+                "barcodes",
+                "datamatrix",
+                "pdf",
+                "pdf417",
+                "qrcode"
+            ],
+            "support": {
+                "issues": "https://github.com/tecnickcom/TCPDF/issues",
+                "source": "https://github.com/tecnickcom/TCPDF/tree/6.10.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/donate/?hosted_button_id=NZUEC5XS8MFBJ",
+                    "type": "custom"
+                }
+            ],
+            "time": "2025-05-27T18:02:28+00:00"
         }
     ],
     "packages-dev": [],

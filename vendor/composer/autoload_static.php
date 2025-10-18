@@ -57,6 +57,19 @@ class ComposerStaticInit0916290791541dffa3bb0fe297cc864a
             'Composer\\Pcre\\' => 14,
             'Complex\\' => 8,
         ),
+        'A' => 
+        array (
+            'Amenadiel\\JpGraph\\Util\\' => 23,
+            'Amenadiel\\JpGraph\\Themes\\' => 25,
+            'Amenadiel\\JpGraph\\Text\\' => 23,
+            'Amenadiel\\JpGraph\\Plot\\' => 23,
+            'Amenadiel\\JpGraph\\Image\\' => 24,
+            'Amenadiel\\JpGraph\\Graph\\Tick\\' => 29,
+            'Amenadiel\\JpGraph\\Graph\\Scale\\' => 30,
+            'Amenadiel\\JpGraph\\Graph\\Axis\\' => 29,
+            'Amenadiel\\JpGraph\\Graph\\' => 24,
+            'Amenadiel\\JpGraph\\' => 18,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -145,11 +158,64 @@ class ComposerStaticInit0916290791541dffa3bb0fe297cc864a
         array (
             0 => __DIR__ . '/..' . '/markbaker/complex/classes/src',
         ),
+        'Amenadiel\\JpGraph\\Util\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/amenadiel/jpgraph/src/util',
+        ),
+        'Amenadiel\\JpGraph\\Themes\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/amenadiel/jpgraph/src/themes',
+        ),
+        'Amenadiel\\JpGraph\\Text\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/amenadiel/jpgraph/src/text',
+        ),
+        'Amenadiel\\JpGraph\\Plot\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/amenadiel/jpgraph/src/plot',
+        ),
+        'Amenadiel\\JpGraph\\Image\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/amenadiel/jpgraph/src/image',
+        ),
+        'Amenadiel\\JpGraph\\Graph\\Tick\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/amenadiel/jpgraph/src/graph/tick',
+        ),
+        'Amenadiel\\JpGraph\\Graph\\Scale\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/amenadiel/jpgraph/src/graph/scale',
+        ),
+        'Amenadiel\\JpGraph\\Graph\\Axis\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/amenadiel/jpgraph/src/graph/axis',
+        ),
+        'Amenadiel\\JpGraph\\Graph\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/amenadiel/jpgraph/src/graph',
+        ),
+        'Amenadiel\\JpGraph\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/amenadiel/jpgraph/src',
+        ),
     );
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Datamatrix' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/datamatrix.php',
         'Dompdf\\Cpdf' => __DIR__ . '/..' . '/dompdf/dompdf/lib/Cpdf.php',
+        'JpGraph\\JpGraph' => __DIR__ . '/..' . '/jpgraph/jpgraph/lib/JpGraph.php',
+        'PDF417' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/pdf417.php',
+        'QRcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/qrcode.php',
+        'TCPDF' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf.php',
+        'TCPDF2DBarcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf_barcodes_2d.php',
+        'TCPDFBarcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf_barcodes_1d.php',
+        'TCPDF_COLORS' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/tcpdf_colors.php',
+        'TCPDF_FILTERS' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/tcpdf_filters.php',
+        'TCPDF_FONTS' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/tcpdf_fonts.php',
+        'TCPDF_FONT_DATA' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/tcpdf_font_data.php',
+        'TCPDF_IMAGES' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/tcpdf_images.php',
+        'TCPDF_STATIC' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/tcpdf_static.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
