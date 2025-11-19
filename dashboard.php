@@ -405,19 +405,24 @@ document.addEventListener("DOMContentLoaded", async () => {
       color: #0C1634;
       box-shadow: 0 0 8px rgba(0, 212, 255, 0.7);
     }
-    .sin-datos {
-      opacity: 0.4;
-      filter: grayscale(50%);
-    }
-    @keyframes parpadeo {
-      0% { opacity: 1; }
-      50% { opacity: 0.3; }
-      100% { opacity: 1; }
-    }
-
-    .parpadeo {
-      animation: parpadeo 1s infinite;
-    }
+      .valor,
+      #ingresos, #gastos, #ahorro, #aportes {
+        transition: color 0.4s, transform 0.3s ease;
+      }
+      .sin-datos {
+        opacity: 0.5;
+        filter: grayscale(40%);
+        transition: opacity 1.5s ease, filter 1.5s ease;
+      }
+      .parpadeo {
+        animation: pulsoSuave 3.6s infinite ease-in-out;
+      }
+      @keyframes pulsoSuave {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.7; transform: scale(1.05); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+      
     /* Widgets sin datos */
     .grid-stack-item-content.empty {
       opacity: 0.4;
@@ -580,7 +585,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     <div id="graficas-dashboard">
     <div class="grid-stack">
       <!-- Gráfico -->
-      <div class="grid-stack-item" id="grafico-item" gs-x="6" gs-y="0" gs-w="5" gs-h="4">
+      <div class="grid-stack-item" id="grafico-item" gs-x="6" gs-y="0" gs-w="5" gs-h="5">
         <div class="grid-stack-item-content" style="position: relative;">
           <div class="chart-filters">
             <button onclick="filtrar('día')">Día</button>
@@ -596,49 +601,49 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
         </div>
       </div>
-      <div class="grid-stack-item" gs-x="0" gs-y="0" gs-w="6" gs-h="4">
+      <div class="grid-stack-item" gs-x="0" gs-y="0" gs-w="6" gs-h="5">
         <div class="grid-stack-item-content glass-card">
           <h3>Ingresos vs Gastos</h3>
           <canvas id="chartIngresosGastos"></canvas>
         </div>
       </div>
       <!-- Distribución General -->
-      <div class="grid-stack-item" gs-x="7" gs-y="4" gs-w="3" gs-h="4">
+      <div class="grid-stack-item" gs-x="6" gs-y="5" gs-w="4" gs-h="4">
         <div class="grid-stack-item-content glass-card">
           <h3>Distribución General</h3>
           <canvas id="chartDistribucion"></canvas>
         </div>
       </div>
       <!-- Evolución del Ahorro -->
-      <div class="grid-stack-item" gs-x="0" gs-y="4" gs-w="6" gs-h="4">
+      <div class="grid-stack-item" gs-x="0" gs-y="5" gs-w="6" gs-h="4">
         <div class="grid-stack-item-content glass-card">
           <h3>Evolución del Ahorro</h3>
           <canvas id="chartAhorro"></canvas>
         </div>
       </div>
       <!-- Ingresos -->
-      <div class="grid-stack-item" gs-x="6" gs-y="4" gs-h="2" style="display: block;">
+      <div class="grid-stack-item" gs-x="10" gs-y="5" gs-h="2" style="display: block;">
         <div class="grid-stack-item-content">
           <h3>Ingresos</h3>
           <p id="ingresos">$0.00</p>
         </div>
       </div>
       <!-- Gastos -->
-      <div class="grid-stack-item" gs-x="10" gs-y="4" gs-h="2" style="display: block;">
+      <div class="grid-stack-item" gs-x="11" gs-y="5" gs-h="2" style="display: block;">
         <div class="grid-stack-item-content">
           <h3>Gastos</h3>
           <p id="gastos">$0.00</p>
         </div>
       </div>
       <!-- Ahorro disponible -->
-      <div class="grid-stack-item ui-resizable-autohide" id="contenedor-ahorro" gs-x="10" gs-y="6" style="display: block;" gs-h="2">
+      <div class="grid-stack-item ui-resizable-autohide" id="contenedor-ahorro" gs-x="11" gs-y="7" style="display: block;" gs-h="2">
         <div class="grid-stack-item-content">
           <h3>Ahorro disponible</h3>
           <p id="ahorro">$0.00</p>
         </div>
       </div>
       <!-- Ahorro invertido -->
-      <div class="grid-stack-item ui-resizable-autohide" id="contenedor-aportes" gs-x="6" gs-y="6" style="display: block;" gs-h="2">
+      <div class="grid-stack-item ui-resizable-autohide" id="contenedor-aportes" gs-x="10" gs-y="7" style="display: block;" gs-h="2">
         <div class="grid-stack-item-content">
           <h3>Ahorro invertido</h3>
           <p id="aportes">$0.00</p>
@@ -1071,19 +1076,25 @@ getWeather("barranquilla", "weather-barranquilla", "cond-barranquilla", "rec-bar
       margin: 10,              // Espacio entre widgets
       disableOneColumnMode: true
     });
-    // 🔹 Expande dinámicamente las filas
+
+    // 🔹 Expande dinámicamente las filas según contenido
     grid.on('added removed change', function () {
       grid.engine.maxRow = grid.engine.getRow();
     });
-    // 🔹 Forzamos scroll vertical
+
+    // 🔹 Ajuste de scroll y altura flexible
     const mainContent = document.querySelector('.main-content');
     if (mainContent) {
       mainContent.style.overflowY = 'auto';
-      mainContent.style.maxHeight = 'calc(100vh - 50px)';
+      mainContent.style.height = 'auto';
+      mainContent.style.minHeight = '100vh';
+      mainContent.style.maxHeight = ''; // sin límite fijo
     }
+
     filtrar('mes'); // carga inicial
   });
-  // Inicialización del gráfico
+
+  // 🔹 Inicialización del gráfico
   const ctx = document.getElementById('graficoFinanzas').getContext('2d');
   const grafico = new Chart(ctx, {
     type: 'bar',
@@ -1119,16 +1130,21 @@ getWeather("barranquilla", "weather-barranquilla", "cond-barranquilla", "rec-bar
       }
     }
   });
+
   // 🔹 Formatear números
   function formatNumber(num) {
     return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2 }).format(num);
   }
-  // 🔹 Actualizar color según positivo/negativo
+
+  // 🔹 Actualizar color y animación de totales
   function aplicarColor(id, valor) {
     const el = document.getElementById(id);
     el.innerText = `$${formatNumber(valor)}`;
     el.style.color = valor < 0 ? '#FF6B6B' : '#FFFFFF';
+    el.classList.add('cambiando');
+    setTimeout(() => el.classList.remove('cambiando'), 300);
   }
+
   // 🔹 Filtrar datos
   function filtrar(periodo) {
     const periodoLower = periodo.toLowerCase();
@@ -1136,8 +1152,9 @@ getWeather("barranquilla", "weather-barranquilla", "cond-barranquilla", "rec-bar
     // Botón activo
     document.querySelectorAll('.chart-filters button').forEach(btn => {
       btn.classList.toggle('activo', btn.textContent.toLowerCase() === periodoLower);
-      btn.classList.remove('parpadeo'); // limpiamos parpadeo previo
+      btn.classList.remove('parpadeo');
     });
+
     $.post('includes/filtrar_datos.php', { periodo: periodoLower }, function (respuesta) {
       const datos = typeof respuesta === 'string' ? JSON.parse(respuesta) : respuesta;
 
@@ -1145,28 +1162,33 @@ getWeather("barranquilla", "weather-barranquilla", "cond-barranquilla", "rec-bar
         datos.fechas && datos.fechas.length > 0 &&
         ((datos.ingresos && datos.ingresos.some(v => v !== 0)) ||
          (datos.gastos && datos.gastos.some(v => v !== 0)));
+
       const mensaje = document.getElementById('mensaje-sin-registros');
       const graficoItem = document.getElementById('grafico-item');
+
       if (tieneDatos) {
         grafico.data.labels = datos.fechas;
         grafico.data.datasets = [
           { label: 'Ingresos', data: datos.ingresos, backgroundColor: '#4CAF50' },
           { label: 'Gastos', data: datos.gastos, backgroundColor: '#F44336' }
         ];
-        mensaje.classList.remove('visible');
+        mensaje.style.display = 'none';
         graficoItem.classList.remove('parpadeo');
       } else {
         grafico.data.labels = [];
         grafico.data.datasets.forEach(ds => ds.data = []);
-        mensaje.classList.add('visible');
+        mensaje.style.display = 'block';
         graficoItem.classList.add('parpadeo');
       }
+
       grafico.update();
-      // Totales
+
+      // 🔹 Totales
       aplicarColor('ingresos', datos.ingresos?.reduce((a, b) => a + b, 0) || 0);
       aplicarColor('gastos', datos.gastos?.reduce((a, b) => a + b, 0) || 0);
       aplicarColor('ahorro', datos.ahorro || 0);
       aplicarColor('aportes', datos.aportes || 0);
+
       // 🔹 Widgets: semi-transparente si no hay datos
       const widgets = [
         { id: 'ingresos', cont: '.grid-stack-item:has(#ingresos)' },
@@ -1174,6 +1196,7 @@ getWeather("barranquilla", "weather-barranquilla", "cond-barranquilla", "rec-bar
         { id: 'ahorro', cont: '#contenedor-ahorro' },
         { id: 'aportes', cont: '#contenedor-aportes' }
       ];
+
       widgets.forEach(w => {
         const el = document.querySelector(w.cont);
         if (!el) return;
@@ -1185,7 +1208,8 @@ getWeather("barranquilla", "weather-barranquilla", "cond-barranquilla", "rec-bar
           el.classList.add('sin-datos');
         }
       });
-      // 🔹 Buscar si otro periodo tiene datos (parpadeo)
+
+      // 🔹 Buscar si otro periodo tiene datos (para sugerir)
       const periodos = ['día', 'semana', 'mes', 'año'];
       periodos.forEach(p => {
         if (p !== periodoLower) {
@@ -1204,6 +1228,7 @@ getWeather("barranquilla", "weather-barranquilla", "cond-barranquilla", "rec-bar
     });
   }
 </script>
+
 <script>
 // === Configuración global de colores ===
 const colores = {

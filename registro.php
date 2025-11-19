@@ -796,25 +796,7 @@ async function exportarReporte(tipo) {
         </a>
       </form>
     </div>
-
-    <div class="tabla-container">
-  <h2>Registros</h2>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <?php if (count($transacciones) > 0): ?>
-    <div class="acciones">
-      <form id="formExportar" method="POST">
-        <button type="button" onclick="exportarReporte('excel')" class="btn btn-success">Exportar a Excel</button>
-        <button type="button" onclick="exportarReporte('pdf')" class="btn btn-danger">Exportar a PDF</button>
-        <span id="exportStatus" style="margin-left:10px;display:none;">Preparando exportación…</span>
-      </form>
-    </div>
-  <?php else: ?>
-    <p style="text-align:center; color:#666; margin-top:20px;">No hay registros disponibles para exportar.</p>
-  <?php endif; ?>
-</div>
-
-
-<div class="tabla-container">
+  <div class="tabla-container">
   <h2>Registros</h2>
 
   <?php if (!empty($transacciones)): ?>
